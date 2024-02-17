@@ -52,6 +52,7 @@ export const getSiteConnection = /* GraphQL */ `
       title
       type
       connectionId
+      positionId
       position {
         positionId
         lat
@@ -62,7 +63,6 @@ export const getSiteConnection = /* GraphQL */ `
       }
       createdAt
       updatedAt
-      positionSitesPositionId
       __typename
     }
   }
@@ -79,9 +79,9 @@ export const listSiteConnections = /* GraphQL */ `
         title
         type
         connectionId
+        positionId
         createdAt
         updatedAt
-        positionSitesPositionId
         __typename
       }
       nextToken
@@ -96,6 +96,7 @@ export const getClientConnection = /* GraphQL */ `
       connectionId
       lat
       lng
+      zone
       createdAt
       updatedAt
       __typename
@@ -118,6 +119,7 @@ export const listClientConnections = /* GraphQL */ `
         connectionId
         lat
         lng
+        zone
         createdAt
         updatedAt
         __typename
@@ -183,16 +185,16 @@ export const positionsByLng = /* GraphQL */ `
     }
   }
 `;
-export const clientConnectionsByLat = /* GraphQL */ `
-  query ClientConnectionsByLat(
-    $lat: Float!
+export const siteConnectionsByConnectionId = /* GraphQL */ `
+  query SiteConnectionsByConnectionId(
+    $connectionId: String!
     $sortDirection: ModelSortDirection
-    $filter: ModelClientConnectionFilterInput
+    $filter: ModelSiteConnectionFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    clientConnectionsByLat(
-      lat: $lat
+    siteConnectionsByConnectionId(
+      connectionId: $connectionId
       sortDirection: $sortDirection
       filter: $filter
       limit: $limit
@@ -200,9 +202,10 @@ export const clientConnectionsByLat = /* GraphQL */ `
     ) {
       items {
         id
+        title
+        type
         connectionId
-        lat
-        lng
+        positionId
         createdAt
         updatedAt
         __typename
@@ -212,16 +215,46 @@ export const clientConnectionsByLat = /* GraphQL */ `
     }
   }
 `;
-export const clientConnectionsByLng = /* GraphQL */ `
-  query ClientConnectionsByLng(
-    $lng: Float!
+export const siteConnectionsByPositionId = /* GraphQL */ `
+  query SiteConnectionsByPositionId(
+    $positionId: String!
+    $sortDirection: ModelSortDirection
+    $filter: ModelSiteConnectionFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    siteConnectionsByPositionId(
+      positionId: $positionId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        title
+        type
+        connectionId
+        positionId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const clientConnectionsByConnectionId = /* GraphQL */ `
+  query ClientConnectionsByConnectionId(
+    $connectionId: String!
     $sortDirection: ModelSortDirection
     $filter: ModelClientConnectionFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    clientConnectionsByLng(
-      lng: $lng
+    clientConnectionsByConnectionId(
+      connectionId: $connectionId
       sortDirection: $sortDirection
       filter: $filter
       limit: $limit
@@ -232,6 +265,37 @@ export const clientConnectionsByLng = /* GraphQL */ `
         connectionId
         lat
         lng
+        zone
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const clientConnectionsByZone = /* GraphQL */ `
+  query ClientConnectionsByZone(
+    $zone: String!
+    $sortDirection: ModelSortDirection
+    $filter: ModelClientConnectionFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    clientConnectionsByZone(
+      zone: $zone
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        connectionId
+        lat
+        lng
+        zone
         createdAt
         updatedAt
         __typename

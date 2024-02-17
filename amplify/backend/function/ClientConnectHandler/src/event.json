@@ -1,0 +1,93 @@
+{
+  "headers": {
+      "Accept-Encoding": "gzip, deflate, br",
+      "Accept-Language": "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+      "Cache-Control": "no-cache",
+      "Host": "vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com",
+      "Origin": "chrome://new-tab-page",
+      "Pragma": "no-cache",
+      "Sec-WebSocket-Extensions": "permessage-deflate; client_max_window_bits",
+      "Sec-WebSocket-Key": "ZEUhIsGC0h8+pz/YZTLvyw==",
+      "Sec-WebSocket-Version": "13",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+      "X-Amzn-Trace-Id": "Root=1-65cdc8b5-475873f1092393c06a67fd63",
+      "X-Forwarded-For": "114.37.113.162",
+      "X-Forwarded-Port": "443",
+      "X-Forwarded-Proto": "https"
+  },
+  "multiValueHeaders": {
+      "Accept-Encoding": [
+          "gzip, deflate, br"
+      ],
+      "Accept-Language": [
+          "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7"
+      ],
+      "Cache-Control": [
+          "no-cache"
+      ],
+      "Host": [
+          "vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com"
+      ],
+      "Origin": [
+          "chrome://new-tab-page"
+      ],
+      "Pragma": [
+          "no-cache"
+      ],
+      "Sec-WebSocket-Extensions": [
+          "permessage-deflate; client_max_window_bits"
+      ],
+      "Sec-WebSocket-Key": [
+          "ZEUhIsGC0h8+pz/YZTLvyw=="
+      ],
+      "Sec-WebSocket-Version": [
+          "13"
+      ],
+      "User-Agent": [
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+      ],
+      "X-Amzn-Trace-Id": [
+          "Root=1-65cdc8b5-475873f1092393c06a67fd63"
+      ],
+      "X-Forwarded-For": [
+          "114.37.113.162"
+      ],
+      "X-Forwarded-Port": [
+          "443"
+      ],
+      "X-Forwarded-Proto": [
+          "https"
+      ]
+  },
+  "queryStringParameters": {
+    "lat": "24.944717",
+    "lng": "121.382895"
+  },
+  "multiValueQueryStringParameters": {
+    "lat": [
+      "24.944717"
+    ],
+    "lng": [
+      "121.382895"
+    ]
+  },
+  "requestContext": {
+      "routeKey": "$connect",
+      "eventType": "CONNECT",
+      "extendedRequestId": "TKxMZFj3tjMFTaw=",
+      "requestTime": "15/Feb/2024:08:17:57 +0000",
+      "messageDirection": "IN",
+      "stage": "dev",
+      "connectedAt": 1707985077400,
+      "requestTimeEpoch": 1707985077401,
+      "identity": {
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+          "sourceIp": "114.37.113.162"
+      },
+      "requestId": "TKxMZFj3tjMFTaw=",
+      "domainName": "vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com",
+      "connectionId": "TKxMZcyPNjMCFwQ=",
+      "apiId": "vv3z4ral1k"
+  },
+  "isBase64Encoded": false
+}

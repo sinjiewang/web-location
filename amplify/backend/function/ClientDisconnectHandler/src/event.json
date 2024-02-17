@@ -1,0 +1,43 @@
+{
+  "headers": {
+      "Host": "vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com",
+      "x-api-key": "",
+      "X-Forwarded-For": "",
+      "x-restapi": ""
+  },
+  "multiValueHeaders": {
+      "Host": [
+          "vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com"
+      ],
+      "x-api-key": [
+          ""
+      ],
+      "X-Forwarded-For": [
+          ""
+      ],
+      "x-restapi": [
+          ""
+      ]
+  },
+  "requestContext": {
+      "routeKey": "$disconnect",
+      "disconnectStatusCode": 1001,
+      "eventType": "DISCONNECT",
+      "extendedRequestId": "TKyFXGOfNjMF5Vg=",
+      "requestTime": "15/Feb/2024:08:24:02 +0000",
+      "messageDirection": "IN",
+      "disconnectReason": "",
+      "stage": "dev",
+      "connectedAt": 1707985077400,
+      "requestTimeEpoch": 1707985442040,
+      "identity": {
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+          "sourceIp": "114.37.113.162"
+      },
+      "requestId": "TKyFXGOfNjMF5Vg=",
+      "domainName": "vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com",
+      "connectionId": "TKxMZcyPNjMCFwQ=",
+      "apiId": "vv3z4ral1k"
+  },
+  "isBase64Encoded": false
+}

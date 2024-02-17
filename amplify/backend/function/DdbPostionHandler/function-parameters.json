@@ -1,0 +1,23 @@
+{
+  "lambdaLayers": [
+    {
+      "type": "ProjectLayer",
+      "resourceName": "weblocationawssdk",
+      "env": "dev",
+      "version": "Always choose latest version",
+      "isLatestVersionSelected": true
+    }
+  ],
+  "permissions": {
+    "api": {
+      "weblocation": [
+        "Query"
+      ]
+    },
+    "storage": {
+      "ClientConnection:@model(appsync)": [
+        "read"
+      ]
+    }
+  }
+}

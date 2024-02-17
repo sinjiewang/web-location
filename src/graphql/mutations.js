@@ -68,6 +68,7 @@ export const createSiteConnection = /* GraphQL */ `
       title
       type
       connectionId
+      positionId
       position {
         positionId
         lat
@@ -78,7 +79,6 @@ export const createSiteConnection = /* GraphQL */ `
       }
       createdAt
       updatedAt
-      positionSitesPositionId
       __typename
     }
   }
@@ -93,6 +93,7 @@ export const updateSiteConnection = /* GraphQL */ `
       title
       type
       connectionId
+      positionId
       position {
         positionId
         lat
@@ -103,7 +104,6 @@ export const updateSiteConnection = /* GraphQL */ `
       }
       createdAt
       updatedAt
-      positionSitesPositionId
       __typename
     }
   }
@@ -118,6 +118,7 @@ export const deleteSiteConnection = /* GraphQL */ `
       title
       type
       connectionId
+      positionId
       position {
         positionId
         lat
@@ -128,7 +129,6 @@ export const deleteSiteConnection = /* GraphQL */ `
       }
       createdAt
       updatedAt
-      positionSitesPositionId
       __typename
     }
   }
@@ -143,6 +143,7 @@ export const createClientConnection = /* GraphQL */ `
       connectionId
       lat
       lng
+      zone
       createdAt
       updatedAt
       __typename
@@ -159,6 +160,7 @@ export const updateClientConnection = /* GraphQL */ `
       connectionId
       lat
       lng
+      zone
       createdAt
       updatedAt
       __typename
@@ -175,6 +177,7 @@ export const deleteClientConnection = /* GraphQL */ `
       connectionId
       lat
       lng
+      zone
       createdAt
       updatedAt
       __typename

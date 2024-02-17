@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "storage": {
+      "SiteConnection:@model(appsync)": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ],
+      "ClientConnection:@model(appsync)": [
+        "create",
+        "read",
+        "update",
+        "delete"
+      ]
+    }
+  },
+  "lambdaLayers": [
+    {
+      "type": "ProjectLayer",
+      "resourceName": "weblocationawssdk",
+      "env": "dev",
+      "version": "Always choose latest version",
+      "isLatestVersionSelected": true
+    }
+  ]
+}

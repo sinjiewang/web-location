@@ -1,0 +1,23 @@
+{
+  "requestContext": {
+      "routeKey": "$default",
+      "messageId": "TKx-Vd7GNjMCFwQ=",
+      "eventType": "MESSAGE",
+      "extendedRequestId": "TKx-VFHxNjMFekA=",
+      "requestTime": "15/Feb/2024:08:23:17 +0000",
+      "messageDirection": "IN",
+      "stage": "dev",
+      "connectedAt": 1707985077400,
+      "requestTimeEpoch": 1707985397052,
+      "identity": {
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+          "sourceIp": "114.37.113.162"
+      },
+      "requestId": "TKx-VFHxNjMFekA=",
+      "domainName": "vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com",
+      "connectionId": "TKxMZcyPNjMCFwQ=",
+      "apiId": "vv3z4ral1k"
+  },
+  "body": "{\"action\":\"offer\",\"siteId\":\"TKxMZcyPNjMCFwQ=\",\"data\":{\"sdp\":\"brabra\",\"type\":\"offer\"}}",
+  "isBase64Encoded": false
+}
