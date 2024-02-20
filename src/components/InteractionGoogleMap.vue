@@ -1,6 +1,5 @@
 <script>
 import { v4 as uuidv4 } from 'uuid';
-import coordinate from '../utils/coordinate';
 
 export default {
   name: "InteractionMap",
@@ -19,7 +18,7 @@ export default {
     },
     zoom: {
       type: Number,
-      default: 17
+      default: 18
     },
   },
   data() {
@@ -27,6 +26,7 @@ export default {
       CONFIG: {
         streetViewControl: false,
         mapTypeControl: false,
+        scaleControl: true,
         styles: [
           {
             featureType: 'poi.business',
@@ -34,23 +34,18 @@ export default {
           },
         ]
       },
+      LABEL_ID_PREFIX: 'label',
+      POSITION_ID_PREFIX: 'position',
+      mapHeight: '100%',
       map: null,
       markers: new Map(),
       positionMarkerId: null,
     };
   },
   async mounted() {
-    let position;
-
-    if (this.center) {
-      position = this.center;
-    } else {
-      position = await this.getUserPosition();
-    }
-
     const map = this.createMap({
       ...this.CONFIG,
-      center: position,
+      center: this.center,
       zoom: this.zoom,
       maxZoom: this.maxZoom,
       minZoom: this.minZoom,
@@ -59,26 +54,7 @@ export default {
     map.addListener('dragend', () => this.onMapDragend());
 
     this.map = map;
-    // this.addLabelMarker(position);
-    // this.addLabelMarker({
-    //     'lat': 24.949717,
-    //     'lng': 121.382895,
-    //   });
-    
-    // this.addLabelMarker({
-    //     'lat': 24.944717,
-    //     'lng': 121.387895,
-    //   });
-    
-    // this.addLabelMarker({
-    //     'lat': 24.939717,
-    //     'lng': 121.382895,
-    //   });
-    
-    // this.addLabelMarker({
-    //     'lat': 24.944717,
-    //     'lng': 121.377895,
-    //   });
+    this.setMapHeight();
   },
   computed: {
     draggableTitle() {
@@ -93,21 +69,32 @@ export default {
       return this.markers.get(id);
     },
     setMarker(id, marker) {
-      this.markers.set(id, marker);
+      const { map, markers } = this;
+
+      marker.setMap(map);
+      markers.set(id, () => {
+        marker.setMap(null);
+        google.maps.event.clearListeners(marker);
+      })
     },
     deleteMaker(id) {
+      const deleteMaker = this.getMarker(id);
+
+      if (!deleteMaker) return;
+
+      deleteMaker();
+
       this.markers.delete(id);
     },
+    getPositionMarkerId() {
+      return `${this.POSITION_ID_PREFIX}_${uuidv4()}`;
+    },
     addPositionMarker({ lat, lng }) {
-      const { positionMarkerId } = this;
-      if (positionMarkerId) {
-        this.deleteMaker(positionMarkerId);
-      }
+      this.removePositionMarker();
 
-      const id = uuidv4();
+      const id = this.getPositionMarkerId();
       const marker = new google.maps.Marker({
         position: { lat, lng },
-        map: this.map,
       });
 
       marker.addListener('dragend', (event) => this.onMarkerDragend(event));
@@ -118,6 +105,14 @@ export default {
 
       return { id, marker };
     },
+    removePositionMarker() {
+      const { positionMarkerId } = this;
+
+      if (positionMarkerId) {
+        this.deleteMaker(positionMarkerId);
+        this.positionMarkerId = null;
+      }
+    },
     setMarkerDraggable(marker) {
       marker.setDraggable(true);
       marker.setTitle(this.draggableTitle);
@@ -126,11 +121,13 @@ export default {
       marker.setDraggable(false);
       marker.setTitle('');
     },
+    getLabelMarkerId({ lat, lng }) {
+      return `${this.LABEL_ID_PREFIX}_${lat}_${lng}`;
+    },
     addLabelMarker({ lat, lng }) {
-      const id = uuidv4();
+      const id = this.getLabelMarkerId({ lat, lng });
       const marker = new google.maps.Marker({
         position: { lat, lng },
-        map: this.map,
         icon: {
           url: '/thumbtack.svg',
         },
@@ -142,38 +139,24 @@ export default {
 
       return { id, marker };
     },
-    async getCurrentPosition() {
-      return new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject))
-        .then(({ coords }) => ({
-          accuracy: coords.accuracy,
-          ...coordinate.transform({
-            lat: coords.latitude,
-            lng: coords.longitude,
-          }),
-        }));
+    updateLabelMarkers(positions=[]) {
+      const positionIds = positions.map((position) => this.getLabelMarkerId(position));
+      const existMarkerIds = Array.from(this.markers.keys());
+      
+      positions.filter((position) => !existMarkerIds.includes(this.getLabelMarkerId(position)))
+        .forEach((position) => this.addLabelMarker(position));
+      existMarkerIds.filter((markerId) => !positionIds.includes(markerId))
+        .forEach((markerId) => this.deleteMaker(markerId));
     },
-    async getGeolocationAPI() {
-        return fetch(this.googleapisUrl, {
-          method: 'POST',
-        })
-        .then(res => res.json())
-        .then(({ accuracy, location }) => ({ accuracy, ...coordinate.transform(location)}));
+    removeLabelMarker({ lat, lng }) {
+      const id = this.getLabelMarkerId({ lat, lng });
+
+      this.deleteMaker(id);
     },
-    async getUserPosition() {
-      let position = null;
-
-      try {
-        if ('geolocation' in navigator) {
-          position = await this.getCurrentPosition();
-        } else {
-          position = await this.getGeolocationAPI();
-        }
-
-      } catch (err) {
-        console.warn('getUserPosition fail', err);
-      }
-
-      return position;
+    removeAllLabelMarker() {
+      Array.from(this.markers.keys())
+        .filter((labelId) => labelId !== this.positionMarkerId)
+        .forEach((labelId) => this.deleteMaker(labelId));
     },
     onMapDragend() {
       const center = this.map.getCenter();
@@ -184,7 +167,8 @@ export default {
       });
     },
     onMarkerDragend(event) {
-      this.$emit('marker', {
+      this.removeAllLabelMarker();
+      this.$emit('position', {
         lat: event.latLng.lat(),
         lng: event.latLng.lng(),
       });
@@ -192,19 +176,23 @@ export default {
     onLabelMouseover({ lat,lng  }) {
       this.$emit('label', { lat, lng });
     },
+    setMapHeight() {
+      this.mapHeight = document.getElementById("map").offsetWidth + 'px';
+    }
   }
 };
 </script>
 
 <template>
-  <div>
-    <div class="google-map" id="map"></div>
-  </div>
+  <div class="google-map" id="map"
+    :style="{
+      height: mapHeight
+    }"
+  ></div>
 </template>
 
 <style scoped>
 .google-map {
   width: 100%;
-  height: 400px;
 }
 </style>

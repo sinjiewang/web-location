@@ -1,7 +1,11 @@
+function toFixedSix(value) {
+  return Number(Number(value).toFixed(6));
+}
+
 function transform({ lat, lng }) {
   return {
-    lat: Number(lat.toFixed(6)),
-    lng: Number(lng.toFixed(6)),
+    lat: toFixedSix(lat),
+    lng: toFixedSix(lng),
   };
 }
 

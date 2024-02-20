@@ -1,7 +1,7 @@
 <script>
 import InteractionGoogleMap from './components/InteractionGoogleMap.vue';
 import coordinate from './utils/coordinate';
-import { mapActions } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
 
 export default {
   components: {
@@ -13,38 +13,63 @@ export default {
         'lat': 24.944716936535976,
         'lng': 121.38289496216872,
       }),
+      component: null,
     };
   },
+  computed: {
+    ...mapGetters('Geopositioning', ['labels']),
+  },
   methods: {
-    ...mapActions('MapLabel', ['getLabels']),
-    onMarker(position) {
-      console.log('marker', position)
+    ...mapActions('Geopositioning', ['getLabels', 'getUserPosition']),
+    ...mapActions('CloudTunnel', ['clientConnect', 'updateClientPosition']),
+    onPosition(position) {
+      console.log('position', position)
+
+      this.getLabels(position);
     },
     onCenter(position) {
       console.log('center', position)
+
+      this.center = position;
+      this.getLabels(this.center);
+      this.updateClientPosition(position);
     },
     onLabel(position) {
       console.log('label', position)
     },
   },
-  mounted() {
+  watch: {
+    labels(value) {
+      const { googleMap } = this.$refs;
+
+      googleMap.updateLabelMarkers(value);
+    },
+  },
+  async mounted() {
+    this.center = await this.getUserPosition();
+    await this.clientConnect(this.center);
+    console.log('this.center', this.center)
     this.getLabels(this.center);
+    this.component = 'InteractionGoogleMap';
   },
 }
 </script>
 
 <template>
-  <InteractionGoogleMap
+  <component
+    ref="googleMap"
+    :is="component"
     class="map"
     :center="center"
+    :minZoom="16"
     @center="onCenter"
-    @marker="onMarker"
+    @position="onPosition"
     @label="onLabel"
   />
 </template>
 
 <style scoped>
 .map {
-  width: 90vh;
+  width: 100%;
 }
 </style>

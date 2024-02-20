@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "aws-amplify": "^6.0.15",
+    "events": "^3.3.0",
     "uuid": "^9.0.1",
     "vue": "^3.3.11",
     "vuex": "^4.0.2"

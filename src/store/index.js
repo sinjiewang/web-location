@@ -1,8 +1,10 @@
 import { createStore } from 'vuex'
-import MapLabel from './MapLabel'
+import CloudTunnel from './CloudTunnel'
+import Geopositioning from './Geopositioning'
 
 export const store = createStore({
   modules: {
-    MapLabel,
+    CloudTunnel,
+    Geopositioning,
   }
 })
