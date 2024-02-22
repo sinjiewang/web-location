@@ -31,7 +31,7 @@ export async function handler(event) {
     };
   }
 
-  const { lat, lng } = queryStringParameters;
+  const { lat, lng, type } = queryStringParameters;
   const ddbPosition = new DdbPosition();
   const ddbSiteConnection = new DdbSiteConnection();
   const positionId = getPositionId({ lat, lng })
@@ -45,6 +45,7 @@ export async function handler(event) {
   await ddbSiteConnection.create({
     positionId,
     connectionId,
+    type,
   });
 
   return {

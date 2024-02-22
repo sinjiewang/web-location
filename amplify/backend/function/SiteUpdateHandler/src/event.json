@@ -1,0 +1,23 @@
+{
+  "requestContext": {
+      "routeKey": "position",
+      "messageId": "TKxVTc-zNjMCFwQ=",
+      "eventType": "MESSAGE",
+      "extendedRequestId": "TKxVTEcetjMFZmg=",
+      "requestTime": "15/Feb/2024:08:18:54 +0000",
+      "messageDirection": "IN",
+      "stage": "dev",
+      "connectedAt": 1707985077400,
+      "requestTimeEpoch": 1707985134411,
+      "identity": {
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+          "sourceIp": "114.37.113.162"
+      },
+      "requestId": "TKxVTEcetjMFZmg=",
+      "domainName": "vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com",
+      "connectionId": "TKxMZcyPNjMCFwQ=",
+      "apiId": "vv3z4ral1k"
+  },
+  "body": "{\"action\":\"update\",\"data\":{\"title\":\"test title\"}}",
+  "isBase64Encoded": false
+}

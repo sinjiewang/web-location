@@ -5,10 +5,20 @@ const { API_WEBLOCATION_SITECONNECTIONTABLE_NAME, REGION } = process.env;
 class DdbSiteConnection extends DdbActions {
   static TABLE = API_WEBLOCATION_SITECONNECTIONTABLE_NAME;
 
-  create({ connectionId, positionId, type=null }) {
-    return DdbSiteConnection.create({
+  query({ connectionId }) {
+    return DdbSiteConnection.query({
       region: REGION,
-      data: { connectionId, positionId, type },
+      condition: { connectionId },
+    }, {
+      IndexName: 'siteConnectionsByConnectionId',
+    });
+  }
+
+  update({ id, data }) {
+    return DdbSiteConnection.update({
+      region: REGION,
+      condition: { id },
+      data,
     });
   }
 };
