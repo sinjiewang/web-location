@@ -1,4 +1,4 @@
-import APIGatewayClient from '../../utils/APIGatewayClient';
+import APIGatewayClient from '@/utils/APIGatewayClient';
 
 export default {
   namespaced: true,
@@ -6,9 +6,9 @@ export default {
     connected: true,
     wsClient: null,
   }),
-  getters: {
-    
-  },
+  // getters: {
+
+  // },
   actions: {
     async clientConnect({ state, dispatch }, position=null) {
       if (state.wsClient) {
@@ -33,7 +33,9 @@ export default {
           state.wsClient = null;
         });
         wsClient.on('message', (event) => {
-          const { action, type, data } = JSON.parse(event.data);
+          const { action, type, data, message } = JSON.parse(event.data);
+
+          if (message) console.warn(message);
 
           const handler = `${action}${type[0].toUpperCase() + type.substring(1)}`;
 

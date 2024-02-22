@@ -1,75 +1,48 @@
 <script>
-import InteractionGoogleMap from './components/InteractionGoogleMap.vue';
-import coordinate from './utils/coordinate';
-import { mapGetters, mapActions } from 'vuex';
+import Header from '@/components/Header.vue';
+import Navigation from '@/components/Navigation.vue';
+// import { mapActions } from 'vuex';
 
 export default {
   components: {
-    InteractionGoogleMap,
+    Header,
+    Navigation,
   },
   data() {
     return {
-      center: coordinate.transform({
-        'lat': 24.944716936535976,
-        'lng': 121.38289496216872,
-      }),
-      component: null,
+
     };
   },
-  computed: {
-    ...mapGetters('Geopositioning', ['labels']),
-  },
+  // computed: {
+
+  // },
   methods: {
-    ...mapActions('Geopositioning', ['getLabels', 'getUserPosition']),
-    ...mapActions('CloudTunnel', ['clientConnect', 'updateClientPosition']),
-    onPosition(position) {
-      console.log('position', position)
-
-      this.getLabels(position);
-    },
-    onCenter(position) {
-      console.log('center', position)
-
-      this.center = position;
-      this.getLabels(this.center);
-      this.updateClientPosition(position);
-    },
-    onLabel(position) {
-      console.log('label', position)
-    },
+    // ...mapActions('Geopositioning', ['getLabels', 'getUserPosition']),
   },
-  watch: {
-    labels(value) {
-      const { googleMap } = this.$refs;
+  // watch: {
 
-      googleMap.updateLabelMarkers(value);
-    },
-  },
+  // },
   async mounted() {
-    this.center = await this.getUserPosition();
-    await this.clientConnect(this.center);
-    console.log('this.center', this.center)
-    this.getLabels(this.center);
-    this.component = 'InteractionGoogleMap';
+    // await this.getUserPosition();
   },
 }
 </script>
 
 <template>
-  <component
-    ref="googleMap"
-    :is="component"
-    class="map"
-    :center="center"
-    :minZoom="16"
-    @center="onCenter"
-    @position="onPosition"
-    @label="onLabel"
-  />
+  <v-layout>
+    <Header />
+
+    <Navigation />
+
+    <v-main>
+      <router-view></router-view>
+    </v-main>
+  </v-layout>
 </template>
 
 <style scoped>
-.map {
-  width: 100%;
+.v-main {
+  min-height: 300px;
+  height: 100vh;
 }
 </style>

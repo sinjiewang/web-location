@@ -124,7 +124,8 @@ export default {
     getLabelMarkerId({ lat, lng }) {
       return `${this.LABEL_ID_PREFIX}_${lat}_${lng}`;
     },
-    addLabelMarker({ lat, lng }) {
+    addLabelMarker(position) {
+      const { lat, lng } = position;
       const id = this.getLabelMarkerId({ lat, lng });
       const marker = new google.maps.Marker({
         position: { lat, lng },
@@ -133,7 +134,7 @@ export default {
         },
       });
 
-      marker.addListener('mouseover', () => this.onLabelMouseover({ lat, lng }));
+      marker.addListener('click', () => this.onClickLabel(position));
 
       this.setMarker(id, marker);
 
@@ -142,7 +143,7 @@ export default {
     updateLabelMarkers(positions=[]) {
       const positionIds = positions.map((position) => this.getLabelMarkerId(position));
       const existMarkerIds = Array.from(this.markers.keys());
-      
+
       positions.filter((position) => !existMarkerIds.includes(this.getLabelMarkerId(position)))
         .forEach((position) => this.addLabelMarker(position));
       existMarkerIds.filter((markerId) => !positionIds.includes(markerId))
@@ -173,8 +174,8 @@ export default {
         lng: event.latLng.lng(),
       });
     },
-    onLabelMouseover({ lat,lng  }) {
-      this.$emit('label', { lat, lng });
+    onClickLabel(position) {
+      this.$emit('label', position);
     },
     setMapHeight() {
       this.mapHeight = document.getElementById("map").offsetWidth + 'px';

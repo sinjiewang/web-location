@@ -1,6 +1,6 @@
 import { generateClient } from 'aws-amplify/api';
-import { listPositions } from '../../graphql/queries';
-import coordinate from '../../utils/coordinate';
+import { listPositions, getPosition } from '@/graphql/queries';
+import coordinate from '@/utils/coordinate';
 
 const QUERY_RANGE = 0.01;
 const client = generateClient();
@@ -84,6 +84,18 @@ export default {
       commit('updateUserPosition', position);
 
       return position;
+    },
+    async getPositionSites(_, variables) {
+      try {
+        const sites = await client.graphql({
+          query: getPosition,
+          variables,
+        }).then(res => res.data.getPosition.sites);
+
+        return sites;
+      } catch (err) {
+        console.error('listPositions fail', err)
+      }
     },
   },
   mutations: {

@@ -2,14 +2,22 @@
 // this is an auto generated file. This will be overwritten
 
 export const getPosition = /* GraphQL */ `
-  query GetPosition($positionId: String!) {
+  query GetPosition($positionId: String = "", $limit: Int = 10, $nextToken: String = null) {
     getPosition(positionId: $positionId) {
       positionId
       lat
       lng
-      sites {
+      sites(limit: $limit, nextToken: $nextToken) {
         nextToken
-        __typename
+        items {
+          connectionId
+          createdAt
+          id
+          positionId
+          title
+          type
+          updatedAt
+        }
       }
       createdAt
       updatedAt
