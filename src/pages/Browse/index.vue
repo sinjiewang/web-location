@@ -2,12 +2,8 @@
 import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
 import { mapGetters, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiChatProcessingOutline, mdiHelp, mdiBullhornVariantOutline } from '@mdi/js';
-
-const SITE_TYPE_ICON = Object.freeze({
-  'post': mdiBullhornVariantOutline,
-  'chat': mdiChatProcessingOutline,
-});
+import { mdiHelp } from '@mdi/js';
+import SITE from '@/constants/site.js';
 
 export default {
   components: {
@@ -58,8 +54,7 @@ export default {
       return this.updateSites(label.positionId);
     },
     getSiteTypeIcon(type) {
-
-      return SITE_TYPE_ICON[type] || mdiHelp;
+      return SITE.TYPE[type]?.icon || mdiHelp;
     },
   },
   watch: {
@@ -96,12 +91,13 @@ export default {
           />
         </v-sheet>
       </v-col>
-      <v-col cols="4">
-        <div class="d-flex align-center flex-column"
-          v-if="selectedLabel"
-        >
+      <v-col cols="4"
+        v-if="selectedLabel"
+      >
+        <div class="d-flex align-center flex-column">
           <div class="text-subtitle-1">{{ labelName }}</div>
-          <template v-for="site in selectedLabelSites"
+          <template
+            v-for="site in selectedLabelSites"
             :key="site.connectionId"
           >
             <v-card

@@ -13,9 +13,11 @@ export default {
 
     };
   },
-  // computed: {
-
-  // },
+  computed: {
+    displayLayout() {
+      return this.$route.meta.layout !== false;
+    },
+  },
   methods: {
     // ...mapActions('Geopositioning', ['getLabels', 'getUserPosition']),
   },
@@ -30,9 +32,9 @@ export default {
 
 <template>
   <v-layout>
-    <Header />
+    <Header v-if="displayLayout" />
 
-    <Navigation />
+    <Navigation  v-if="displayLayout" />
 
     <v-main>
       <router-view></router-view>

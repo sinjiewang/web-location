@@ -1,9 +1,17 @@
 {
   "Announcement": "公告",
   "Browse": "浏览",
+  "Chat": "聊天",
+  "Close": "关闭",
   "Connect": "连接",
+  "Create": "创建",
+  "Drag to set your position": "拖动以设置您的位置",
   "Hello": "您好",
   "History": "历史",
   "Information": "信息",
-  "Language": "语言"
+  "Language": "语言",
+  "Message Board": "留言板",
+  "Required": "必填",
+  "Title": "标题",
+  "Type": "类型"
 }

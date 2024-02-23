@@ -58,11 +58,12 @@ export default class WebSocketClient extends EventEmitter {
 
   destroy() {
     const { ws } = this;
-    
+
     if (ws) {
       ws.removeEventListener('open', this);
       ws.removeEventListener('close', this);
       ws.removeEventListener('message', this);
+      ws.close();
     }
 
     this.clearTimeout();

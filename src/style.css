@@ -89,6 +89,10 @@ button:focus-visible {
   text-align: center;
 }
 
+.v-field, .v-label, .v-messages {
+  user-select: none;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

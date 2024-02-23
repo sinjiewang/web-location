@@ -1,9 +1,17 @@
 {
   "Announcement": "공고",
   "Browse": "브라우즈",
+  "Chat": "채팅",
+  "Close": "닫기",
   "Connect": "연결",
+  "Create": "생성",
+  "Drag to set your position": "위치를 설정하려면 드래그하세요",
   "Hello": "안녕하세요",
   "History": "역사",
   "Information": "정보",
-  "Language": "언어"
+  "Language": "언어",
+  "Message Board": "게시판",
+  "Required": "필수",
+  "Title": "제목",
+  "Type": "타입"
 }

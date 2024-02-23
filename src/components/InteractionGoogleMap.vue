@@ -58,7 +58,7 @@ export default {
   },
   computed: {
     draggableTitle() {
-      return 'Drag to set your position.';
+      return this.$t('Drag to set your position');
     },
   },
   methods: {
@@ -103,7 +103,7 @@ export default {
       this.setMarker(id, marker);
       this.setMarkerDraggable(marker);
 
-      return { id, marker };
+      return marker;
     },
     removePositionMarker() {
       const { positionMarkerId } = this;
@@ -138,7 +138,7 @@ export default {
 
       this.setMarker(id, marker);
 
-      return { id, marker };
+      return marker;
     },
     updateLabelMarkers(positions=[]) {
       const positionIds = positions.map((position) => this.getLabelMarkerId(position));
@@ -159,6 +159,16 @@ export default {
         .filter((labelId) => labelId !== this.positionMarkerId)
         .forEach((labelId) => this.deleteMaker(labelId));
     },
+    setMapDraggable() {
+      if (this.map) {
+        this.map.setOptions({ draggable: true });
+      }
+    },
+    setMapUndraggable() {
+      if (this.map) {
+      this.map.setOptions({ draggable: false });
+      }
+    },
     onMapDragend() {
       const center = this.map.getCenter();
 
@@ -168,7 +178,6 @@ export default {
       });
     },
     onMarkerDragend(event) {
-      this.removeAllLabelMarker();
       this.$emit('position', {
         lat: event.latLng.lat(),
         lng: event.latLng.lng(),

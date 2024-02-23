@@ -1,7 +1,7 @@
 <script>
 import LANG_LIST from '@/locales/list';
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiTranslate, mdiMap } from '@mdi/js'
+import { mdiTranslate, mdiMap, mdiMapPlus } from '@mdi/js'
 
 export default {
   components: {
@@ -12,27 +12,25 @@ export default {
       items: LANG_LIST,
       mdiTranslate,
       mdiMap,
+      mdiMapPlus,
     };
   },
   computed: {
     locale() {
       return this.$i18n.locale;
     },
-    // language() {
-    //   return LANG_LIST.find(({ value }) => value === this.locale)?.text;
-    // }
+    buildPath() {
+      return this.$router.getRoutes().find(route => route.name === 'Establish').path;
+    },
   },
   methods: {
     selectItem(locale) {
       this.$i18n.locale = locale;
-    }
+    },
+    onMapPlusClick() {
+      window.open(this.buildPath, '_blank');
+    },
   },
-  // watch: {
-
-  // },
-  // async mounted() {
-
-  // },
 }
 </script>
 
@@ -44,12 +42,17 @@ export default {
           <svg-icon type="mdi" :path="mdiMap"></svg-icon>
         </v-col>
         <v-col cols="auto">
+          <v-btn icon
+            @click="onMapPlusClick"
+          >
+            <svg-icon type="mdi" :path="mdiMapPlus"></svg-icon>
+          </v-btn>
           <v-menu offset-y>
             <template v-slot:activator="{ props }">
               <v-btn icon
                 v-bind="props"
               >
-              <svg-icon type="mdi" :path="mdiTranslate"></svg-icon>
+                <svg-icon type="mdi" :path="mdiTranslate"></svg-icon>
               </v-btn>
             </template>
             <v-list>

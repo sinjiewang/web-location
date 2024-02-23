@@ -1,9 +1,17 @@
 {
   "Announcement": "告知",
   "Browse": "閲覧",
+  "Chat": "チャット",
+  "Close": "閉じる",
   "Connect": "接続",
+  "Create": "作る",
+  "Drag to set your position": "位置を設定するためにドラッグしてください",
   "Hello": "こんにちは",
   "History": "歴史",
   "Information": "情報",
-  "Language": "言語"
+  "Language": "言語",
+  "Message Board": "掲示板",
+  "Required": "必須",
+  "Title": "タイトル",
+  "Type": "種類"
 }

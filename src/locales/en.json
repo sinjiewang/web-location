@@ -1,9 +1,17 @@
 {
   "Announcement": "Announcement",
   "Browse": "Browse",
+  "Chat": "Chat",
+  "Close": "Close",
   "Connect": "Connect",
+  "Create": "Create",
+  "Drag to set your position": "Drag to set your position",
   "Hello": "Hello",
   "History": "History",
   "Information": "Information",
-  "Language": "Language"
+  "Language": "Language",
+  "Message Board": "Message Board",
+  "Required": "Required",
+  "Title": "Title",
+  "Type": "Type"
 }
