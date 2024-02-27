@@ -5,7 +5,7 @@
       "execute-api:ManageConnections"
     ],
     "Resource": [
-      "arn:aws:execute-api:ap-northeast-1:301856136276:srz21jd7c7/*/POST/@connections/*"
+      "arn:aws:execute-api:ap-northeast-1:301856136276:k64wydzchi/*/POST/@connections/*"
     ]
   }
 ]

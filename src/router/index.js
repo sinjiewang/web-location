@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Browse from '@/pages/Browse/index.vue';
 import Establish from '@/pages/Establish/index.vue';
+import Chat from '@/pages/Chat/client/index.vue';
 
 const routes = [
   {
@@ -15,6 +16,16 @@ const routes = [
     meta: {
       // requiresAuth: true,
       layout: false,
+    },
+  },
+  {
+    path: '/chat/:connectionId',
+    name: 'Chat',
+    component: Chat,
+    meta: {
+      // requiresAuth: true,
+      layout: false,
+      type: 'chat',
     },
   },
   {

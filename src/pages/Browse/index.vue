@@ -56,6 +56,19 @@ export default {
     getSiteTypeIcon(type) {
       return SITE.TYPE[type]?.icon || mdiHelp;
     },
+
+    getTypeName(type) {
+      return this.$router.getRoutes().find(route => route.meta?.type === type).name;
+    },
+    onClickConnect(connectionId, type) {
+      const name = this.getTypeName(type);
+      const url = this.$router.resolve({
+        name: name, // 假设有一个命名为 User 的路由
+        params: { connectionId }
+      }).href;
+
+      window.open(url, '_blank');
+    },
   },
   watch: {
     labels(value) {
@@ -109,7 +122,9 @@ export default {
               </v-card-title>
               <v-card-text>{{ site.title }}</v-card-text>
               <v-card-actions class="d-flex justify-end">
-                <v-btn color="blue">
+                <v-btn class="bg-blue"
+                  @click="onClickConnect(site.connectionId, site.type)"
+                >
                   {{ connectLabel }}
                 </v-btn>
               </v-card-actions>

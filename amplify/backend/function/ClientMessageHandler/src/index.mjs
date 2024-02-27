@@ -10,7 +10,7 @@ Amplify Params - DO NOT EDIT */
 
 import AWS from 'aws-sdk';
 
-const SiteConnectionWebSocketAPI_URL = 'https://srz21jd7c7.execute-api.ap-northeast-1.amazonaws.com/dev/';
+const SiteConnectionWebSocketAPI_URL = 'https://k64wydzchi.execute-api.ap-northeast-1.amazonaws.com/dev/';
 const apiGateway = new AWS.ApiGatewayManagementApi({
     endpoint: SiteConnectionWebSocketAPI_URL
 });
@@ -26,6 +26,7 @@ export async function handler(event) {
   const statusCode = 200;
   const body = JSON.parse(event.body);
   const { siteId, data } = body;
+  const clientId = event.requestContext.connectionId;
 
   if (!siteId) {
     return { statusCode };
@@ -37,12 +38,12 @@ export async function handler(event) {
   });
 
   if (res.Items && res.Items.length) {
-    await Promise.all(res.Items.map(({ connectionId }) => {    
+    await Promise.all(res.Items.map(({ connectionId }) => {
       return apiGateway.postToConnection({
         ConnectionId: connectionId,
         Data: JSON.stringify({
           action: body.action,
-          clientId: connectionId,
+          clientId,
           data: data
         }),
       }).promise();
@@ -51,4 +52,3 @@ export async function handler(event) {
 
   return { statusCode };
 };
-

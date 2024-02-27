@@ -26,6 +26,7 @@ export async function handler(event) {
   // const { connectionId } = event.requestContext;
   const body = JSON.parse(event.body);
   const { clientId, data } = body;
+  const siteId = event.requestContext.connectionId;
   const statusCode = 200;
 
   if (!clientId) {
@@ -38,12 +39,12 @@ export async function handler(event) {
   });
 
   if (res.Items && res.Items.length) {
-    await Promise.all(res.Items.map(({ connectionId }) => {    
+    await Promise.all(res.Items.map(({ connectionId }) => {
       return apiGateway.postToConnection({
         ConnectionId: connectionId,
         Data: JSON.stringify({
           action: body.action,
-          clientId: connectionId,
+          siteId,
           data: data
         }),
       }).promise();
@@ -52,4 +53,3 @@ export async function handler(event) {
 
   return { statusCode };
 };
-

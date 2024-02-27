@@ -1,15 +1,21 @@
 <script>
 import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
-import { mapActions } from 'vuex';
+import { mapState, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiMapMarkerRightOutline } from '@mdi/js';
 import coordinate from '@/utils/coordinate.js'
 import SITE from '@/constants/site.js';
+import Chat from '@/pages/Chat/site/index.vue';
+
+const APP_MAPPING = {
+  chat: 'Chat'
+};
 
 export default {
   components: {
     SvgIcon,
     InteractionGoogleMap,
+    Chat,
   },
   data() {
     return {
@@ -21,15 +27,22 @@ export default {
       type: null,
       loading: false,
       formValid: false,
-      wsClient: null,
+      appComponent: null,
     };
   },
   computed: {
+    ...mapState('CloudTunnel', ['wsClient']),
     types() {
       return Object.keys(SITE.TYPE).map((type) => ({
         type,
         text: SITE.TYPE[type].name(this.$t),
       }));
+    },
+    labelX() {
+      return this.position?.lat || '';
+    },
+    labelY() {
+      return this.position?.lng || '';
     },
   },
   methods: {
@@ -48,26 +61,17 @@ export default {
 
       this.setUndraggable();
       this.loading = true;
-      this.wsClient = await this.siteConnect({ lat, lng, type, title });
 
-      this._onWsClientClose = () => {
-        this.wsClient.off('close', this._onWsClientClose);
-        this.wsClient = null;
-        this._onWsClientClose = null;
-      };
-      this.wsClient.on('close', this._onWsClientClose);
+      await this.siteConnect({ lat, lng, type, title });
+
+      this.appComponent = APP_MAPPING[type];
       this.loading = false;
     },
     onClickDisconnect() {
-      const { wsClient, _onWsClientClose } = this;
-
-      if (wsClient && _onWsClientClose) {
-        _onWsClientClose();
-      }
-
       setTimeout(() => {
         this.loading = false;
         this.setDraggable();
+        this.appComponent = null;
       }, 1000)
       this.loading = true;
       this.disconnect();
@@ -96,7 +100,7 @@ export default {
 <template>
   <!-- <v-container class="bg-surface-variant"> -->
     <v-row no-gutters>
-      <v-col cols="8">
+      <v-col cols="12" md="8">
         <v-sheet class="ma-2 pa-2">
           <component
             ref="googleMap"
@@ -107,7 +111,7 @@ export default {
           />
         </v-sheet>
       </v-col>
-      <v-col cols="4">
+      <v-col cols="12" md="4">
         <!-- <v-row cols="8">
           <svg-icon type="mdi" :path="mdiMapMarkerRightOutline"></svg-icon>
         </v-row> -->
@@ -121,6 +125,30 @@ export default {
               <svg-icon type="mdi" :path="mdiMapMarkerRightOutline"></svg-icon>
               <span>{{ $t('Drag to set your position') }}</span>
             </div>
+            <v-row class="mb-4">
+              <v-col
+                cols="12"
+                md="6"
+              >
+                <v-text-field
+                  v-model="labelX"
+                  label="x"
+                  disabled
+                  hide-details
+                ></v-text-field>
+              </v-col>
+              <v-col
+                cols="12"
+                md="6"
+              >
+                <v-text-field
+                  v-model="labelY"
+                  label="y"
+                  disabled
+                  hide-details
+                ></v-text-field>
+              </v-col>
+            </v-row>
             <v-select
               v-model="type"
               :label="$t('Type')"
@@ -162,6 +190,12 @@ export default {
           </v-container>
         </v-form>
       </v-col>
+    </v-row>
+    <v-row no-gutters>
+      <component
+        :tunnel="wsClient"
+        :is="appComponent"
+      ></component>
     </v-row>
   <!-- </v-container> -->
 </template>

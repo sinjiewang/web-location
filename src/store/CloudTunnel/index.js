@@ -1,9 +1,8 @@
-import APIGatewayClient from '@/utils/APIGatewayClient';
+import APIGatewayConnect from '@/utils/APIGatewayConnect';
 
 export default {
   namespaced: true,
   state: () => ({
-    connected: true,
     wsClient: null,
   }),
   // getters: {
@@ -12,25 +11,15 @@ export default {
   actions: {
     connect ({ state, dispatch }, url) {
       return new Promise((reslove, reject) => {
-        const wsClient = new APIGatewayClient({ url });
+        const wsClient = new APIGatewayConnect({ url });
 
-        wsClient.on('open', () => {
-          reslove(wsClient);
-          state.wsClient = wsClient;
-        });
         wsClient.on('close', () => {
           reject();
           state.wsClient = null;
         });
-        wsClient.on('message', (event) => {
-          const { action, type, data, message } = JSON.parse(event.data);
+        wsClient.connect().then(reslove, reject);
 
-          if (message) console.warn(message);
-
-          const handler = `${action}${type[0].toUpperCase() + type.substring(1)}`;
-
-          dispatch(handler, data);
-        });
+        state.wsClient = wsClient;
       })
     },
     async clientConnect({ state, dispatch }, position=null) {
@@ -53,11 +42,10 @@ export default {
         return Promise.resolve(state.wsClient);
       }
 
-      let url = import.meta.env.VITE_AWS_API_GATEWAY_SITE_URL;
-
-      url = `${url}?lat=${lat}&lng=${lng}&type=${type}`;
+      let  url = `${import.meta.env.VITE_AWS_API_GATEWAY_SITE_URL}?lat=${lat}&lng=${lng}&type=${type}`;
 
       const wsClient = await dispatch('connect', url);
+
       await dispatch('updateSiteTitle', title);
 
       return wsClient;
@@ -68,21 +56,27 @@ export default {
         state.wsClient = null;
       }
     },
-    async updateSiteTitle({ dispatch }, title ) {
-      const wsSite = await dispatch('siteConnect');
+    async sendBySite({ dispatch }, options) {
+      const wsClient = await dispatch('siteConnect');
 
-      wsSite.send({
+      wsClient.send(options);
+    },
+    async updateSiteTitle({ dispatch }, title ) {
+     await dispatch('sendBySite', {
         action: 'update',
         data: { title },
-      })
+      });
     },
-    async updateClientPosition({ dispatch }, { lat, lng }) {
+    async sendByClient({ dispatch }, options) {
       const wsClient = await dispatch('clientConnect');
 
-      wsClient.send({
+      wsClient.send(options);
+    },
+    async updateClientPosition({ dispatch }, { lat, lng }) {
+      await dispatch('sendByClient', {
         action: 'position',
         data: { lat, lng },
-      })
+      });
     },
     addPosition({ commit }, position) {
       commit('Geopositioning/addLabel', position, { root: true });
