@@ -9,8 +9,8 @@ export default {
   data() {
     return {
       mdiAccountCircle,
-      userName: 'Test Name',
-      userEmail: 'test@test.com',
+      userName: 'Guest',
+      userEmail: '',
     };
   },
   computed: {

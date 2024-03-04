@@ -31,15 +31,17 @@ export default {
 </script>
 
 <template>
-  <v-layout>
-    <Header v-if="displayLayout" />
+  <v-app>
+    <v-layout>
+      <Header v-if="displayLayout" />
 
-    <Navigation  v-if="displayLayout" />
+      <Navigation  v-if="displayLayout" />
 
-    <v-main>
-      <router-view></router-view>
-    </v-main>
-  </v-layout>
+      <v-main>
+        <router-view></router-view>
+      </v-main>
+    </v-layout>
+  </v-app>
 </template>
 
 <style scoped>

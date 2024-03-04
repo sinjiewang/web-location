@@ -17,6 +17,9 @@ export default {
           reject();
           state.wsClient = null;
         });
+        wsClient.on('position', (event) => {
+          dispatch('onposition', event);
+        });
         wsClient.connect().then(reslove, reject);
 
         state.wsClient = wsClient;
@@ -74,9 +77,16 @@ export default {
     },
     async updateClientPosition({ dispatch }, { lat, lng }) {
       await dispatch('sendByClient', {
+        //TODO 'position' -> 'update'
         action: 'position',
         data: { lat, lng },
       });
+    },
+    onposition({ dispatch }, event) {
+      const { action, data } = event;
+      const operateName = `${action}Position`;
+
+      dispatch(operateName, data);
     },
     addPosition({ commit }, position) {
       commit('Geopositioning/addLabel', position, { root: true });

@@ -1,4 +1,8 @@
 import EventEmitter from 'events';
+import DataChannelWrapper from './DataChannelWrapper';
+import { getTagged } from './logger';
+
+const Log = getTagged('connection:rtc-client');
 
 export default class RTCPeerSite extends EventEmitter {
   constructor({ signaling }) {
@@ -34,6 +38,12 @@ export default class RTCPeerSite extends EventEmitter {
       if (['failed', 'disconnected', 'closed'].includes(peerConnection.iceConnectionState)) {
         console.error('WebRTC disconnect', clientId);
         // Handle the failure
+        const { channels } = peerConnectionMap[clientId];
+
+        Object.keys(channels).forEach((label) => {
+          channels[label].removeAllListeners();
+        });
+
         delete peerConnectionMap[clientId];
 
         this.emit('diconnect', { clientId });
@@ -41,17 +51,17 @@ export default class RTCPeerSite extends EventEmitter {
     };
 
     peerConnection.ondatachannel = (event) => {
-      const dataChannel = event.channel;
-
+      const dataChannel = new DataChannelWrapper(event.channel);
+      const { label } = event.channel;
       if (peerConnection.channels) {
         peerConnection.channels[dataChannel.label] = dataChannel
       } else {
         peerConnection.channels = {
-          [dataChannel.label]: dataChannel,
+          [label]: dataChannel,
         }
       }
 
-      console.log('datachannel opened')
+      this.emit('connect', { clientId });
     };
 
     await peerConnection.setRemoteDescription(desc);
@@ -69,8 +79,10 @@ export default class RTCPeerSite extends EventEmitter {
         .forEach((desc) => this.addIceCandidate({ clientId, desc }));
       delete this.$iceBufferMap[clientId];
     }
+  }
 
-    this.emit('connect', { clientId, peerConnection });
+  getPeerConnection(clientId) {
+    return this.peerConnectionMap[clientId];
   }
 
   addIceCandidate({ clientId, desc }) {
@@ -85,5 +97,37 @@ export default class RTCPeerSite extends EventEmitter {
     } else {
       $iceBufferMap[clientId] = [desc];
     }
+  }
+
+  async createDataChannel({ clientId, label, options = { /* ordered: true */ }}={}) {
+    const { peerConnectionMap } = this;
+    const peerConnection = peerConnectionMap[clientId];
+
+    if (!peerConnection) {
+      return Promise.reject(new Error('WebRTC disconnect'));
+    }
+
+    if (peerConnection.channels[label]) {
+      return Promise.resolve(peerConnection.channels[label]);
+    }
+
+    return new Promise((resolve) => {
+      const channel = new DataChannelWrapper(peerConnection.createDataChannel(label, options));
+      channel.createTime = new Date().getTime();
+      channel.on('open', () => {
+        channel.openedTime = new Date().getTime() - channel.createTime;
+        Log.log(`Data channel: ${label} opened in ${channel.openedTime} ms.`);
+        peerConnection.channels[label] = channel;
+
+        resolve(channel);
+      });
+      channel.on('close', () => {
+        if (peerConnection.channels[label]) {
+          Log.warn(`Data channel: ${label} closed. Trying to close session: ${channel.sessionId}`);
+
+          delete peerConnection.channels[label];
+        }
+      });
+    });
   }
 }

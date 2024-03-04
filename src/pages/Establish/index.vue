@@ -4,8 +4,11 @@ import { mapState, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiMapMarkerRightOutline } from '@mdi/js';
 import coordinate from '@/utils/coordinate.js'
+
 import SITE from '@/constants/site.js';
 import Chat from '@/pages/Chat/site/index.vue';
+
+import { v4 as uuidv4 } from 'uuid';
 
 const APP_MAPPING = {
   chat: 'Chat'
@@ -21,13 +24,16 @@ export default {
     return {
       mdiMapMarkerRightOutline,
       mapComponent: null,
+      thumbnailComponent: null,
       positionMarker: null,
       position: null,
-      title: null,
-      type: null,
+      id: null,
+      title: 'TEST',
+      type: 'chat',
       loading: false,
       formValid: false,
       appComponent: null,
+      step: 1,
     };
   },
   computed: {
@@ -61,20 +67,32 @@ export default {
 
       this.setUndraggable();
       this.loading = true;
+      this.id = uuidv4();
 
       await this.siteConnect({ lat, lng, type, title });
 
+      this.nextStep();
       this.appComponent = APP_MAPPING[type];
       this.loading = false;
+
+      this.setThumbnailMap();
     },
     onClickDisconnect() {
       setTimeout(() => {
+        this.previousStep();
         this.loading = false;
         this.setDraggable();
         this.appComponent = null;
       }, 1000)
       this.loading = true;
       this.disconnect();
+    },
+    setThumbnailMap() {
+      // this.thumbnailComponent = 'InteractionGoogleMap';
+      // this.$nextTick(() => {
+      //   this.positionMarker = this.$refs.thumbnailMap.addPositionMarker(this.position);
+      //   this.$refs.thumbnailMap.setMapUndraggable();
+      // });
     },
     setDraggable() {
       this.$refs.googleMap.setMapDraggable();
@@ -83,6 +101,12 @@ export default {
     setUndraggable() {
       this.$refs.googleMap.setMapUndraggable();
       this.$refs.googleMap.setMarkerUndraggable(this.positionMarker);
+    },
+    nextStep() {
+      this.step = Math.min(this.step + 1, 2);
+    },
+    previousStep() {
+      this.step = Math.max(this.step - 1, 1);
     },
   },
   async mounted() {
@@ -98,7 +122,11 @@ export default {
 </script>
 
 <template>
-  <!-- <v-container class="bg-surface-variant"> -->
+  <v-window v-model="step">
+
+  <!-- config window -->
+  <v-window-item :value="1">
+  <v-container>
     <v-row no-gutters>
       <v-col cols="12" md="8">
         <v-sheet class="ma-2 pa-2">
@@ -112,9 +140,6 @@ export default {
         </v-sheet>
       </v-col>
       <v-col cols="12" md="4">
-        <!-- <v-row cols="8">
-          <svg-icon type="mdi" :path="mdiMapMarkerRightOutline"></svg-icon>
-        </v-row> -->
         <v-form
           v-model="formValid"
           ref="form"
@@ -123,7 +148,7 @@ export default {
           <v-container>
             <div class="d-flex mb-4">
               <svg-icon type="mdi" :path="mdiMapMarkerRightOutline"></svg-icon>
-              <span>{{ $t('Drag to set your position') }}</span>
+              <span class="ml-1">{{ $t('Drag to set your position') }}</span>
             </div>
             <v-row class="mb-4">
               <v-col
@@ -168,7 +193,6 @@ export default {
             ></v-text-field>
             <div class="d-flex flex-column">
               <v-btn
-                v-if="!wsClient"
                 :disabled="!formValid"
                 :loading="loading"
                 class="mt-4 form-btn"
@@ -177,27 +201,106 @@ export default {
               >
               {{ $t('Create') }}
               </v-btn>
-              <v-btn
-                v-else
-                class="mt-4 form-btn"
-                color="red"
-                :loading="loading"
-                @click="onClickDisconnect"
-              >
-              {{ $t('Close') }}
-              </v-btn>
             </div>
           </v-container>
         </v-form>
       </v-col>
     </v-row>
-    <v-row no-gutters>
-      <component
-        :tunnel="wsClient"
-        :is="appComponent"
-      ></component>
+  </v-container>
+  </v-window-item>
+
+  <!-- module window -->
+  <v-window-item :value="2">
+    <v-container>
+      <v-row no-gutters>
+        <v-col cols="12">
+          <v-form class="site-form">
+            <v-row no-gutters>
+              <v-col
+                cols="12"
+                md="1"
+              >
+              <component
+                ref="thumbnailMap"
+                :is="thumbnailComponent"
+                :center="position"
+              />
+              </v-col>
+              <v-col
+                cols="12"
+                md="1"
+              >
+                <v-text-field
+                  v-model="labelX"
+                  label="x"
+                  disabled
+                  hide-details
+                ></v-text-field>
+              </v-col>
+              <v-col
+                cols="12"
+                md="1"
+              >
+                <v-text-field
+                  v-model="labelY"
+                  label="y"
+                  disabled
+                  hide-details
+                ></v-text-field>
+              </v-col>
+              <v-col
+                cols="12"
+                md="1"
+              >
+                <v-select
+                  v-model="type"
+                  :label="$t('Type')"
+                  :items="types"
+                  item-title="text"
+                  item-value="type"
+                  disabled
+                >
+                </v-select>
+              </v-col>
+              <v-col
+                cols="12"
+                md="7"
+              >
+                <v-text-field
+                  v-model="title"
+                  :label="$t('Title')"
+                  hide-details
+                  :rules="[v => !!v || $t('Required')]"
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col
+                cols="12"
+                md="1"
+              >
+                <v-btn
+                  class="form-btn"
+                  color="red"
+                  :loading="loading"
+                  @click="onClickDisconnect"
+                >
+                {{ $t('Close') }}
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-col>
+      </v-row>
+      <v-divider></v-divider>
+      <v-row no-gutters class="app-content">
+        <component
+          :tunnel="wsClient"
+          :is="appComponent"
+        ></component>
     </v-row>
-  <!-- </v-container> -->
+    </v-container>
+  </v-window-item>
+  </v-window>
 </template>
 
 <style scoped>
@@ -211,6 +314,10 @@ export default {
 
 .loader {
   animation: spin 2s linear infinite;
+}
+
+.app-content {
+  height: calc(100vh - 79px);
 }
 
 @keyframes spin {

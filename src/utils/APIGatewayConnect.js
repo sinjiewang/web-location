@@ -1,6 +1,12 @@
 import EventEmitter from 'events';
 
-const KEEPALIVE_TIMEOUT = 1000 * 60 * 9; // 9 min
+const KEEPALIVE_TIMEOUT = 1000 * 60 * 0.5; // 9 min
+const WS_READY_STATE = {
+  CONNECTING: 0,
+  OPEN: 1,
+  CLOSING: 2,
+  CLOSED: 3,
+};
 
 export default class APIGatewayConnect extends EventEmitter {
   _timeout;
@@ -10,6 +16,12 @@ export default class APIGatewayConnect extends EventEmitter {
 
     this.url = url;
     this.protocol = protocol;
+  }
+
+  get connected() {
+    const { ws } = this;
+
+    return ws && ws.readyState === WS_READY_STATE.OPEN;
   }
 
   handleEvent(event) {
@@ -55,17 +67,22 @@ export default class APIGatewayConnect extends EventEmitter {
   async send(message) {
     await this.connect();
 
-    this.ws.send(JSON.stringify(message));
-    this.keepAlive();
+    if (this.connected) {
+      this.ws.send(JSON.stringify(message));
+      this.keepAlive();
+    }
   }
 
   keepAlive() {
     this.clearTimeout();
-    this._timeout = setTimeout(() => {
-      this.send({
-        action: 'keep-alive',
-      });
-    }, KEEPALIVE_TIMEOUT);
+
+    if (this.connected) {
+      this._timeout = setTimeout(() => {
+        this.send({
+          action: 'keep-alive',
+        });
+      }, KEEPALIVE_TIMEOUT);
+    }
   }
 
   clearTimeout() {
@@ -83,6 +100,14 @@ export default class APIGatewayConnect extends EventEmitter {
       this.onclose();
 
       ws.close();
+    }
+  }
+
+  onmessage(event) {
+    const { action, type, data } = JSON.parse(event.data);
+
+    if (type) {
+      this.emit(type, { action, type, data });
     }
   }
 

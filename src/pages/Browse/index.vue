@@ -63,7 +63,7 @@ export default {
     onClickConnect(connectionId, type) {
       const name = this.getTypeName(type);
       const url = this.$router.resolve({
-        name: name, // 假设有一个命名为 User 的路由
+        name: name,
         params: { connectionId }
       }).href;
 
@@ -89,7 +89,7 @@ export default {
 </script>
 
 <template>
-  <!-- <v-container class="bg-surface-variant"> -->
+  <v-container>
     <v-row no-gutters>
       <v-col cols="8">
         <v-sheet class="ma-2 pa-2">
@@ -134,7 +134,7 @@ export default {
         </div>
       </v-col>
     </v-row>
-  <!-- </v-container> -->
+  </v-container>
 </template>
 
 <style scoped>

@@ -13,6 +13,11 @@ export default class Signaling extends EventEmitter {
 
   onmessage(event) {
     const { action, data, clientId, siteId } = JSON.parse(event.data);
+
+    if (!data || !data.sdp) {
+      return;
+    }
+
     const actionData = {
       desc: data.sdp,
     };
