@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 import DataChannelWrapper from './DataChannelWrapper';
-import { getTagged } from './logger';
+import { getTagged } from '../logger';
 
 const Log = getTagged('connection:rtc-client');
 
@@ -40,13 +40,15 @@ export default class RTCPeerSite extends EventEmitter {
         // Handle the failure
         const { channels } = peerConnectionMap[clientId];
 
-        Object.keys(channels).forEach((label) => {
-          channels[label].removeAllListeners();
-        });
+        if (channels) {
+          Object.keys(channels).forEach((label) => {
+            channels[label].removeAllListeners();
+          });
 
-        delete peerConnectionMap[clientId];
+          delete peerConnectionMap[clientId];
 
-        this.emit('diconnect', { clientId });
+          this.emit('diconnect', { clientId });
+        }
       }
     };
 

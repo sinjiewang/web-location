@@ -1,21 +1,22 @@
 <script>
 import { mapState, mapActions } from 'vuex';
 import ClientSignaling from '@/utils/Signaling/ClientSignaling.js';
-import RTCPeerClient from '@/utils/RTCPeerClient.js';
+import RTCPeerClient from '@/utils/RTCPeer/RTCPeerClient.js';
 
 import ChatProtocol from '../utils/ChatProtocol';
-import MessageWindow from '../MessageWindow.vue';
+import ChatWindow from '../ChatWindow.vue';
 
 export default {
   components: {
-    MessageWindow,
+    ChatWindow,
   },
   data() {
     return {
+      nickName: this.$route.query.nickName || 'Guest',
       siteId: this.$route.params.connectionId,
       loading: true,
       channel: null,
-      newMessage: 'TESTTEST',
+      participants: {},
     };
   },
   computed: {
@@ -36,9 +37,12 @@ export default {
       const chatProtocol = new ChatProtocol({ dataChannel })
 
       chatProtocol.on('message', (event) => this.onmessage(event));
+      chatProtocol.on('register', (event) => this.onregister(event));
+      chatProtocol.on('unregister', (event) => this.onunregister(event));
       chatProtocol.on('close', () => this.onclose());
 
       this.channel = chatProtocol;
+      this.register();
     },
     onmessage(data) {
       const { sender, time, message, avatar } = data;
@@ -51,14 +55,37 @@ export default {
       });
     },
     onclose() {
+      this.channel.removeAllListeners();
       this.channel = null;
+      // disconnect handle
+      // TODO
     },
-    sendMessage() {
+    onregister(data) {
+      const { name, avatar, clientId, time } = data;
+
+      this.participants[clientId] = { name, avatar };
+
+      this.$refs.messageWindow.appendMessage({
+        message: this.$t('has joined', { name }),
+        time,
+      });
+    },
+    onunregister(data) {
+      const { clientId, time } = data;
+      const participant = this.participants[clientId];
+
+      if (participant) {
+        delete this.participants[clientId];
+        this.$refs.messageWindow.appendMessage({
+          message: this.$t('has left', { name: participant.name }),
+          time,
+        });
+      }
+    },
+    sendMessage(message) {
       const time = Date.now();
-      const message = this.newMessage;
 
       this.channel.sendMessage({ message, time });
-      this.newMessage = '';
       this.appendMessage({
         sender: this.$t('You'),
         time,
@@ -68,6 +95,11 @@ export default {
     },
     appendMessage({ sender, time, message, avatar, align }) {
       this.$refs.messageWindow.appendMessage({ sender, time, message, avatar, align });
+    },
+    register() {
+      const name = this.nickName;
+
+      this.channel.sendRegister({ name });
     },
   },
   async mounted() {
@@ -83,39 +115,24 @@ export default {
 
 <template>
   <v-app>
-    <v-container>
-      <MessageWindow ref="messageWindow" class="message-block" />
-      <v-row>
-        <v-col cols="10">
-          <v-text-field
-            v-model="newMessage"
-            :label="$t('Type a message')"
-            filled
-            @keyup.enter="sendMessage"
-          ></v-text-field>
-        </v-col>
-        <v-col cols="2">
-          <v-btn
-            class="form-btn"
-            color="primary"
-            @click="sendMessage"
-            :disabled="!newMessage">{{ $t('Send') }}</v-btn>
-        </v-col>
-      </v-row>
-    </v-container>
+    <ChatWindow
+      ref="messageWindow"
+      class="message-block"
+      @send="sendMessage">
+    </ChatWindow>
   </v-app>
 </template>
 
 <style scoped>
 .message-block {
-  height: calc(100vh - 126px);
+  height: 100vh;
 }
 .v-btn.form-btn {
   height: 56px;
   width: 100%;
 }
 
-:deep .v-avatar.v-avatar--density-default {
+:deep(.v-avatar.v-avatar--density-default) {
   width: 40px;
   height: 40px;
 }

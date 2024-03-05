@@ -1,6 +1,6 @@
 <script>
 import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
-import { mapGetters, mapActions } from 'vuex';
+import { mapState, mapGetters, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiHelp } from '@mdi/js';
 import SITE from '@/constants/site.js';
@@ -20,6 +20,7 @@ export default {
     };
   },
   computed: {
+    ...mapState('Account', ['nickName']),
     ...mapGetters('Geopositioning', ['labels']),
     labelName() {
       const { lat, lng } = this.selectedLabel || {};
@@ -62,9 +63,11 @@ export default {
     },
     onClickConnect(connectionId, type) {
       const name = this.getTypeName(type);
+      const { nickName } = this;
       const url = this.$router.resolve({
         name: name,
-        params: { connectionId }
+        params: { connectionId },
+        query: { nickName },
       }).href;
 
       window.open(url, '_blank');

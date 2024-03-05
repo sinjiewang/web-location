@@ -296,6 +296,7 @@ export default {
         <component
           :tunnel="wsClient"
           :is="appComponent"
+          :title="title"
         ></component>
     </v-row>
     </v-container>

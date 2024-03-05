@@ -1,4 +1,4 @@
-import { getTagged } from './logger';
+import { getTagged } from '../logger';
 import EventEmitter from 'events';
 
 const Log = getTagged('connection:data-channel');
