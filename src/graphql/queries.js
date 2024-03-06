@@ -10,9 +10,8 @@ export const getPosition = /* GraphQL */ `
       sites(limit: $limit, nextToken: $nextToken) {
         nextToken
         items {
-          connectionId
+          siteId
           createdAt
-          id
           positionId
           title
           type
@@ -60,6 +59,7 @@ export const getSiteConnection = /* GraphQL */ `
       title
       type
       connectionId
+      siteId
       positionId
       position {
         positionId
@@ -87,6 +87,7 @@ export const listSiteConnections = /* GraphQL */ `
         title
         type
         connectionId
+        siteId
         positionId
         createdAt
         updatedAt
@@ -213,6 +214,38 @@ export const siteConnectionsByConnectionId = /* GraphQL */ `
         title
         type
         connectionId
+        siteId
+        positionId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const siteConnectionsBySiteId = /* GraphQL */ `
+  query SiteConnectionsBySiteId(
+    $siteId: String!
+    $sortDirection: ModelSortDirection
+    $filter: ModelSiteConnectionFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    siteConnectionsBySiteId(
+      siteId: $siteId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        title
+        type
+        connectionId
+        siteId
         positionId
         createdAt
         updatedAt
@@ -243,6 +276,7 @@ export const siteConnectionsByPositionId = /* GraphQL */ `
         title
         type
         connectionId
+        siteId
         positionId
         createdAt
         updatedAt

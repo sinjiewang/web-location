@@ -1,5 +1,101 @@
 {
-  "key1": "value1",
-  "key2": "value2",
-  "key3": "value3"
+  "headers": {
+      "Accept-Encoding": "gzip, deflate, br, zstd",
+      "Accept-Language": "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+      "Cache-Control": "no-cache",
+      "Host": "k64wydzchi.execute-api.ap-northeast-1.amazonaws.com",
+      "Origin": "http://localhost:5173",
+      "Pragma": "no-cache",
+      "Sec-WebSocket-Extensions": "permessage-deflate; client_max_window_bits",
+      "Sec-WebSocket-Key": "P0kDO1jarhu7ic6wlGuvqQ==",
+      "Sec-WebSocket-Version": "13",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+      "X-Amzn-Trace-Id": "Root=1-65e6bc25-52ebf73b68f3ec0478aeb0d4",
+      "X-Forwarded-For": "36.226.145.42",
+      "X-Forwarded-Port": "443",
+      "X-Forwarded-Proto": "https"
+  },
+  "multiValueHeaders": {
+      "Accept-Encoding": [
+          "gzip, deflate, br, zstd"
+      ],
+      "Accept-Language": [
+          "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7"
+      ],
+      "Cache-Control": [
+          "no-cache"
+      ],
+      "Host": [
+          "k64wydzchi.execute-api.ap-northeast-1.amazonaws.com"
+      ],
+      "Origin": [
+          "http://localhost:5173"
+      ],
+      "Pragma": [
+          "no-cache"
+      ],
+      "Sec-WebSocket-Extensions": [
+          "permessage-deflate; client_max_window_bits"
+      ],
+      "Sec-WebSocket-Key": [
+          "P0kDO1jarhu7ic6wlGuvqQ=="
+      ],
+      "Sec-WebSocket-Version": [
+          "13"
+      ],
+      "User-Agent": [
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+      ],
+      "X-Amzn-Trace-Id": [
+          "Root=1-65e6bc25-52ebf73b68f3ec0478aeb0d4"
+      ],
+      "X-Forwarded-For": [
+          "36.226.145.42"
+      ],
+      "X-Forwarded-Port": [
+          "443"
+      ],
+      "X-Forwarded-Proto": [
+          "https"
+      ]
+  },
+  "queryStringParameters": {
+      "lat": "24.962662",
+      "lng": "121.346458",
+      "siteId": "h94UM28vs5gryWFK9yeqxE",
+      "type": "chat"
+  },
+  "multiValueQueryStringParameters": {
+      "lat": [
+          "24.962662"
+      ],
+      "lng": [
+          "121.346458"
+      ],
+      "siteId": [
+          "h94UM28vs5gryWFK9yeqxE"
+      ],
+      "type": [
+          "chat"
+      ]
+  },
+  "requestContext": {
+      "routeKey": "$connect",
+      "eventType": "CONNECT",
+      "extendedRequestId": "UJJV_GvGNjMFWgQ=",
+      "requestTime": "05/Mar/2024:06:31:02 +0000",
+      "messageDirection": "IN",
+      "stage": "dev",
+      "connectedAt": 1709620262008,
+      "requestTimeEpoch": 1709620262010,
+      "identity": {
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          "sourceIp": "36.226.145.42"
+      },
+      "requestId": "UJJV_GvGNjMFWgQ=",
+      "domainName": "k64wydzchi.execute-api.ap-northeast-1.amazonaws.com",
+      "connectionId": "UJJV_d3yNjMCJNw=",
+      "apiId": "k64wydzchi"
+  },
+  "isBase64Encoded": false
 }

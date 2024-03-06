@@ -19,7 +19,7 @@ const routes = [
     },
   },
   {
-    path: '/chat/:connectionId',
+    path: '/chat/:siteId',
     name: 'Chat',
     component: Chat,
     meta: {

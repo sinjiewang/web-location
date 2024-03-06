@@ -40,12 +40,12 @@ export default {
 
       return wsClient;
     },
-    async siteConnect({ state, dispatch }, { lat=0, lng=0, type='', title='' }={}) {
+    async siteConnect({ state, dispatch }, { siteId='', lat=0, lng=0, type='', title='' }={}) {
       if (state.wsClient) {
         return Promise.resolve(state.wsClient);
       }
 
-      let  url = `${import.meta.env.VITE_AWS_API_GATEWAY_SITE_URL}?lat=${lat}&lng=${lng}&type=${type}`;
+      let  url = `${import.meta.env.VITE_AWS_API_GATEWAY_SITE_URL}?siteId=${siteId}&lat=${lat}&lng=${lng}&type=${type}`;
 
       const wsClient = await dispatch('connect', url);
 

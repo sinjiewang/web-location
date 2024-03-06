@@ -12,19 +12,40 @@ export default {
   },
   data() {
     return {
-      nickName: this.$route.query.nickName || 'Guest',
-      siteId: this.$route.params.connectionId,
-      loading: true,
+      nickName: this.$route.query.nickName,
+      showNicknameDialog: !this.$route.query.nickName,
+      showDisconnectedDialog: false,
+      siteId: this.$route.params.siteId,
+      loading: false,
       channel: null,
       participants: {},
     };
   },
   computed: {
     ...mapState('CloudTunnel', ['wsClient']),
+    connected() {
+      return this.channel;
+    },
+    disconnected() {
+      return !this.connected;
+    },
   },
   methods: {
     ...mapActions('CloudTunnel', ['clientConnect', 'disconnect']),
     async init() {
+      this.loading = true;
+
+      try {
+        await this.clientConnect();
+        await this.peerConnect();
+      } catch (err) {
+        console.error('init failed', err);
+      }
+
+      this.loading = false;
+      this.disconnect();
+    },
+    async peerConnect() {
       const { wsClient, siteId } = this;
       const signaling = new ClientSignaling({ tunnel: wsClient });
       const rtcConnection = new RTCPeerClient({
@@ -57,18 +78,32 @@ export default {
     onclose() {
       this.channel.removeAllListeners();
       this.channel = null;
-      // disconnect handle
-      // TODO
+      this.showDisconnectedDialog = true;
+      this.$refs.messageWindow.appendMessage({
+        message: `Host ${this.$t('Disconnected')}`,
+        time: Date.now(),
+      });
     },
     onregister(data) {
       const { name, avatar, clientId, time } = data;
 
       this.participants[clientId] = { name, avatar };
 
-      this.$refs.messageWindow.appendMessage({
-        message: this.$t('has joined', { name }),
-        time,
-      });
+      if (clientId === 'HOST') {
+        this.$refs.messageWindow.appendMessage({
+          message: `${this.$t('has joined')} (${name})`,
+          time,
+        });
+        this.$refs.messageWindow.appendMessage({
+          message: this.$t('has joined', { name: 'Host' }),
+          time,
+        });
+      } else {
+        this.$refs.messageWindow.appendMessage({
+          message: this.$t('has joined', { name }),
+          time,
+        });
+      }
     },
     onunregister(data) {
       const { clientId, time } = data;
@@ -101,35 +136,110 @@ export default {
 
       this.channel.sendRegister({ name });
     },
+    async onClickReconnect() {
+      this.showDisconnectedDialog = false;
+
+      await this.init();
+
+      this.loading = false;
+    },
+    onClickCloseWindow() {
+      window.close();
+    },
+    onClickClose() {
+      this.showNicknameDialog = false;
+      this.init();
+    }
   },
-  async mounted() {
-    await this.clientConnect();
-    await this.init();
-
-    this.loading = false;
-
-    this.disconnect();
+  mounted() {
+    if (this.nickName) {
+      this.init();
+    } else {
+      this.showNicknameDialog = true;
+    }
   },
 }
 </script>
 
 <template>
   <v-app>
-    <ChatWindow
-      ref="messageWindow"
-      class="message-block"
-      @send="sendMessage">
-    </ChatWindow>
+    <v-container class="fill-height" fluid>
+      <ChatWindow
+        ref="messageWindow"
+        class="fill-height-100"
+        disabled
+        @send="sendMessage">
+      </ChatWindow>
+    </v-container>
+
+    <v-overlay
+      v-model="loading"
+      class="d-flex align-center justify-center"
+    >
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
+
+    <v-dialog
+      v-model="showDisconnectedDialog"
+      persistent
+      max-width="400px"
+    >
+      <v-card>
+        <v-card-text>
+          {{ $t('Disconnected from the Host') }}
+        </v-card-text>
+        <v-card-actions class="d-flex align-stretch">
+          <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            @click="onClickReconnect"
+          >
+            {{ $t('Reconnect') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="elevated"
+            @click="onClickCloseWindow"
+          >
+            {{ $t('Close Window') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog
+      v-model="showNicknameDialog"
+      persistent
+      max-width="400px"
+    >
+      <v-card>
+        <v-card-text>
+          <v-text-field
+            v-model="nickName"
+            :label="$t('Please enter your nickname')"
+            filled
+          ></v-text-field>
+        </v-card-text>
+        <v-card-actions class="d-flex align-stretch">
+          <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            :disabled="!nickName"
+            @click="onClickClose"
+          >
+            {{ $t('Close') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
 <style scoped>
-.message-block {
-  height: 100vh;
-}
-.v-btn.form-btn {
-  height: 56px;
-  width: 100%;
+.fill-height-100 {
+  height: 100%;
 }
 
 :deep(.v-avatar.v-avatar--density-default) {

@@ -132,4 +132,15 @@ export default class RTCPeerSite extends EventEmitter {
       });
     });
   }
+
+  close() {
+    const { peerConnectionMap } = this;
+
+    Object.keys(peerConnectionMap)
+      .forEach((clientId) => {
+        peerConnectionMap[clientId].close();
+
+        console.log('peerConnection', clientId, 'closed')
+      });
+  }
 }

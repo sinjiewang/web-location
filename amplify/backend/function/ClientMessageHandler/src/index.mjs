@@ -33,7 +33,7 @@ export async function handler(event) {
   }
 
   const ddbSiteConnection = new DdbSiteConnection();
-  const res = await ddbSiteConnection.queryByConnectionId({ connectionId: siteId }).catch(err => {
+  const res = await ddbSiteConnection.queryBySiteId({ siteId }).catch(err => {
     console.error('DdbSiteConnection.query fail: ', err);
   });
 

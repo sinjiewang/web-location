@@ -132,7 +132,7 @@ export default {
       </v-list>
     </v-card>
     <v-row>
-      <v-col cols="10">
+      <v-col cols="9" md="10">
         <v-text-field
           v-model="newMessage"
           :label="$t('Type a message')"
@@ -140,7 +140,7 @@ export default {
           @keyup.enter="sendMessage"
         ></v-text-field>
       </v-col>
-      <v-col cols="2">
+      <v-col cols="3" md="2">
         <v-btn
           class="form-btn"
           color="primary"
@@ -168,6 +168,7 @@ export default {
 
 .message-block {
   height: calc(100% - 102px);
+  overflow: auto;
 }
 
 </style>

@@ -31,9 +31,12 @@ export default class ChatProtocol extends EventEmitter {
 
   onmessage(event) {
     const { data, type } = JSON.parse(event.data);
-    const { clientId } = this;
 
-    this.emit(type, { ...data, clientId });
+    if (this.clientId) {
+      data.clientId = this.clientId
+    }
+
+    this.emit(type, data);
   }
 
   sendRegister(data) {

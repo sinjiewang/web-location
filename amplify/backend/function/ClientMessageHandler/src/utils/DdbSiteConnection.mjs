@@ -5,13 +5,13 @@ const { API_WEBLOCATION_SITECONNECTIONTABLE_NAME, REGION } = process.env;
 class DdbOrganizationActions extends DdbActions {
   static TABLE = API_WEBLOCATION_SITECONNECTIONTABLE_NAME;
 
-  queryByConnectionId({ connectionId }) {
+  queryBySiteId({ siteId }) {
     return DdbOrganizationActions.query({
       region: REGION,
-      condition: { connectionId },
+      condition: { siteId },
     }, {
-      IndexName: 'siteConnectionsByConnectionId',
-    })
+      IndexName: 'siteConnectionsBySiteId',
+    });
   }
 };
 

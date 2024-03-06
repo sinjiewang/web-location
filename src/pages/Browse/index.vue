@@ -57,17 +57,16 @@ export default {
     getSiteTypeIcon(type) {
       return SITE.TYPE[type]?.icon || mdiHelp;
     },
-
     getTypeName(type) {
       return this.$router.getRoutes().find(route => route.meta?.type === type).name;
     },
-    onClickConnect(connectionId, type) {
+    onClickConnect(siteId, type) {
       const name = this.getTypeName(type);
       const { nickName } = this;
       const url = this.$router.resolve({
         name: name,
-        params: { connectionId },
-        query: { nickName },
+        params: { siteId },
+        // query: { nickName },
       }).href;
 
       window.open(url, '_blank');
@@ -94,7 +93,7 @@ export default {
 <template>
   <v-container>
     <v-row no-gutters>
-      <v-col cols="8">
+      <v-col cols="12" md="8">
         <v-sheet class="ma-2 pa-2">
           <component
             ref="googleMap"
@@ -107,14 +106,14 @@ export default {
           />
         </v-sheet>
       </v-col>
-      <v-col cols="4"
+      <v-col cols="12" md="4"
         v-if="selectedLabel"
       >
         <div class="d-flex align-center flex-column">
           <div class="text-subtitle-1">{{ labelName }}</div>
           <template
             v-for="site in selectedLabelSites"
-            :key="site.connectionId"
+            :key="site.siteId"
           >
             <v-card
               width="100%"
@@ -124,9 +123,9 @@ export default {
                 <svg-icon type="mdi" :path="getSiteTypeIcon(site.type)"></svg-icon>
               </v-card-title>
               <v-card-text>{{ site.title }}</v-card-text>
-              <v-card-actions class="d-flex justify-end">
+              <v-card-actions class="d-flex justify-end align-stretch">
                 <v-btn class="bg-blue"
-                  @click="onClickConnect(site.connectionId, site.type)"
+                  @click="onClickConnect(site.siteId, site.type)"
                 >
                   {{ connectLabel }}
                 </v-btn>

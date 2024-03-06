@@ -104,11 +104,12 @@ export default {
         data: { name, avatar, clientId, time },
         type: 'register',
       });
+
       dataChannel.send({
         type: 'register',
         data: {
           clientId: 'HOST',
-          name: 'Host',
+          name: this.title,
           avatar: null,
           time,
         },
@@ -160,6 +161,10 @@ export default {
       time: Date.now(),
       message: `${this.title} ${this.$t('Established')}`,
     });
+  },
+  beforeUnmount() {
+    this.rtcSite.close();
+    this.rtcSite = null;
   },
 }
 </script>

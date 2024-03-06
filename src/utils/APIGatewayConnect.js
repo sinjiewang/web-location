@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 
-const KEEPALIVE_TIMEOUT = 1000 * 60 * 0.5; // 9 min
+const KEEPALIVE_TIMEOUT = 1000 * 60 * 9; // 9 min
 const WS_READY_STATE = {
   CONNECTING: 0,
   OPEN: 1,
@@ -128,7 +128,7 @@ export default class APIGatewayConnect extends EventEmitter {
   onclose() {
     const { ws } = this;
 
-    if (ws) {
+    if (ws && ws.removeEventListener) {
       ws.removeEventListener('open', this);
       ws.removeEventListener('close', this);
       ws.removeEventListener('message', this);

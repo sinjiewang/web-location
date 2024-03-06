@@ -22,6 +22,7 @@ export async function handler(event) {
   const { connectionId } = requestContext;
 
   if (!queryStringParameters ||
+      !queryStringParameters.hasOwnProperty('siteId') ||
       !queryStringParameters.hasOwnProperty('lat') ||
       !queryStringParameters.hasOwnProperty('lng')
   ) {
@@ -31,10 +32,22 @@ export async function handler(event) {
     };
   }
 
-  const { lat, lng, type } = queryStringParameters;
+  const { siteId, lat, lng, type } = queryStringParameters;
   const ddbPosition = new DdbPosition();
   const ddbSiteConnection = new DdbSiteConnection();
-  const positionId = getPositionId({ lat, lng })
+  const positionId = getPositionId({ lat, lng });
+
+  const res = await ddbSiteConnection.queryBySiteId({ siteId }).catch(err => {
+    console.error('DdbSiteConnection.query fail: ', err);
+  });
+
+  if (res.Items && res.Items.length) {
+    console.error('Duplicate siteId', siteId)
+    return {
+      statusCode: 400,
+      body: 'Duplicate siteId'
+    };
+  }
 
   await ddbPosition.create({
     positionId,
@@ -46,6 +59,7 @@ export async function handler(event) {
     positionId,
     connectionId,
     type,
+    siteId,
   });
 
   return {

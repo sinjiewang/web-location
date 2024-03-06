@@ -2,13 +2,15 @@
 import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
 import { mapState, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiMapMarkerRightOutline } from '@mdi/js';
+import { mdiMapMarkerRightOutline, mdiQrcode } from '@mdi/js';
 import coordinate from '@/utils/coordinate.js'
 
 import SITE from '@/constants/site.js';
 import Chat from '@/pages/Chat/site/index.vue';
 
 import { v4 as uuidv4 } from 'uuid';
+import short from 'short-uuid';
+import QRCode from 'qrcode';
 
 const APP_MAPPING = {
   chat: 'Chat'
@@ -23,6 +25,7 @@ export default {
   data() {
     return {
       mdiMapMarkerRightOutline,
+      mdiQrcode,
       mapComponent: null,
       thumbnailComponent: null,
       positionMarker: null,
@@ -30,6 +33,8 @@ export default {
       id: null,
       title: 'TEST',
       type: 'chat',
+      qrcodeUrl: null,
+      showQRcodeDialog: false,
       loading: false,
       formValid: false,
       appComponent: null,
@@ -58,8 +63,9 @@ export default {
       this.position = coordinate.transform({ lat, lng });
     },
     async onClickCreate() {
-      const { type, title, position } = this;
+      const { id, type, title, position } = this;
       const { lat, lng } = position;
+      const siteId = id || short.generate();
 
       this.$refs.form.validate();
 
@@ -69,13 +75,13 @@ export default {
       this.loading = true;
       this.id = uuidv4();
 
-      await this.siteConnect({ lat, lng, type, title });
+      await this.siteConnect({ siteId, lat, lng, type, title });
 
+      this.id = siteId;
       this.nextStep();
       this.appComponent = APP_MAPPING[type];
       this.loading = false;
-
-      this.setThumbnailMap();
+      this.setQRCode();
     },
     onClickDisconnect() {
       setTimeout(() => {
@@ -87,12 +93,31 @@ export default {
       this.loading = true;
       this.disconnect();
     },
-    setThumbnailMap() {
-      // this.thumbnailComponent = 'InteractionGoogleMap';
-      // this.$nextTick(() => {
-      //   this.positionMarker = this.$refs.thumbnailMap.addPositionMarker(this.position);
-      //   this.$refs.thumbnailMap.setMapUndraggable();
-      // });
+    onClickQRCode() {
+      this.showQRcodeDialog = true;
+    },
+    getTypeName(type) {
+      return this.$router.getRoutes().find(route => route.meta?.type === type).name;
+    },
+    async setQRCode() {
+      const { type, id } = this;
+      const name = this.getTypeName(type);
+      const path = this.$router.resolve({
+        name: name,
+        params: { siteId: id },
+      }).href;
+      const url = `${location.origin}${path}`;
+      const dataUrl = await new Promise((reslove, reject) => {
+        QRCode.toDataURL(url, (err, url) => {
+          if (err) {
+            reject(err);
+          } else {
+            reslove(url);
+          }
+        });
+      });
+
+      this.qrcodeUrl = dataUrl;
     },
     setDraggable() {
       this.$refs.googleMap.setMapDraggable();
@@ -152,8 +177,7 @@ export default {
             </div>
             <v-row class="mb-4">
               <v-col
-                cols="12"
-                md="6"
+                cols="6"
               >
                 <v-text-field
                   v-model="labelX"
@@ -163,8 +187,7 @@ export default {
                 ></v-text-field>
               </v-col>
               <v-col
-                cols="12"
-                md="6"
+                cols="6"
               >
                 <v-text-field
                   v-model="labelY"
@@ -215,79 +238,74 @@ export default {
       <v-row no-gutters>
         <v-col cols="12">
           <v-form class="site-form">
-            <v-row no-gutters>
-              <v-col
-                cols="12"
-                md="1"
-              >
-              <component
-                ref="thumbnailMap"
-                :is="thumbnailComponent"
-                :center="position"
-              />
-              </v-col>
-              <v-col
-                cols="12"
-                md="1"
-              >
-                <v-text-field
-                  v-model="labelX"
-                  label="x"
-                  disabled
-                  hide-details
-                ></v-text-field>
-              </v-col>
-              <v-col
-                cols="12"
-                md="1"
-              >
-                <v-text-field
-                  v-model="labelY"
-                  label="y"
-                  disabled
-                  hide-details
-                ></v-text-field>
-              </v-col>
-              <v-col
-                cols="12"
-                md="1"
-              >
-                <v-select
-                  v-model="type"
-                  :label="$t('Type')"
-                  :items="types"
-                  item-title="text"
-                  item-value="type"
-                  disabled
+            <v-container>
+              <v-row no-gutters>
+                <v-col
+                  cols="3"
+                  md="1"
                 >
-                </v-select>
-              </v-col>
-              <v-col
-                cols="12"
-                md="7"
-              >
-                <v-text-field
-                  v-model="title"
-                  :label="$t('Title')"
-                  hide-details
-                  :rules="[v => !!v || $t('Required')]"
-                  required
-                ></v-text-field>
-              </v-col>
-              <v-col
-                cols="12"
-                md="1"
-              >
-                <v-btn
-                  class="form-btn"
-                  color="red"
-                  :loading="loading"
-                  @click="onClickDisconnect"
+                  <v-btn
+                    class="form-btn"
+                    @click="onClickQRCode"
+                    block
+                  >
+                    <svg-icon type="mdi" width="36" height="36" :path="mdiQrcode"></svg-icon>
+                  </v-btn>
+                  <v-dialog
+                    v-model="showQRcodeDialog"
+                    persistent
+                    max-width="400px"
+                    @click:outside="showQRcodeDialog = false"
+                  >
+                    <v-card>
+                      <v-card-text>
+                        <v-img :src="qrcodeUrl" />
+                      </v-card-text>
+                    </v-card>
+                  </v-dialog>
+                </v-col>
+                <v-col
+                  cols="4"
+                  md="1"
                 >
-                {{ $t('Close') }}
-                </v-btn>
-              </v-col>
-            </v-row>
+                  <v-select
+                    v-model="type"
+                    :label="$t('Type')"
+                    :items="types"
+                    item-title="text"
+                    item-value="type"
+                    disabled
+                  >
+                  </v-select>
+                </v-col>
+                <v-col
+                  cols="5"
+                  md="9"
+                >
+                  <v-text-field
+                    v-model="title"
+                    :label="$t('Title')"
+                    hide-details
+                    :rules="[v => !!v || $t('Required')]"
+                    required
+                  ></v-text-field>
+                </v-col>
+                <v-col
+                  cols="12"
+                  md="1"
+                >
+                  <v-btn
+                    class="form-btn close-btn"
+                    color="red"
+                    :loading="loading"
+                    @click="onClickDisconnect"
+                    block
+                  >
+                  {{ $t('Close') }}
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-container>
           </v-form>
         </v-col>
       </v-row>

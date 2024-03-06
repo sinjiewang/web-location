@@ -68,6 +68,7 @@ export const createSiteConnection = /* GraphQL */ `
       title
       type
       connectionId
+      siteId
       positionId
       position {
         positionId
@@ -93,6 +94,7 @@ export const updateSiteConnection = /* GraphQL */ `
       title
       type
       connectionId
+      siteId
       positionId
       position {
         positionId
@@ -118,6 +120,7 @@ export const deleteSiteConnection = /* GraphQL */ `
       title
       type
       connectionId
+      siteId
       positionId
       position {
         positionId
