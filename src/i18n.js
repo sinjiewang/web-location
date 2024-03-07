@@ -5,6 +5,8 @@ import zhCN from './locales/zh-CN.json';
 import ja from './locales/ja.json';
 import ko from './locales/ko.json';
 
+import Account from '@/store/Account';
+
 const messages = {
   en,
   'zh-TW': zhTW,
@@ -13,7 +15,10 @@ const messages = {
   ko,
 };
 const keys = Object.keys(messages);
-const locale = navigator.languages.reduce((acc, curr) => acc || (keys.includes(curr) ? curr : null), null)
+const defaultLocale = Account.state().locale;
+const locale = defaultLocale
+  ? defaultLocale
+  : navigator.languages.reduce((acc, curr) => acc || (keys.includes(curr) ? curr : null), null);
 const i18n = createI18n({
   fallbackLocale: 'en',
   locale,

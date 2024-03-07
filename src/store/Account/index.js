@@ -1,9 +1,12 @@
+const locale = localStorage.getItem('locale');
+
 export default {
   namespaced: true,
   state: () => ({
     email: '',
-    nickName: 'Guest',
+    nickName: '',
     avatar: null,
+    locale,
   }),
   // getters: {
 
@@ -15,13 +18,23 @@ export default {
     updateAvatar({ commit }, blob) {
       commit('updateAvatar', blob);
     },
+    updateLocale({ commit }, { i18n, locale }) {
+      localStorage.setItem('locale', locale);
+
+      i18n.locale = locale;
+
+      commit('updateLocale', locale);
+    },
   },
   mutations: {
-    updateNickName({ state }, name) {
+    updateNickName(state, name) {
       state.nickName = name;
     },
-    updateAvatar({ state }, blob) {
+    updateAvatar(state, blob) {
       state.avatar = blob;
+    },
+    updateLocale(state, locale) {
+      state.locale = locale;
     },
   },
 }

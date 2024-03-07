@@ -2,6 +2,7 @@
 import LANG_LIST from '@/locales/list';
 import SvgIcon from '@jamescoyle/vue-icon'
 import { mdiTranslate, mdiMap, mdiMapPlus } from '@mdi/js'
+import { mapActions } from 'vuex';
 
 export default {
   components: {
@@ -24,8 +25,12 @@ export default {
     },
   },
   methods: {
-    selectItem(locale) {
-      this.$i18n.locale = locale;
+    ...mapActions('Account', ['updateLocale']),
+    selectLocale(locale) {
+      this.updateLocale({
+        i18n: this.$i18n,
+        locale,
+      });
     },
     onMapPlusClick() {
       window.open(this.buildPath, '_blank');
@@ -60,7 +65,7 @@ export default {
                 v-for="(item, index) in items"
                 :key="index"
                 :active="item.value === locale"
-                @click="selectItem(item.value)"
+                @click="selectLocale(item.value)"
               >
                 <v-list-item-title>{{ item.text }}</v-list-item-title>
               </v-list-item>
