@@ -3,14 +3,17 @@ const locale = localStorage.getItem('locale');
 export default {
   namespaced: true,
   state: () => ({
+    sub: null,
     email: '',
-    nickName: '',
+    nickname: '',
     avatar: null,
     locale,
   }),
-  // getters: {
-
-  // },
+  getters: {
+    getNickname(state) {
+      return state.nickname || 'Guest';
+    },
+  },
   actions: {
     updateNickName({ commit }, name) {
       commit('updateNickName', name);
@@ -27,8 +30,11 @@ export default {
     },
   },
   mutations: {
-    updateNickName(state, name) {
-      state.nickName = name;
+    updateSub(state, sub) {
+      state.sub = sub;
+    },
+    updateNickname(state, name) {
+      state.nickname = name;
     },
     updateAvatar(state, blob) {
       state.avatar = blob;

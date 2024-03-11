@@ -1,7 +1,7 @@
 <script>
 import Header from '@/components/Header.vue';
 import Navigation from '@/components/Navigation.vue';
-// import { mapActions } from 'vuex';
+import { mapActions } from 'vuex';
 
 export default {
   components: {
@@ -19,13 +19,13 @@ export default {
     },
   },
   methods: {
-    // ...mapActions('Geopositioning', ['getLabels', 'getUserPosition']),
+    ...mapActions('IndexedDB', ['connect']),
   },
   // watch: {
 
   // },
   async mounted() {
-    // await this.getUserPosition();
+    await this.connect();
   },
 }
 </script>

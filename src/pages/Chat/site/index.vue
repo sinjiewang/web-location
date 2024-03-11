@@ -1,35 +1,55 @@
 <script>
 import Signaling from '@/utils/Signaling/SiteSignaling.js';
 import RTCPeerSite from '@/utils/RTCPeer/RTCPeerSite.js';
+import IdbChat from '@/utils/IndexedDB/IdbChat';
+import IdbHistory from '@/utils/IndexedDB/IdbHistory';
+import ChatProtocol from '../utils/ChatProtocol';
 
 import ChatWindow from '../ChatWindow.vue';
-import ChatProtocol from '../utils/ChatProtocol';
+import { mapActions } from 'vuex';
 
 export default {
   components: {
     ChatWindow,
   },
   props: {
+    // siteId: {
+    //   type: String,
+    //   default: '',
+    // },
     tunnel: {
       type: Object,
       default: () => null,
     },
-    title: {
-      type: String,
-      default: '',
-    }
+    // title: {
+    //   type: String,
+    //   default: '',
+    // }
+    profile: {
+      type: Object,
+      default: () => null,
+    },
   },
   data() {
     return {
       signaling: null,
       rtcSite: null,
+      idbChat: null,
+      idbHistory: null,
       dataChannels: {},
     };
   },
   computed: {
-
+    // ...mapState('IndexedDB', ['db']),
+    siteId() {
+      return this.profile.id;
+    },
+    title() {
+      return this.profile.title;
+    },
   },
   methods: {
+    ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     init() {
       const { tunnel } = this;
       const signaling = new Signaling({ tunnel });
@@ -60,7 +80,7 @@ export default {
         dataChannel.removeAllListeners();
 
         delete this.dataChannels[clientId];
-        this.$refs.messageWindow.appendMessage({
+        this.appendMessage({
           message: this.$t('has left', { name }),
           time,
         });
@@ -80,22 +100,24 @@ export default {
         message,
       };
 
-      this.$refs.messageWindow.appendMessage(newChat);
+      this.appendMessage(newChat);
       this.broadcast({
         excepts: [clientId],
         data: newChat,
       });
     },
     onregister({ clientId, name, avatar }) {
-      const dataChannel = this.dataChannels[clientId];
+      const { dataChannels } = this;
+      const dataChannel = dataChannels[clientId];
       const time = Date.now();
+      const { profile } = this;
 
       if (dataChannel) {
         dataChannel.name = name;
         dataChannel.avatar = avatar;
       }
 
-      this.$refs.messageWindow.appendMessage({
+      this.appendMessage({
         message: this.$t('has joined', { name }),
         time,
       });
@@ -106,22 +128,28 @@ export default {
       });
 
       dataChannel.send({
+        type: 'profile',
+        data: {
+          ...profile,
+          time,
+        },
+      });
+      dataChannel.send({
         type: 'register',
         data: {
-          clientId: 'HOST',
-          name: this.title,
+          name: 'HOST',
           avatar: null,
           time,
         },
       });
-      Object.keys(this.dataChannels)
+      Object.keys(dataChannels)
         .filter((id) => id !== clientId)
         .forEach((id) => dataChannel.send({
           type: 'register',
           data: {
             clientId: id,
-            name: this.dataChannels[id].name,
-            avatar: this.dataChannels[id].avatar,
+            name: dataChannels[id].name,
+            avatar: dataChannels[id].avatar,
             time,
           },
         }));
@@ -132,7 +160,7 @@ export default {
         message,
       };
 
-      this.$refs.messageWindow.appendMessage({
+      this.appendMessage({
         sender: this.$t('You'),
         align: 'right',
         ...data,
@@ -154,12 +182,30 @@ export default {
           data,
         }));
     },
+    appendMessage(data) {
+      this.$refs.messageWindow.appendMessage(data);
+      this.idbChat.create({
+        ...data,
+        historyId: this.siteId,
+      })/*.then((id) => {})*/;
+    },
   },
   async mounted() {
+    const db = await this.idbConnect();
+    const { lat, lng } = this.profile.position;
+
+    this.idbChat = new IdbChat({ db });
+    this.idbHistory = new IdbHistory({ db });
     this.init();
-    this.$refs.messageWindow.appendMessage({
+
+    this.idbHistory.create({
+      ...this.profile,
+      position: { lat, lng },
+      action: 'create',
+    });
+    this.appendMessage({
       time: Date.now(),
-      message: `${this.title} ${this.$t('Established')}`,
+      message: `(${this.title}) ${this.$t('Established')}`,
     });
   },
   beforeUnmount() {

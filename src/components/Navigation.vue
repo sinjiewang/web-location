@@ -1,4 +1,5 @@
 <script>
+import { mapState, mapGetters } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiAccountCircle } from '@mdi/js';
 
@@ -9,11 +10,13 @@ export default {
   data() {
     return {
       mdiAccountCircle,
-      userName: 'Guest',
-      userEmail: '',
     };
   },
   computed: {
+    ...mapState('Account', ['email']),
+    ...mapGetters('Account', {
+      username: 'getNickname'
+    }),
     navigation() {
       return [
         {
@@ -24,7 +27,7 @@ export default {
         {
           text: this.$t('History'),
           icon: 'mdi-history',
-          route: '',
+          route: '/history',
         },
         {
           text: this.$t('Information'),
@@ -34,7 +37,7 @@ export default {
       ];
     },
     message() {
-      return `${this.$t('Hello')}, ${this.userName}`;
+      return `${this.$t('Hello')}, ${this.username}`;
     },
   },
 }
@@ -49,7 +52,7 @@ export default {
       <v-list-item
         class="text-start"
         :title="message"
-        :subtitle="userEmail"
+        :subtitle="email"
       >
         <template #prepend>
           <v-avatar color="surface-variant">

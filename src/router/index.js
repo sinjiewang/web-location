@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Browse from '@/pages/Browse/index.vue';
+import History from '@/pages/History/index.vue';
 import Establish from '@/pages/Establish/index.vue';
 import Chat from '@/pages/Chat/client/index.vue';
 
@@ -8,6 +9,11 @@ const routes = [
     path: '/browse',
     name: 'Browse',
     component: Browse,
+  },
+  {
+    path: '/history',
+    name: 'History',
+    component: History,
   },
   {
     path: '/establish',

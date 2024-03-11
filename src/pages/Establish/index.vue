@@ -8,7 +8,6 @@ import coordinate from '@/utils/coordinate.js'
 import SITE from '@/constants/site.js';
 import Chat from '@/pages/Chat/site/index.vue';
 
-import { v4 as uuidv4 } from 'uuid';
 import short from 'short-uuid';
 import QRCode from 'qrcode';
 
@@ -31,7 +30,7 @@ export default {
       positionMarker: null,
       position: null,
       id: null,
-      title: 'TEST',
+      title: 'Chat',
       type: 'chat',
       qrcodeUrl: null,
       showQRcodeDialog: false,
@@ -42,6 +41,7 @@ export default {
     };
   },
   computed: {
+    ...mapState('Account', ['sub']),
     ...mapState('CloudTunnel', ['wsClient']),
     types() {
       return Object.keys(SITE.TYPE).map((type) => ({
@@ -55,8 +55,19 @@ export default {
     labelY() {
       return this.position?.lng || '';
     },
+    appProfile() {
+      const { id, title, position, type } = this;
+
+      return {
+        id,
+        title,
+        position,
+        type,
+      };
+    }
   },
   methods: {
+    ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     ...mapActions('Geopositioning', ['getUserPosition']),
     ...mapActions('CloudTunnel', ['siteConnect', 'disconnect']),
     onPositionChanged({ lat, lng }) {
@@ -73,7 +84,6 @@ export default {
 
       this.setUndraggable();
       this.loading = true;
-      this.id = uuidv4();
 
       await this.siteConnect({ siteId, lat, lng, type, title });
 
@@ -314,7 +324,7 @@ export default {
         <component
           :tunnel="wsClient"
           :is="appComponent"
-          :title="title"
+          :profile="appProfile"
         ></component>
     </v-row>
     </v-container>
@@ -336,7 +346,7 @@ export default {
 }
 
 .app-content {
-  height: calc(100vh - 79px);
+  height: calc(100vh - 110px);
 }
 
 @keyframes spin {

@@ -5,6 +5,9 @@ import RTCPeerClient from '@/utils/RTCPeer/RTCPeerClient.js';
 
 import ChatProtocol from '../utils/ChatProtocol';
 import ChatWindow from '../ChatWindow.vue';
+import IdbHistory from '@/utils/IndexedDB/IdbHistory';
+import IdbChat from '@/utils/IndexedDB/IdbChat';
+import short from 'short-uuid';
 
 export default {
   components: {
@@ -19,6 +22,9 @@ export default {
       loading: false,
       channel: null,
       participants: {},
+      idbChat: null,
+      idbHistory: null,
+      id: short.generate(),
     };
   },
   computed: {
@@ -31,6 +37,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     ...mapActions('CloudTunnel', ['clientConnect', 'disconnect']),
     async init() {
       this.loading = true;
@@ -57,6 +64,7 @@ export default {
       const dataChannel = await rtcConnection.createDataChannel('data');
       const chatProtocol = new ChatProtocol({ dataChannel })
 
+      chatProtocol.on('profile', (event) => this.onprofile(event));
       chatProtocol.on('message', (event) => this.onmessage(event));
       chatProtocol.on('register', (event) => this.onregister(event));
       chatProtocol.on('unregister', (event) => this.onunregister(event));
@@ -64,6 +72,20 @@ export default {
 
       this.channel = chatProtocol;
       this.register();
+    },
+    onprofile({ id, position, type, title }) {
+      this.appendMessage({
+        message: `${this.$t('has joined')} (${title})`,
+        time: Date.now(),
+      });
+      this.idbHistory.create({
+        id: this.id,
+        action: 'join',
+        siteId: id,
+        position,
+        type,
+        title,
+      });
     },
     onmessage(data) {
       const { sender, time, message, avatar } = data;
@@ -79,7 +101,7 @@ export default {
       this.channel.removeAllListeners();
       this.channel = null;
       this.showDisconnectedDialog = true;
-      this.$refs.messageWindow.appendMessage({
+      this.appendMessage({
         message: `Host ${this.$t('Disconnected')}`,
         time: Date.now(),
       });
@@ -89,21 +111,22 @@ export default {
 
       this.participants[clientId] = { name, avatar };
 
-      if (clientId === 'HOST') {
-        this.$refs.messageWindow.appendMessage({
-          message: `${this.$t('has joined')} (${name})`,
-          time,
-        });
-        this.$refs.messageWindow.appendMessage({
-          message: this.$t('has joined', { name: 'Host' }),
-          time,
-        });
-      } else {
-        this.$refs.messageWindow.appendMessage({
+      // if (clientId === 'HOST') {
+      //   this.updateHistory(name);
+      //   this.appendMessage({
+      //     message: `${this.$t('has joined')} (${name})`,
+      //     time,
+      //   });
+      //   this.appendMessage({
+      //     message: this.$t('has joined', { name: 'Host' }),
+      //     time,
+      //   });
+      // } else {
+        this.appendMessage({
           message: this.$t('has joined', { name }),
           time,
         });
-      }
+      // }
     },
     onunregister(data) {
       const { clientId, time } = data;
@@ -111,7 +134,7 @@ export default {
 
       if (participant) {
         delete this.participants[clientId];
-        this.$refs.messageWindow.appendMessage({
+        this.appendMessage({
           message: this.$t('has left', { name: participant.name }),
           time,
         });
@@ -128,8 +151,12 @@ export default {
         align: 'right',
       });
     },
-    appendMessage({ sender, time, message, avatar, align }) {
-      this.$refs.messageWindow.appendMessage({ sender, time, message, avatar, align });
+    appendMessage(data) {
+      this.$refs.messageWindow.appendMessage(data);
+      this.idbChat.create({
+        ...data,
+        historyId: this.id,
+      });
     },
     register() {
       const name = this.nickName;
@@ -149,14 +176,31 @@ export default {
     onClickClose() {
       this.showNicknameDialog = false;
       this.init();
-    }
+      // this.createHistory();
+    },
+    // createHistory() {
+    //   this.idbHistory.create({
+    //     id: this.id,
+    //     type: 'chat',
+    //     action: 'join',
+    //   });
+    // },
+    // updateHistory(title) {
+    //   this.idbHistory.update(this.id, { title });
+    // }
   },
-  mounted() {
+  async mounted() {
     if (this.nickName) {
       this.init();
+      this.createHistory();
     } else {
       this.showNicknameDialog = true;
     }
+
+    const db = await this.idbConnect();
+
+    this.idbChat = new IdbChat({ db });
+    this.idbHistory = new IdbHistory({ db });
   },
 }
 </script>

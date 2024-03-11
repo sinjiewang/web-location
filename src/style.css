@@ -106,7 +106,7 @@ button:focus-visible {
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .v-main {
     overflow: auto;
   }
