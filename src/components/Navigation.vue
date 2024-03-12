@@ -78,11 +78,6 @@ export default {
 </template>
 
 <style>
-.align-left {
-  justify-content: flex-start;
-  text-align: left;
-}
-
 .route-link:hover {
   color: var(--color-text-hover);
 }

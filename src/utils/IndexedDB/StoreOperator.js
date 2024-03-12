@@ -1,4 +1,4 @@
-export default class IdbOperator {
+export default class StoreOperator {
   constructor({ db, storeName }={}) {
     this.db = db;
     this.storeName = storeName;
@@ -26,7 +26,7 @@ export default class IdbOperator {
         ...addData,
         id: event.target.result,
       });
-      request.onerror = (event) => reject(event);
+      request.onerror = (event) => reject(event.target.error);
     });
   }
 
@@ -43,7 +43,7 @@ export default class IdbOperator {
         .get(id);
 
       request.onsuccess = (event) => resolve(event.target.result);
-      request.onerror = (event) => reject(event);
+      request.onerror = (event) => reject(event.target.error);
     });
   }
 
@@ -69,7 +69,7 @@ export default class IdbOperator {
           .put(putItem);
 
         request.onsuccess = () => resolve(putItem);
-        request.onerror = (event) => reject(event);
+        request.onerror = (event) => reject(event.target.error);
       }));
   }
 
@@ -86,7 +86,7 @@ export default class IdbOperator {
         .delete(id);
 
       request.onsuccess = (event) => resolve(event.target.result);
-      request.onerror = (event) => reject(event);
+      request.onerror = (event) => reject(event.target.error);
     });
   }
 }

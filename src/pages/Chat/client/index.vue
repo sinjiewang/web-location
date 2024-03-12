@@ -5,8 +5,8 @@ import RTCPeerClient from '@/utils/RTCPeer/RTCPeerClient.js';
 
 import ChatProtocol from '../utils/ChatProtocol';
 import ChatWindow from '../ChatWindow.vue';
-import IdbHistory from '@/utils/IndexedDB/IdbHistory';
-import IdbChat from '@/utils/IndexedDB/IdbChat';
+import StoreHistory from '@/utils/IndexedDB/StoreHistory';
+import StoreChat from '@/utils/IndexedDB/StoreChat';
 import short from 'short-uuid';
 
 export default {
@@ -22,8 +22,8 @@ export default {
       loading: false,
       channel: null,
       participants: {},
-      idbChat: null,
-      idbHistory: null,
+      storeChat: null,
+      storeHistory: null,
       id: short.generate(),
     };
   },
@@ -78,7 +78,7 @@ export default {
         message: `${this.$t('has joined')} (${title})`,
         time: Date.now(),
       });
-      this.idbHistory.create({
+      this.storeHistory.create({
         id: this.id,
         action: 'join',
         siteId: id,
@@ -153,7 +153,7 @@ export default {
     },
     appendMessage(data) {
       this.$refs.messageWindow.appendMessage(data);
-      this.idbChat.create({
+      this.storeChat.create({
         ...data,
         historyId: this.id,
       });
@@ -179,14 +179,14 @@ export default {
       // this.createHistory();
     },
     // createHistory() {
-    //   this.idbHistory.create({
+    //   this.storeHistory.create({
     //     id: this.id,
     //     type: 'chat',
     //     action: 'join',
     //   });
     // },
     // updateHistory(title) {
-    //   this.idbHistory.update(this.id, { title });
+    //   this.storeHistory.update(this.id, { title });
     // }
   },
   async mounted() {
@@ -199,8 +199,8 @@ export default {
 
     const db = await this.idbConnect();
 
-    this.idbChat = new IdbChat({ db });
-    this.idbHistory = new IdbHistory({ db });
+    this.storeChat = new StoreChat({ db });
+    this.storeHistory = new StoreHistory({ db });
   },
 }
 </script>

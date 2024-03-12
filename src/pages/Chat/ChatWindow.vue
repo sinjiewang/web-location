@@ -6,6 +6,12 @@ export default {
   components: {
     SvgIcon,
   },
+  props: {
+    displayInput: {
+      type: Boolean,
+      default: true,
+    },
+  },
   data() {
     return {
       newMessage: null,
@@ -57,13 +63,22 @@ export default {
         ? 'd-flex justify-end'
         : 'd-flex justify-start'
     },
+    clear() {
+      this.messages = [];
+    },
   },
 }
 </script>
 
 <template>
   <v-container>
-    <v-card class="mb-4 message-block" outlined>
+    <v-card
+      class="mb-4 message-block"
+      :class="{
+        'display-input': displayInput
+      }"
+      outlined
+    >
       <v-list>
         <v-list-item v-for="(msg, index) in messages" :key="index"
           three-line
@@ -131,7 +146,7 @@ export default {
         </v-list-item>
       </v-list>
     </v-card>
-    <v-row>
+    <v-row v-if="displayInput">
       <v-col cols="9" md="10">
         <v-text-field
           v-model="newMessage"
@@ -167,8 +182,12 @@ export default {
 }
 
 .message-block {
-  height: calc(100% - 102px);
+  height: calc(100%);
   overflow: auto;
+
+  &.display-input {
+    height: calc(100% - 102px);
+  }
 }
 
 </style>

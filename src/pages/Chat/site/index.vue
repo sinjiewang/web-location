@@ -1,8 +1,8 @@
 <script>
 import Signaling from '@/utils/Signaling/SiteSignaling.js';
 import RTCPeerSite from '@/utils/RTCPeer/RTCPeerSite.js';
-import IdbChat from '@/utils/IndexedDB/IdbChat';
-import IdbHistory from '@/utils/IndexedDB/IdbHistory';
+import StoreChat from '@/utils/IndexedDB/StoreChat';
+import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 import ChatProtocol from '../utils/ChatProtocol';
 
 import ChatWindow from '../ChatWindow.vue';
@@ -34,8 +34,8 @@ export default {
     return {
       signaling: null,
       rtcSite: null,
-      idbChat: null,
-      idbHistory: null,
+      storeChat: null,
+      storeHistory: null,
       dataChannels: {},
     };
   },
@@ -184,7 +184,7 @@ export default {
     },
     appendMessage(data) {
       this.$refs.messageWindow.appendMessage(data);
-      this.idbChat.create({
+      this.storeChat.create({
         ...data,
         historyId: this.siteId,
       })/*.then((id) => {})*/;
@@ -194,11 +194,11 @@ export default {
     const db = await this.idbConnect();
     const { lat, lng } = this.profile.position;
 
-    this.idbChat = new IdbChat({ db });
-    this.idbHistory = new IdbHistory({ db });
+    this.storeChat = new StoreChat({ db });
+    this.storeHistory = new StoreHistory({ db });
     this.init();
 
-    this.idbHistory.create({
+    this.storeHistory.create({
       ...this.profile,
       position: { lat, lng },
       action: 'create',

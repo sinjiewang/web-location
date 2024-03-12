@@ -3,6 +3,7 @@ import Browse from '@/pages/Browse/index.vue';
 import History from '@/pages/History/index.vue';
 import Establish from '@/pages/Establish/index.vue';
 import Chat from '@/pages/Chat/client/index.vue';
+import HistoryChat from '@/pages/History/chat.vue';
 
 const routes = [
   {
@@ -14,6 +15,12 @@ const routes = [
     path: '/history',
     name: 'History',
     component: History,
+    children: [
+      {
+        path: 'chat/:id',
+        component: HistoryChat,
+      }
+    ]
   },
   {
     path: '/establish',

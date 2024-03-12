@@ -89,7 +89,13 @@ button:focus-visible {
   text-align: center;
 }
 
-.v-field, .v-label, .v-messages, .v-input--disabled, .v-field--disabled, [disabled] {
+.v-list-item,
+.v-field,
+.v-label,
+.v-messages,
+.v-input--disabled,
+.v-field--disabled,
+[disabled] {
   user-select: none;
 }
 

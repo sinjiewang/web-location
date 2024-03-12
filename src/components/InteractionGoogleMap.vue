@@ -2,7 +2,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 export default {
-  name: "InteractionMap",
+  name: 'InteractionMap',
   props: {
     center: {
       type: Object,
@@ -63,7 +63,7 @@ export default {
   },
   methods: {
     createMap(config) {
-      return new google.maps.Map(document.getElementById("map"), config);
+      return new google.maps.Map(document.getElementById('map'), config);
     },
     getMarker(id) {
       return this.markers.get(id);
@@ -169,6 +169,11 @@ export default {
       this.map.setOptions({ draggable: false });
       }
     },
+    setMapCenter({ lat, lng }={}) {
+      if (this.map) {
+        this.map.setCenter({ lat, lng });
+      }
+    },
     onMapDragend() {
       const center = this.map.getCenter();
 
@@ -187,7 +192,7 @@ export default {
       this.$emit('label', position);
     },
     setMapHeight() {
-      this.mapHeight = document.getElementById("map").offsetWidth + 'px';
+      this.mapHeight = document.getElementById('map').offsetWidth + 'px';
     }
   }
 };

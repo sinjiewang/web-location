@@ -1,12 +1,12 @@
-import IdbOperator from "./IdbOperator";
+import StoreOperator from "./StoreOperator";
 
-export default class IdbChat extends IdbOperator {
+export default class StoreChat extends StoreOperator {
   constructor({ db, storeName='chat' }={}) {
     super({ db, storeName });
   }
 
   queryByHistoryId(id) {
-    const { storeName } = this;
+    const { db, storeName } = this;
 
     return new Promise((resolve, reject) => {
       const request = db.transaction(storeName)
@@ -15,7 +15,7 @@ export default class IdbChat extends IdbOperator {
         .getAll(id)
 
       request.onsuccess = (event) => resolve(event.target.result);
-      request.onerror = (event) => reject(event);
+      request.onerror = (event) => reject(event.target.error);
     });
   }
 }
