@@ -55,7 +55,10 @@ export default {
 
       this.$refs.googleMap.removePositionMarker();
       this.$refs.googleMap.setMapCenter({ lat, lng });
-      this.$refs.googleMap.addPositionMarker({ lat, lng });
+
+      const positionMarker = this.$refs.googleMap.addPositionMarker({ lat, lng });
+
+      this.$refs.googleMap.setMarkerUndraggable(positionMarker);
       this.selectedHistory = item;
     },
     onClickOpen({ id }) {
