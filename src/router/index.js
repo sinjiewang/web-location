@@ -3,7 +3,7 @@ import Browse from '@/pages/Browse/index.vue';
 import History from '@/pages/History/index.vue';
 import Establish from '@/pages/Establish/index.vue';
 import Chat from '@/pages/Chat/client/index.vue';
-import HistoryChat from '@/pages/History/chat.vue';
+import HistoryChat from '@/pages/History/Chat.vue';
 
 const routes = [
   {
@@ -23,7 +23,7 @@ const routes = [
     ]
   },
   {
-    path: '/establish',
+    path: '/establish/:id?',
     name: 'Establish',
     component: Establish,
     meta: {

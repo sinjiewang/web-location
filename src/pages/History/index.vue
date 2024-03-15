@@ -44,9 +44,7 @@ export default {
       return SITE.TYPE_ACTION_ICON[type][action] || mdiHelp;
     },
     toLocaleString(timestamp) {
-      const date = new Date(timestamp);
-
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+      return new Date(timestamp).toLocaleString();
     },
     genHistoryChildUrl(item) {
       return `${this.historyUrl}/${item.type}/${item.id}`;
@@ -58,6 +56,23 @@ export default {
       this.$refs.googleMap.setMapCenter({ lat, lng });
       this.$refs.googleMap.addPositionMarker({ lat, lng });
       this.selectedHistory = item;
+    },
+    onClickOpen({ id }) {
+      const url = this.$router.resolve({
+        name: 'Establish',
+        params: { id },
+      }).href;
+
+      window.open(url, '_blank');
+    },
+    async onClickDelete({ id }) {
+      await this.storeHistory.delete(id);
+
+      this.history = this.history.filter((item) => item.id !== id);
+
+      if (this.$route.params.id) {
+        this.$router.push('../');
+      }
     },
   },
   async mounted() {
@@ -120,6 +135,21 @@ export default {
                   {{ toLocaleString(item.updatedTime) }}
                 </span>
               </v-list-item-subtitle>
+              <template v-slot:append>
+                <v-btn
+                  v-if="item.action === 'create'"
+                  color="grey-lighten-1"
+                  icon="mdi-arrow-top-right-bold-box-outline"
+                  variant="text"
+                  @click="onClickOpen(item)"
+                ></v-btn>
+                <v-btn
+                  color="red"
+                  icon="mdi-delete"
+                  variant="text"
+                  @click="onClickDelete(item)"
+                ></v-btn>
+              </template>
             </v-list-item>
           </div>
           <!-- SM size -->
@@ -160,6 +190,14 @@ export default {
                       {{ toLocaleString(item.updatedTime) }}
                     </span>
                   </v-list-item-subtitle>
+                  <template v-slot:append v-if="item.action === 'create'">
+                    <v-btn
+                      color="grey-lighten-1"
+                      icon="mdi-arrow-top-right-bold-box-outline"
+                      variant="text"
+                      @click="onClickOpen(item)"
+                    ></v-btn>
+                  </template>
                 </v-list-item>
               </v-list>
             </v-menu>

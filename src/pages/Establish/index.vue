@@ -2,9 +2,10 @@
 import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
 import { mapState, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiMapMarkerRightOutline, mdiQrcode } from '@mdi/js';
+import { mdiMapMarkerRightOutline, mdiQrcode, mdiContentCopy, mdiCheckBold } from '@mdi/js';
 import coordinate from '@/utils/coordinate.js'
 
+import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 import SITE from '@/constants/site.js';
 import Chat from '@/pages/Chat/site/index.vue';
 
@@ -25,19 +26,22 @@ export default {
     return {
       mdiMapMarkerRightOutline,
       mdiQrcode,
+      mdiContentCopy,
       mapComponent: null,
       thumbnailComponent: null,
       positionMarker: null,
       position: null,
-      id: null,
-      title: 'Chat',
-      type: 'chat',
+      id: this.$route.params.id,
+      title: null,
+      type: null,
+      disableTypeSelect: false,
       qrcodeUrl: null,
       showQRcodeDialog: false,
       loading: false,
       formValid: false,
       appComponent: null,
       step: 1,
+      copyIcon: mdiContentCopy,
     };
   },
   computed: {
@@ -64,7 +68,24 @@ export default {
         position,
         type,
       };
-    }
+    },
+    appUrl() {
+      const { type, id } = this;
+
+      if (!type || !id) return '';
+
+debugger
+      const name = this.getTypeName(type);
+      const path = this.$router.resolve({
+        name: name,
+        params: { siteId: id },
+      }).href;
+
+      return `${location.origin}${path}`;
+    },
+    establishLabel() {
+      return this.id ? this.$t('Establish') : this.$t('Create');
+    },
   },
   methods: {
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
@@ -73,7 +94,7 @@ export default {
     onPositionChanged({ lat, lng }) {
       this.position = coordinate.transform({ lat, lng });
     },
-    async onClickCreate() {
+    async onClickEstablish() {
       const { id, type, title, position } = this;
       const { lat, lng } = position;
       const siteId = id || short.generate();
@@ -106,19 +127,22 @@ export default {
     onClickQRCode() {
       this.showQRcodeDialog = true;
     },
+    onClickCopy() {
+      navigator.clipboard.writeText(this.appUrl)
+        .then(() => {
+          this.copyIcon = mdiCheckBold;
+
+          setTimeout(() => {
+            this.copyIcon = mdiContentCopy;
+          }, 1.5 * 1000);
+        });
+    },
     getTypeName(type) {
       return this.$router.getRoutes().find(route => route.meta?.type === type).name;
     },
     async setQRCode() {
-      const { type, id } = this;
-      const name = this.getTypeName(type);
-      const path = this.$router.resolve({
-        name: name,
-        params: { siteId: id },
-      }).href;
-      const url = `${location.origin}${path}`;
       const dataUrl = await new Promise((reslove, reject) => {
-        QRCode.toDataURL(url, (err, url) => {
+        QRCode.toDataURL(this.appUrl, (err, url) => {
           if (err) {
             reject(err);
           } else {
@@ -145,9 +169,26 @@ export default {
     },
   },
   async mounted() {
-    const { lat, lng } = await this.getUserPosition();
+    let history = null;
 
-    this.position = coordinate.transform({ lat, lng });
+    if (this.id) {
+      const db = await this.idbConnect();
+      const storeHistory = new StoreHistory({ db });
+
+      history = await storeHistory.queryById(this.id);
+    }
+
+    if (history) {
+      this.type = history.type;
+      this.title = history.title;
+      this.position = history.position;
+      this.disableTypeSelect = true;
+    } else {
+      const { lat, lng } = await this.getUserPosition();
+
+      this.position = coordinate.transform({ lat, lng });
+    }
+
     this.mapComponent = 'InteractionGoogleMap';
     this.$nextTick(() => {
       this.positionMarker = this.$refs.googleMap.addPositionMarker(this.position);
@@ -212,6 +253,7 @@ export default {
               :label="$t('Type')"
               :items="types"
               :rules="[v => !!v || $t('Required')]"
+              :disabled="disableTypeSelect"
               item-title="text"
               item-value="type"
               required
@@ -230,9 +272,9 @@ export default {
                 :loading="loading"
                 class="mt-4 form-btn"
                 :color="formValid ? 'blue' : null"
-                @click="onClickCreate"
+                @click="onClickEstablish"
               >
-              {{ $t('Create') }}
+              {{ establishLabel }}
               </v-btn>
             </div>
           </v-container>
@@ -267,9 +309,32 @@ export default {
                     max-width="400px"
                     @click:outside="showQRcodeDialog = false"
                   >
-                    <v-card>
+                    <v-card class="site-form">
+                      <v-img :src="qrcodeUrl" />
                       <v-card-text>
-                        <v-img :src="qrcodeUrl" />
+                        <v-row no-gutters>
+                          <v-col
+                            cols="10"
+                          >
+                          <v-text-field
+                            v-model="appUrl"
+                            label="URL"
+                            hide-details
+                            disabled
+                          ></v-text-field>
+                          </v-col>
+                          <v-col
+                            cols="2"
+                          >
+                            <v-btn
+                              class="form-btn"
+                              @click="onClickCopy"
+                              block
+                            >
+                              <svg-icon type="mdi" :path="copyIcon"></svg-icon>
+                            </v-btn>
+                          </v-col>
+                        </v-row>
                       </v-card-text>
                     </v-card>
                   </v-dialog>
@@ -296,8 +361,7 @@ export default {
                     v-model="title"
                     :label="$t('Title')"
                     hide-details
-                    :rules="[v => !!v || $t('Required')]"
-                    required
+                    disabled
                   ></v-text-field>
                 </v-col>
                 <v-col

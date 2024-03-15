@@ -13,18 +13,10 @@ export default {
     ChatWindow,
   },
   props: {
-    // siteId: {
-    //   type: String,
-    //   default: '',
-    // },
     tunnel: {
       type: Object,
       default: () => null,
     },
-    // title: {
-    //   type: String,
-    //   default: '',
-    // }
     profile: {
       type: Object,
       default: () => null,
@@ -40,7 +32,6 @@ export default {
     };
   },
   computed: {
-    // ...mapState('IndexedDB', ['db']),
     siteId() {
       return this.profile.id;
     },
@@ -192,17 +183,32 @@ export default {
   },
   async mounted() {
     const db = await this.idbConnect();
-    const { lat, lng } = this.profile.position;
+    const { title, position } = this.profile;
+    const { lat, lng } = position;
 
     this.storeChat = new StoreChat({ db });
     this.storeHistory = new StoreHistory({ db });
     this.init();
 
-    this.storeHistory.create({
-      ...this.profile,
-      position: { lat, lng },
-      action: 'create',
-    });
+    const { siteId } = this;
+    const history =  await this.storeHistory.queryById(siteId);
+
+    if (history) {
+      this.storeHistory.update(siteId, {
+        title,
+        position: { lat, lng },
+      });
+
+      const messages = await this.storeChat.queryByHistoryId(siteId);
+
+      messages.forEach((message) => this.$refs.messageWindow.appendMessage(message));
+    } else {
+      this.storeHistory.create({
+        ...this.profile,
+        position: { lat, lng },
+        action: 'create',
+      });
+    }
     this.appendMessage({
       time: Date.now(),
       message: `(${this.title}) ${this.$t('Established')}`,

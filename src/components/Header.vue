@@ -20,8 +20,8 @@ export default {
     locale() {
       return this.$i18n.locale;
     },
-    buildPath() {
-      return this.$router.getRoutes().find(route => route.name === 'Establish').path;
+    establishPath() {
+      return this.$router.resolve({ name: 'Establish' }).href;
     },
   },
   methods: {
@@ -33,7 +33,7 @@ export default {
       });
     },
     onMapPlusClick() {
-      window.open(this.buildPath, '_blank');
+      window.open(this.establishPath, '_blank');
     },
   },
 }

@@ -62,11 +62,9 @@ export default {
     },
     onClickConnect(siteId, type) {
       const name = this.getTypeName(type);
-      const { nickName } = this;
       const url = this.$router.resolve({
         name: name,
         params: { siteId },
-        // query: { nickName },
       }).href;
 
       window.open(url, '_blank');

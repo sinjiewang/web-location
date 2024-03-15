@@ -48,7 +48,7 @@ export default {
       this.messages.push({ sender, time, message, avatar, align });
     },
     toLocaleTimeString(timestamp) {
-      return new Date(timestamp).toLocaleTimeString();
+      return new Date(timestamp).toLocaleString();
     },
     sendMessage() {
       const message = this.newMessage;
