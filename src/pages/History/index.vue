@@ -21,6 +21,7 @@ export default {
       center: null,
       mapComponent: null,
       selectedHistory: null,
+      showConfirmDeleteDialog: false,
     };
   },
   computed: {
@@ -65,12 +66,20 @@ export default {
 
       window.open(url, '_blank');
     },
-    async onClickDelete({ id }) {
+    onClickHistoryDelete() {
+      this.showConfirmDeleteDialog = true;
+    },
+    async onClickDelete() {
+      const { id } = this.selectedHistory;
+
+      this.showConfirmDeleteDialog = false;
+
       await this.storeHistory.delete(id);
 
       this.history = this.history.filter((item) => item.id !== id);
 
       if (this.$route.params.id) {
+        this.$refs.googleMap.removePositionMarker();
         this.$router.push('../');
       }
     },
@@ -147,7 +156,7 @@ export default {
                   color="red"
                   icon="mdi-delete"
                   variant="text"
-                  @click="onClickDelete(item)"
+                  @click="onClickHistoryDelete(item)"
                 ></v-btn>
               </template>
             </v-list-item>
@@ -190,12 +199,19 @@ export default {
                       {{ toLocaleString(item.updatedTime) }}
                     </span>
                   </v-list-item-subtitle>
-                  <template v-slot:append v-if="item.action === 'create'">
+                  <template v-slot:append>
                     <v-btn
+                      v-if="item.action === 'create'"
                       color="grey-lighten-1"
                       icon="mdi-arrow-top-right-bold-box-outline"
                       variant="text"
                       @click="onClickOpen(item)"
+                    ></v-btn>
+                    <v-btn
+                      color="red"
+                      icon="mdi-delete"
+                      variant="text"
+                      @click="onClickHistoryDelete(item)"
                     ></v-btn>
                   </template>
                 </v-list-item>
@@ -208,6 +224,36 @@ export default {
         <router-view></router-view>
       </v-col>
     </v-row>
+    <v-dialog
+      v-model="showConfirmDeleteDialog"
+      persistent
+      max-width="400px"
+      @click:outside="showConfirmDeleteDialog = false"
+    >
+      <v-card>
+        <v-card-text>
+          "{{ selectedHistory.title }}"
+          <br>
+          {{ $t('Are you sure you want to remove?') }}
+        </v-card-text>
+        <v-card-actions class="d-flex justify-end align-stretch">
+          <v-spacer></v-spacer>
+          <v-btn
+            class="bg-primary"
+            :text="$t('Cancel')"
+            variant="elevated"
+            @click="showConfirmDeleteDialog = false"
+          ></v-btn>
+          <v-btn
+            class="bg-red"
+            :text="$t('Delete')"
+            color="red"
+            variant="elevated"
+            @click="onClickDelete"
+          ></v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 

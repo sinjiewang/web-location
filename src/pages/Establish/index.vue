@@ -24,16 +24,13 @@ export default {
   },
   data() {
     return {
-      mdiMapMarkerRightOutline,
-      mdiQrcode,
-      mdiContentCopy,
       mapComponent: null,
       thumbnailComponent: null,
       positionMarker: null,
       position: null,
       id: this.$route.params.id,
       title: null,
-      type: null,
+      type: 'chat',
       disableTypeSelect: false,
       qrcodeUrl: null,
       showQRcodeDialog: false,
@@ -41,7 +38,11 @@ export default {
       formValid: false,
       appComponent: null,
       step: 1,
+      // svg-icon
       copyIcon: mdiContentCopy,
+      mdiMapMarkerRightOutline,
+      mdiQrcode,
+      mdiContentCopy,
     };
   },
   computed: {

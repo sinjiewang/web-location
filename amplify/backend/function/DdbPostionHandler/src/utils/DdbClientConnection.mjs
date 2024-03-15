@@ -9,7 +9,7 @@ class DdbClientConnection extends DdbActions {
   queryClientInZone({ lat, lng }, range=0.01) {
     const latToFixedTwo = toFixedTwo(lat);
     const lngToFixedTwo = toFixedTwo(lng);
-    const zoneList = [latToFixedTwo - range, latToFixedTwo, latToFixedTwo + range].map(($lat) => 
+    const zoneList = [latToFixedTwo - range, latToFixedTwo, latToFixedTwo + range].map(($lat) =>
       [lngToFixedTwo - range, lngToFixedTwo, lngToFixedTwo + range].map(($lng) => getZone({
         lat: toFixedTwo($lat),
         lng: toFixedTwo($lng),
@@ -51,6 +51,13 @@ class DdbClientConnection extends DdbActions {
       Count: results.length,
       ScannedCount: results.length,
     };
+  }
+
+  delete({ id }) {
+    return DdbClientConnection.delete({
+      region: REGION,
+      condition: { id },
+    })
   }
 };
 

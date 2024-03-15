@@ -1,11 +1,14 @@
 {
   "Announcement": "公告",
+  "Are you sure you want to remove?": "您确定要移除吗？",
   "Browse": "浏览",
+  "Cancel": "取消",
   "Chat": "聊天",
   "Close": "关闭",
   "Close Window": "关闭窗口",
   "Connect": "连接",
   "Create": "创建",
+  "Delete": "删除",
   "Disconnected": "已断线",
   "Disconnected from the Host": "与主机断线",
   "Drag to set your position": "拖动以设置您的位置",
@@ -18,7 +21,7 @@
   "Information": "信息",
   "Language": "语言",
   "Message Board": "留言板",
-  "Please enter your nickname": "请输入你的昵称",
+  "Please enter your nickname": "请输入您的昵称",
   "Please select...": "请选择...",
   "Reconnect": "重新连接",
   "Required": "必填",
@@ -26,5 +29,5 @@
   "Title": "标题",
   "Type": "类型",
   "Type a message": "输入消息",
-  "You": "你"
+  "You": "您"
 }

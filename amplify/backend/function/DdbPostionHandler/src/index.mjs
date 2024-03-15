@@ -53,7 +53,7 @@ export async function handler(event) {
     const res = await ddbClientConnection.queryClientInZone({ lat, lng });
 
     if (res.Items && res.Items.length) {
-      await Promise.all(res.Items.map(({ connectionId }) => {    
+      await Promise.all(res.Items.map(({ id, connectionId }) => {
         return apiGateway.postToConnection({
           ConnectionId: connectionId,
           Data: JSON.stringify({
@@ -61,7 +61,11 @@ export async function handler(event) {
             type: 'position',
             data: { lat, lng, positionId, createdAt, updatedAt, __typename },
           }),
-        }).promise();
+        }).promise().catch((err) => {
+          console.error('apiGateway.postToConnection() fail:', err);
+          // connectionId Invalid
+          return ddbClientConnection.delete({ id });
+        });
       }));
     }
   }
