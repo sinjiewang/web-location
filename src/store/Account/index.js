@@ -1,9 +1,11 @@
+import StoreAccount from '@/utils/IndexedDB/StoreAccount';
+
 const locale = localStorage.getItem('locale');
 
 export default {
   namespaced: true,
   state: () => ({
-    sub: null,
+    sub: '',
     email: '',
     nickname: '',
     avatar: null,
@@ -15,11 +17,36 @@ export default {
     },
   },
   actions: {
-    updateNickName({ commit }, name) {
-      commit('updateNickName', name);
+    async getStoreConnect({ dispatch }) {
+      const db = await dispatch('IndexedDB/connect', null, { root: true });
+
+      return new StoreAccount({ db });
     },
-    updateAvatar({ commit }, blob) {
-      commit('updateAvatar', blob);
+    async getAccount({ state, dispatch, commit }) {
+      // TODO get sub from cognito
+      const storeAccount = await dispatch('getStoreConnect');
+      const account = await storeAccount.queryById(state.sub);
+
+      if (account) {
+        const { nickname, avatar } = account;
+
+        commit('updateNickname', nickname);
+        commit('updateAvatar', avatar);
+      } else {
+        storeAccount.create({
+          id: '',
+          nickname: '',
+          avatar: null,
+        });
+      }
+    },
+    async updateAccount({ state, dispatch, commit }, { nickname, avatar }) {
+      const storeAccount = await dispatch('getStoreConnect');
+
+      await storeAccount.update(state.sub, { nickname, avatar });
+
+      commit('updateNickname', nickname);
+      commit('updateAvatar', avatar);
     },
     updateLocale({ commit }, { i18n, locale }) {
       localStorage.setItem('locale', locale);
@@ -36,8 +63,8 @@ export default {
     updateNickname(state, name) {
       state.nickname = name;
     },
-    updateAvatar(state, blob) {
-      state.avatar = blob;
+    updateAvatar(state, dataUrl) {
+      state.avatar = dataUrl;
     },
     updateLocale(state, locale) {
       state.locale = locale;

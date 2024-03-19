@@ -1,6 +1,6 @@
 export default class IndexedDBConfig {
   constructor({ sub }={}) {
-    this.version = 1;
+    this.version = 2;
     this.sub = sub || 'guest';
     this.db = null;
   }
@@ -26,6 +26,9 @@ export default class IndexedDBConfig {
 
   get storeConfigure() {
     return {
+      account: {
+        options: { keyPath: 'id' },
+      },
       history: {
         options: { keyPath: 'id' },
         indexes: [
@@ -71,11 +74,13 @@ export default class IndexedDBConfig {
         store = event.target.transaction.objectStore(storeName);
       }
 
-      indexes.forEach(({indexName, keyPath, options}) => {
-        if (!store.indexNames.contains(indexName)) {
-          store.createIndex(indexName, keyPath, options);
-        }
-      });
+      if (indexes && indexes.length) {
+        indexes.forEach(({indexName, keyPath, options}) => {
+          if (!store.indexNames.contains(indexName)) {
+            store.createIndex(indexName, keyPath, options);
+          }
+        });
+      }
     });
   }
 }

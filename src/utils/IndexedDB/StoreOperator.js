@@ -60,7 +60,6 @@ export default class StoreOperator {
         const putItem = {
           ...item,
           ...data,
-          id: item.id,
           createdTime: item.createdTime,
           updatedTime,
         }

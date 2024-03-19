@@ -19,6 +19,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions('Account', ['getAccount']),
     ...mapActions('IndexedDB', ['connect']),
   },
   // watch: {
@@ -26,6 +27,7 @@ export default {
   // },
   async mounted() {
     await this.connect();
+    await this.getAccount();
   },
 }
 </script>

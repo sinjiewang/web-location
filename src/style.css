@@ -95,6 +95,7 @@ button:focus-visible {
 .v-messages,
 .v-input--disabled,
 .v-field--disabled,
+.v-card-actions,
 [disabled] {
   user-select: none;
 }
