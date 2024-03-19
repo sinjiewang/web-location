@@ -111,22 +111,10 @@ export default {
 
       this.participants[clientId] = { name, avatar };
 
-      // if (clientId === 'HOST') {
-      //   this.updateHistory(name);
-      //   this.appendMessage({
-      //     message: `${this.$t('has joined')} (${name})`,
-      //     time,
-      //   });
-      //   this.appendMessage({
-      //     message: this.$t('has joined', { name: 'Host' }),
-      //     time,
-      //   });
-      // } else {
-        this.appendMessage({
-          message: this.$t('has joined', { name }),
-          time,
-        });
-      // }
+      this.appendMessage({
+        message: this.$t('has joined', { name }),
+        time,
+      });
     },
     onunregister(data) {
       const { clientId, time } = data;
@@ -176,31 +164,19 @@ export default {
     onClickClose() {
       this.showNicknameDialog = false;
       this.init();
-      // this.createHistory();
     },
-    // createHistory() {
-    //   this.storeHistory.create({
-    //     id: this.id,
-    //     type: 'chat',
-    //     action: 'join',
-    //   });
-    // },
-    // updateHistory(title) {
-    //   this.storeHistory.update(this.id, { title });
-    // }
   },
   async mounted() {
-    if (this.nickName) {
-      this.init();
-      this.createHistory();
-    } else {
-      this.showNicknameDialog = true;
-    }
-
     const db = await this.idbConnect();
 
     this.storeChat = new StoreChat({ db });
     this.storeHistory = new StoreHistory({ db });
+
+    if (this.nickName) {
+      this.init();
+    } else {
+      this.showNicknameDialog = true;
+    }
   },
 }
 </script>

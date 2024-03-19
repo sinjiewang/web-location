@@ -82,6 +82,7 @@ export default {
       this.showAccountDialog = true;
     },
     onClickAvatar() {
+      this.imageDataUrl = this.newAvatar || this.avatar;
       this.showAvatarDialog = true;
     },
     onClickSelectImage() {
@@ -129,7 +130,7 @@ export default {
 
         if (checkBiggerThanWidth || checkBiggerThanHeight) return;
 
-        this.maskRadius = Math.max(Math.min(radius, maxRadius), 100);
+        this.maskRadius = Math.max(Math.min(radius, maxRadius), 80);
         this.mousePosition = { offsetX };
       }
     },
@@ -172,22 +173,24 @@ export default {
       const img = new Image();
 
       img.onload = () => {
+        const length = 128;
         const { width, height } = img;
         const scaleX = width / imageWidth;
         const scaleY = height / imageHeight;
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        canvas.width = 640;
-        canvas.height = 640;
+        canvas.width = length;
+        canvas.height = length;
 
-        ctx.drawImage(img, maskLeft*scaleX, maskTop*scaleY, maskWidth*scaleX, maskHeight*scaleY, 0, 0, 640, 640);
+        ctx.drawImage(img, maskLeft*scaleX, maskTop*scaleY, maskWidth*scaleX, maskHeight*scaleY, 0, 0, length, length);
 
-        this.newAvatar = canvas.toDataURL('image/png');
+        this.newAvatar = canvas.toDataURL('image/webp', 1);
         this.showAvatarDialog = false;
         this.imageDataUrl = null;
       };
-      img.src = this.imageDataUrl || this.avatar;
+
+      img.src = this.imageDataUrl || this.newAvatar|| this.avatar;
     },
     async onClickSave() {
       const { newNickname, newAvatar} = this;
@@ -197,6 +200,7 @@ export default {
         avatar: newAvatar,
       });
 
+      this.imageDataUrl = null;
       this.closeAccountDialog();
     },
   },
@@ -302,13 +306,13 @@ export default {
             <v-row>
               <v-col cols="12">
                 <svg-icon
-                  v-if="!avatar && !imageDataUrl"
+                  v-if="!imageDataUrl"
                   class="full"
                   type="mdi" :path="mdiAccountCircle"
                 ></svg-icon>
                 <div
                   :class="{
-                    'd-none': !imageDataUrl && !avatar
+                    'd-none': !imageDataUrl
                   }"
                   class="avatar-edit"
                   ref="avatarEdit"
@@ -316,7 +320,7 @@ export default {
                   <v-img
                     class="full"
                     ref="avatarImg"
-                    :src="imageDataUrl || avatar"
+                    :src="imageDataUrl"
                     @load="onImgLoad"
                   ></v-img>
                   <svg style="position: absolute;"
@@ -327,9 +331,26 @@ export default {
                       height: imageHeight,
                     }"
                   >
+                    <rect
+                      :x="maskLeft"
+                      :y="maskTop"
+                      :width="maskWidth"
+                      :height="maskHeight"
+                      fill="rgba(0,0,0,0)"
+                      stroke="rgba(0,0,0,0.7)"
+                    />
                     <mask id="circleMask">
-                      <rect :width="imageWidth" :height="imageHeight" fill="white"/>
-                      <circle :cx="maskCX" :cy="maskCY" :r="maskRadius" fill="black"/>
+                      <rect
+                        :width="imageWidth"
+                        :height="imageHeight"
+                        fill="white"
+                      />
+                      <circle
+                        :cx="maskCX"
+                        :cy="maskCY"
+                        :r="maskRadius"
+                        fill="black"
+                      />
                     </mask>
                     <rect
                       x="0"
@@ -375,7 +396,6 @@ export default {
             <v-btn
               color="primary"
               variant="elevated"
-              :disabled="!newNickname"
               @click="onClickUpdate"
             >
               {{ $t('Update') }}

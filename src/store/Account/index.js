@@ -25,7 +25,7 @@ export default {
     async getAccount({ state, dispatch, commit }) {
       // TODO get sub from cognito
       const storeAccount = await dispatch('getStoreConnect');
-      const account = await storeAccount.queryById(state.sub);
+      let account = await storeAccount.queryById(state.sub);
 
       if (account) {
         const { nickname, avatar } = account;
@@ -33,12 +33,14 @@ export default {
         commit('updateNickname', nickname);
         commit('updateAvatar', avatar);
       } else {
-        storeAccount.create({
+        account = await storeAccount.create({
           id: '',
           nickname: '',
           avatar: null,
         });
       }
+
+      return account
     },
     async updateAccount({ state, dispatch, commit }, { nickname, avatar }) {
       const storeAccount = await dispatch('getStoreConnect');

@@ -75,7 +75,6 @@ export default {
 
       if (!type || !id) return '';
 
-debugger
       const name = this.getTypeName(type);
       const path = this.$router.resolve({
         name: name,

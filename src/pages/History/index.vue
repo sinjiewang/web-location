@@ -69,7 +69,8 @@ export default {
 
       window.open(url, '_blank');
     },
-    onClickHistoryDelete() {
+    onClickHistoryDelete(item) {
+      this.selectedHistory = item;
       this.showConfirmDeleteDialog = true;
     },
     async onClickDelete() {
