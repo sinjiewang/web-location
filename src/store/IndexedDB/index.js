@@ -1,4 +1,6 @@
 import IndexedDBConfig from "@/utils/IndexedDB/IndexedDBConfig";
+import StoreChat from '@/utils/IndexedDB/StoreChat';
+import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 
 export default {
   namespaced: true,
@@ -27,6 +29,16 @@ export default {
 
         commit('updateDb', promise);
       });
+    },
+    async deleteHistory({ dispatch }, id) {
+      const db = await dispatch('connect');
+      const storeHistory = new StoreHistory({ db });
+      const storeChat = new StoreChat({ db });
+      const messages = await storeChat.queryByHistoryId(id);
+
+      messages.forEach(({ id }) => storeChat.delete(id));
+
+      await storeHistory.delete(id);
     },
   },
   mutations: {

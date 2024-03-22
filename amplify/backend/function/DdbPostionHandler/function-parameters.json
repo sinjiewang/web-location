@@ -11,12 +11,17 @@
   "permissions": {
     "api": {
       "weblocation": [
-        "Query"
+        "Query",
+        "Mutation",
+        "Subscription"
       ]
     },
     "storage": {
       "ClientConnection:@model(appsync)": [
-        "read"
+        "create",
+        "read",
+        "update",
+        "delete"
       ]
     }
   }

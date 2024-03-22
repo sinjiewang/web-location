@@ -7,6 +7,7 @@ import ChatProtocol from '../utils/ChatProtocol';
 
 import ChatWindow from '../ChatWindow.vue';
 import { mapActions } from 'vuex';
+import { /*isProxy,*/ toRaw } from 'vue';
 
 export default {
   components: {
@@ -24,11 +25,13 @@ export default {
   },
   data() {
     return {
+      avatar: null,
       signaling: null,
       rtcSite: null,
       storeChat: null,
       storeHistory: null,
       dataChannels: {},
+      participants: {},
     };
   },
   computed: {
@@ -40,6 +43,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions('Account', ['getAccount']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     init() {
       const { tunnel } = this;
@@ -83,15 +87,15 @@ export default {
     },
     onmessage(data) {
       const { time, message, clientId } = data;
-      const { name, avatar } = this.dataChannels[clientId] || {};
+      const { name } = this.dataChannels[clientId] || {};
       const newChat = {
         sender: name,
-        avatar,
+        clientId,
         time,
         message,
       };
 
-      this.appendMessage(newChat);
+      this.appendMessage(newChat, clientId);
       this.broadcast({
         excepts: [clientId],
         data: newChat,
@@ -108,6 +112,7 @@ export default {
         dataChannel.avatar = avatar;
       }
 
+      this.updateStoreHistory({ clientId, name, avatar });
       this.appendMessage({
         message: this.$t('has joined', { name }),
         time,
@@ -129,7 +134,8 @@ export default {
         type: 'register',
         data: {
           name: 'HOST',
-          avatar: null,
+          clientId: 'host',
+          avatar: this.avatar,
           time,
         },
       });
@@ -159,6 +165,7 @@ export default {
       this.broadcast({
         data: {
           sender: 'Host',
+          clientId: 'host',
           ...data,
         }
       });
@@ -173,19 +180,40 @@ export default {
           data,
         }));
     },
-    appendMessage(data) {
-      this.$refs.messageWindow.appendMessage(data);
+    appendMessage(data, clientId='host') {
       this.storeChat.create({
         ...data,
+        clientId,
         historyId: this.siteId,
       })/*.then((id) => {})*/;
+      this.appendMessageToWindow(data, clientId);
+    },
+    appendMessageToWindow(data, clientId) {
+      const { avatar, name } = this.participants[clientId] || {};
+
+      this.$refs.messageWindow.appendMessage({
+        ...data,
+        avatar,
+        name,
+      });
+    },
+    updateStoreHistory({ clientId, name, avatar }) {
+      const { participants, siteId } = this;
+
+      participants[clientId] = { name, avatar };
+
+      this.storeHistory.update(siteId, {
+        participants: toRaw(participants),
+      });
     },
   },
   async mounted() {
     const db = await this.idbConnect();
+    const { avatar } = await this.getAccount();
     const { title, position } = this.profile;
     const { lat, lng } = position;
 
+    this.avatar = avatar;
     this.storeChat = new StoreChat({ db });
     this.storeHistory = new StoreHistory({ db });
     this.init();
@@ -194,6 +222,7 @@ export default {
     const history =  await this.storeHistory.queryById(siteId);
 
     if (history) {
+      this.participants = history.participants;
       this.storeHistory.update(siteId, {
         title,
         position: { lat, lng },
@@ -201,13 +230,24 @@ export default {
 
       const messages = await this.storeChat.queryByHistoryId(siteId);
 
-      messages.forEach((message) => this.$refs.messageWindow.appendMessage(message));
+      messages.forEach((message) => {
+        this.appendMessageToWindow(message, message.clientId)
+      });
     } else {
+      const participants = {
+        host: {
+          name: 'HOST',
+          avatar,
+        },
+      };
+
       this.storeHistory.create({
         ...this.profile,
         position: { lat, lng },
         action: 'create',
+        participants,
       });
+      this.participants = participants;
     }
     this.appendMessage({
       time: Date.now(),

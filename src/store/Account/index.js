@@ -33,11 +33,17 @@ export default {
         commit('updateNickname', nickname);
         commit('updateAvatar', avatar);
       } else {
-        account = await storeAccount.create({
-          id: '',
-          nickname: '',
-          avatar: null,
-        });
+        try {
+          account = await storeAccount.create({
+            id: '',
+            nickname: '',
+            avatar: null,
+          });
+        } catch (err) {
+          console.warn('storeAccount.create failed: ', err)
+          // try again
+          return dispatch('getAccount');
+        }
       }
 
       return account

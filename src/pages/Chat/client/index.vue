@@ -1,5 +1,6 @@
 <script>
 import { mapState, mapActions } from 'vuex';
+import { /*isProxy,*/ toRaw } from 'vue';
 import ClientSignaling from '@/utils/Signaling/ClientSignaling.js';
 import RTCPeerClient from '@/utils/RTCPeer/RTCPeerClient.js';
 
@@ -15,8 +16,8 @@ export default {
   },
   data() {
     return {
-      nickName: this.$route.query.nickName,
-      showNicknameDialog: !this.$route.query.nickName,
+      nickname: null,
+      showNicknameDialog: false,
       showDisconnectedDialog: false,
       siteId: this.$route.params.siteId,
       loading: false,
@@ -37,6 +38,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions('Account', ['getAccount']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     ...mapActions('CloudTunnel', ['clientConnect', 'disconnect']),
     async init() {
@@ -73,29 +75,43 @@ export default {
       this.channel = chatProtocol;
       this.register();
     },
-    onprofile({ id, position, type, title }) {
+    async onprofile({ id, position, type, title }) {
       this.appendMessage({
         message: `${this.$t('has joined')} (${title})`,
         time: Date.now(),
       });
-      this.storeHistory.create({
-        id: this.id,
-        action: 'join',
-        siteId: id,
-        position,
-        type,
-        title,
+
+      try {
+        this.storeHistory.create({
+          id: this.id,
+          action: 'join',
+          siteId: id,
+          position,
+          type,
+          title,
+        });
+      } catch (err) {
+        console.warn('storeHistory.create failed:', err)
+      }
+    },
+    onregister(data) {
+      const { name, avatar, clientId, time } = data;
+
+      this.participants[clientId] = { name, avatar };
+      this.updateStoreHistory();
+      this.appendMessage({
+        message: this.$t('has joined', { name }),
+        time,
       });
     },
     onmessage(data) {
-      const { sender, time, message, avatar } = data;
+      const { sender, time, message, clientId } = data;
 
       this.appendMessage({
         sender,
         time,
         message,
-        avatar,
-      });
+      }, clientId);
     },
     onclose() {
       this.channel.removeAllListeners();
@@ -106,22 +122,12 @@ export default {
         time: Date.now(),
       });
     },
-    onregister(data) {
-      const { name, avatar, clientId, time } = data;
-
-      this.participants[clientId] = { name, avatar };
-
-      this.appendMessage({
-        message: this.$t('has joined', { name }),
-        time,
-      });
-    },
     onunregister(data) {
       const { clientId, time } = data;
       const participant = this.participants[clientId];
 
       if (participant) {
-        delete this.participants[clientId];
+        // delete this.participants[clientId];
         this.appendMessage({
           message: this.$t('has left', { name: participant.name }),
           time,
@@ -139,17 +145,25 @@ export default {
         align: 'right',
       });
     },
-    appendMessage(data) {
-      this.$refs.messageWindow.appendMessage(data);
+    appendMessage(data, clientId='self') {
+      const avatar = clientId ? this.participants[clientId].avatar : this.avatar;
+
+      this.$refs.messageWindow.appendMessage({
+        ...data,
+        avatar,
+      });
       this.storeChat.create({
         ...data,
+        clientId,
         historyId: this.id,
       });
     },
     register() {
-      const name = this.nickName;
+      const name = this.nickname;
+      const avatar = this.avatar;
 
-      this.channel.sendRegister({ name });
+      this.channel.sendRegister({ name, avatar });
+      this.participants['self'] = { name, avatar };
     },
     async onClickReconnect() {
       this.showDisconnectedDialog = false;
@@ -165,6 +179,15 @@ export default {
       this.showNicknameDialog = false;
       this.init();
     },
+    updateStoreHistory() {
+      const { participants, id } = this;
+
+      console.log('updateStoreHistory', id)
+
+      this.storeHistory.update(id, {
+        participants: toRaw(participants),
+      });
+    },
   },
   async mounted() {
     const db = await this.idbConnect();
@@ -172,7 +195,12 @@ export default {
     this.storeChat = new StoreChat({ db });
     this.storeHistory = new StoreHistory({ db });
 
-    if (this.nickName) {
+    const { nickname, avatar } = await this.getAccount();
+
+    this.nickname = nickname;
+    this.avatar = avatar;
+
+    if (nickname) {
       this.init();
     } else {
       this.showNicknameDialog = true;
@@ -236,7 +264,7 @@ export default {
       <v-card>
         <v-card-text>
           <v-text-field
-            v-model="nickName"
+            v-model="nickname"
             :label="$t('Please enter your nickname')"
             filled
           ></v-text-field>
@@ -246,7 +274,7 @@ export default {
           <v-btn
             color="primary"
             variant="elevated"
-            :disabled="!nickName"
+            :disabled="!nickname"
             @click="onClickClose"
           >
             {{ $t('Close') }}

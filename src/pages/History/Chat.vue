@@ -1,6 +1,7 @@
 <script>
 import { mapActions } from 'vuex';
 import StoreChat from '@/utils/IndexedDB/StoreChat';
+import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 import ChatWindow from '@/pages/Chat/ChatWindow.vue';
 
 export default {
@@ -10,6 +11,7 @@ export default {
   data() {
     return {
       storeChat: null,
+      storeHistory: null,
     };
   },
   computed: {
@@ -20,26 +22,47 @@ export default {
   methods: {
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     async updateChatWindow() {
-      const { id, storeChat } = this;
+      const { id, storeChat, participants } = this;
       const messages = await storeChat.queryByHistoryId(id);
 
       this.$refs.chatWindow.clear();
 
       messages.forEach((message) => {
-        this.$refs.chatWindow.appendMessage(message);
+        const { avatar } = (participants && participants[message.clientId])
+          ? participants[message.clientId]
+          : {};
+
+        this.$refs.chatWindow.appendMessage({
+          ...message,
+          avatar,
+        });
       });
+    },
+    async updateParticipants() {
+      const { id, storeHistory } = this;
+      const { participants } = await storeHistory.queryById(id);
+
+      this.participants = participants;
     },
   },
   watch: {
-    id() {
-      this.updateChatWindow();
+    async id() {
+      await this.updateParticipants();
+      await this.updateChatWindow();
     },
   },
   async mounted() {
     const db = await this.idbConnect();
 
+    this.storeHistory = new StoreHistory({ db });
     this.storeChat = new StoreChat({ db });
-    this.updateChatWindow();
+
+    try {
+      await this.updateParticipants();
+      await this.updateChatWindow();
+    } catch (err) {
+      console.error('init failed:', err)
+    }
   },
 }
 </script>

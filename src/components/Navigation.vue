@@ -130,7 +130,7 @@ export default {
 
         if (checkBiggerThanWidth || checkBiggerThanHeight) return;
 
-        this.maskRadius = Math.max(Math.min(radius, maxRadius), 80);
+        this.maskRadius = Math.max(Math.min(radius, maxRadius), 100);
         this.mousePosition = { offsetX };
       }
     },

@@ -37,6 +37,7 @@ export default {
   methods: {
     mergeProps,
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
+    ...mapActions('IndexedDB', ['deleteHistory']),
     ...mapActions('Geopositioning', ['getUserPosition']),
     queryActionsFromStore(next) {
       return this.storeHistory.queryActionOrderByUpdateTime('', { next });
@@ -78,7 +79,7 @@ export default {
 
       this.showConfirmDeleteDialog = false;
 
-      await this.storeHistory.delete(id);
+      await this.deleteHistory(id);
 
       this.history = this.history.filter((item) => item.id !== id);
 
