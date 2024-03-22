@@ -3,6 +3,7 @@ import { mapState, mapActions } from 'vuex';
 import { /*isProxy,*/ toRaw } from 'vue';
 import ClientSignaling from '@/utils/Signaling/ClientSignaling.js';
 import RTCPeerClient from '@/utils/RTCPeer/RTCPeerClient.js';
+import AccountDialog from '@/components/AccountDialog.vue';
 
 import ChatProtocol from '../utils/ChatProtocol';
 import ChatWindow from '../ChatWindow.vue';
@@ -13,11 +14,12 @@ import short from 'short-uuid';
 export default {
   components: {
     ChatWindow,
+    AccountDialog,
   },
   data() {
     return {
       nickname: null,
-      showNicknameDialog: false,
+      avatar: null,
       showDisconnectedDialog: false,
       siteId: this.$route.params.siteId,
       loading: false,
@@ -175,10 +177,6 @@ export default {
     onClickCloseWindow() {
       window.close();
     },
-    onClickClose() {
-      this.showNicknameDialog = false;
-      this.init();
-    },
     updateStoreHistory() {
       const { participants, id } = this;
 
@@ -187,6 +185,11 @@ export default {
       this.storeHistory.update(id, {
         participants: toRaw(participants),
       });
+    },
+    onAccount({ name, avatar }) {
+      this.nickname = name;
+      this.avatar = avatar;
+      this.init();
     },
   },
   async mounted() {
@@ -203,7 +206,8 @@ export default {
     if (nickname) {
       this.init();
     } else {
-      this.showNicknameDialog = true;
+      // this.showNicknameDialog = true;
+      this.$refs.accountDialog.open();
     }
   },
 }
@@ -256,32 +260,11 @@ export default {
       </v-card>
     </v-dialog>
 
-    <v-dialog
-      v-model="showNicknameDialog"
-      persistent
-      max-width="400px"
-    >
-      <v-card>
-        <v-card-text>
-          <v-text-field
-            v-model="nickname"
-            :label="$t('Please enter your nickname')"
-            filled
-          ></v-text-field>
-        </v-card-text>
-        <v-card-actions class="d-flex align-stretch">
-          <v-spacer></v-spacer>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            :disabled="!nickname"
-            @click="onClickClose"
-          >
-            {{ $t('Close') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <AccountDialog
+      ref="accountDialog"
+      :showCloseButton="false"
+      @account="onAccount"
+    />
   </v-app>
 </template>
 
