@@ -109,6 +109,7 @@ export default {
       await this.siteConnect({ siteId, lat, lng, type, title });
 
       this.id = siteId;
+      this.$router.push({ params: { id: siteId }});
       this.nextStep();
       this.appComponent = APP_MAPPING[type];
       this.loading = false;
