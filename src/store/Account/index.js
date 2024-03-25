@@ -9,6 +9,7 @@ export default {
     email: '',
     nickname: '',
     avatar: null,
+    position: null,
     locale,
   }),
   getters: {
@@ -28,10 +29,11 @@ export default {
       let account = await storeAccount.queryById(state.sub);
 
       if (account) {
-        const { nickname, avatar } = account;
+        const { nickname, avatar, position } = account;
 
         commit('updateNickname', nickname);
         commit('updateAvatar', avatar);
+        commit('updatePosition', position);
       } else {
         try {
           account = await storeAccount.create({
@@ -63,6 +65,13 @@ export default {
 
       commit('updateLocale', locale);
     },
+    async updatePosition({ state, dispatch, commit }, { lat, lng }) {
+      const storeAccount = await dispatch('getStoreConnect');
+
+      await storeAccount.update(state.sub, { position: { lat, lng }});
+
+      commit('updatePosition', { lat, lng });
+    },
   },
   mutations: {
     updateSub(state, sub) {
@@ -76,6 +85,9 @@ export default {
     },
     updateLocale(state, locale) {
       state.locale = locale;
+    },
+    updatePosition(state, position) {
+      state.position = position;
     },
   },
 }

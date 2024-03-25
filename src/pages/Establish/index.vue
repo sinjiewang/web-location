@@ -47,6 +47,7 @@ export default {
   },
   computed: {
     ...mapState('Account', ['sub']),
+    ...mapState('Account', { accountPostion: 'position' }),
     ...mapState('CloudTunnel', ['wsClient']),
     types() {
       return Object.keys(SITE.TYPE).map((type) => ({
@@ -88,6 +89,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions('Account', ['getAccount']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     ...mapActions('Geopositioning', ['getUserPosition']),
     ...mapActions('CloudTunnel', ['siteConnect', 'disconnect']),
@@ -170,6 +172,8 @@ export default {
     },
   },
   async mounted() {
+    await this.getAccount();
+
     let history = null;
 
     if (this.id) {
@@ -184,6 +188,8 @@ export default {
       this.title = history.title;
       this.position = history.position;
       this.disableTypeSelect = true;
+    } else if (this.accountPostion) {
+      this.position = this.accountPostion;
     } else {
       const { lat, lng } = await this.getUserPosition();
 

@@ -20,7 +20,7 @@ export default {
     };
   },
   computed: {
-    ...mapState('Account', ['nickName']),
+    ...mapState('Account', ['nickName', 'position']),
     ...mapGetters('Geopositioning', ['labels']),
     labelName() {
       const { lat, lng } = this.selectedLabel || {};
@@ -32,12 +32,15 @@ export default {
     },
   },
   methods: {
+    ...mapActions('Account', ['getAccount']),
+    ...mapActions('Account', { updateAccountPosition: 'updatePosition' }),
     ...mapActions('Geopositioning', ['getLabels', 'getUserPosition', 'getPositionSites']),
     ...mapActions('CloudTunnel', ['clientConnect', 'updateClientPosition']),
     onMapCenterMoved(position) {
       this.center = position;
       this.getLabels(this.center);
       this.updateClientPosition(position);
+      this.updateAccountPosition(position);
     },
     async updateSites(positionId, nextToken=null) {
       const res = await this.getPositionSites({ positionId, nextToken });
@@ -78,7 +81,13 @@ export default {
     },
   },
   async mounted() {
-    this.center = await this.getUserPosition();
+    await this.getAccount();
+
+    if (this.position) {
+      this.center = this.position;
+    } else {
+      this.center = await this.getUserPosition();
+    }
 
     await this.clientConnect(this.center);
 
