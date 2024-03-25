@@ -19,6 +19,10 @@ export default {
       type: Boolean,
       default: () => true,
     },
+    minRadis: {
+      type: Number,
+      default: () => 100,
+    }
   },
   emits: ['account'],
   data() {
@@ -56,6 +60,12 @@ export default {
     },
     maskCY() {
       return this.maskTop + this.maskRadius;
+    },
+    maxRadius() {
+      return this.imageWidth / 2;
+    },
+    displayResizeTri() {
+      return navigator.maxTouchPoints < 2;
     },
   },
   methods: {
@@ -96,23 +106,22 @@ export default {
 
       this.resizing = true;
       this.mousePosition = { offsetX };
-      this.$mouseup = () => this.onMouseUp();
+      this.$actionend = () => this.onActionEnd();
 
-      document.addEventListener('mouseup', this.$mouseup);
+      document.addEventListener('mouseup', this.$actionend);
     },
     onResizing (event) {
       const { offsetX } = event;
-      const { maskRadius, imageWidth, imageHeight, maskTop } = this;
+      const { maskRadius, imageWidth, imageHeight, maskTop, maskLeft, minRadis, maxRadius } = this;
 
       if (this.resizing) {
         const radius = maskRadius + (offsetX - this.mousePosition.offsetX)/2;
-        const maxRadius = imageWidth / 2;
-        const checkBiggerThanWidth = radius * 2 + maskTop > imageWidth;
+        const checkBiggerThanWidth = radius * 2 + maskLeft > imageWidth;
         const checkBiggerThanHeight = radius * 2 + maskTop > imageHeight;
 
         if (checkBiggerThanWidth || checkBiggerThanHeight) return;
 
-        this.maskRadius = Math.max(Math.min(radius, maxRadius), 100);
+        this.maskRadius = Math.max(Math.min(radius, maxRadius), minRadis);
         this.mousePosition = { offsetX };
       }
     },
@@ -125,9 +134,9 @@ export default {
         left: this.maskLeft,
       }
       this.mousePosition = { clientX, clientY };
-      this.$mouseup = () => this.onMouseUp();
+      this.$actionend = () => this.onActionEnd();
 
-      document.addEventListener('mouseup', this.$mouseup);
+      document.addEventListener('mouseup', this.$actionend);
     },
     onMoving(event) {
       if (this.moving) {
@@ -143,12 +152,96 @@ export default {
         this.maskLeft = Math.max(Math.min(maskLeft, imageWidth - maskWidth), 0)
       }
     },
-    onMouseUp() {
+    onResizeTouchStart(event) {
+      console.error('onResizeTouchStart')
+      const touch = event.touches[0] || event.changedTouches[0];
+      const { clientX } = touch;
+
+      this.resizing = true;
+      this.touchPosition = { clientX };
+      this.$actionend = () => this.onActionEnd();
+
+      document.addEventListener('touchend', this.$actionend);
+    },
+    onResizeTouchMoving(event) {
+      const touch = event.touches[0] || event.changedTouches[0];
+      const { clientX } = touch;
+      const { maskRadius, imageWidth, imageHeight, maskTop, maskLeft, minRadis, maxRadius } = this;
+
+      if (this.resizing && event.touches.length < 2) {
+        const radius = maskRadius + (clientX - this.touchPosition.clientX)/2;
+        const checkBiggerThanWidth = radius * 2 + maskLeft > imageWidth;
+        const checkBiggerThanHeight = radius * 2 + maskTop > imageHeight;
+
+        if (checkBiggerThanWidth || checkBiggerThanHeight) return;
+
+        this.maskRadius = Math.max(Math.min(radius, maxRadius), minRadis);
+        this.touchPosition = { clientX };
+
+        event.preventDefault();
+      }
+    },
+    onMoveTouchStart(event) {
+      const { touches } = event;
+      if (touches.length === 2) {
+        this.touchPosition = {
+          distance: this.getDistance(...touches),
+          radius: this.maskRadius,
+          top: this.maskTop,
+          left: this.maskLeft,
+        };
+        this.resizing = true;
+      } else {
+        const touch = touches[0] || event.changedTouches[0];
+        const { clientX, clientY } = touch;
+
+        this.moving = true;
+        this.touchPosition = { clientX, clientY };
+        this.maskPostion = {
+          top: this.maskTop,
+          left: this.maskLeft,
+        }
+      }
+      this.$actionend = () => this.onActionEnd();
+
+      document.addEventListener('touchend', this.$actionend);
+    },
+    onMoveTouchMoving(event) {
+      const { touches } = event;
+
+      if (touches.length === 2 && this.resizing) {
+        const newDistance = this.getDistance(...touches);
+        const { distance, radius, top, left } = this.touchPosition;
+        const { imageHeight, imageWidth, minRadis, maxRadius } = this;
+        const delta = (newDistance - distance) / 2;
+        const newRadius = Math.max(Math.min(radius + delta, maxRadius), minRadis);
+
+        this.maskRadius = newRadius;
+        this.maskTop = Math.min(Math.max(top - delta, 0), imageHeight - newRadius * 2);
+        this.maskLeft = Math.min(Math.max(left - delta, 0), imageWidth - newRadius * 2);
+      } else if (this.moving) {
+        const touch = touches[0] || event.changedTouches[0];
+        const { clientX, clientY } = touch;
+        const { top, left } = this.maskPostion;
+        const deltaX = clientX - this.touchPosition.clientX;
+        const deltaY = clientY - this.touchPosition.clientY;
+        const { maskWidth, maskHeight, imageWidth, imageHeight } = this;
+        const maskTop = top + deltaY;
+        const maskLeft = left + deltaX;
+
+        this.maskTop = Math.max(Math.min(maskTop, imageHeight - maskHeight), 0);
+        this.maskLeft = Math.max(Math.min(maskLeft, imageWidth - maskWidth), 0);
+      }
+
+      event.preventDefault();
+    },
+    onActionEnd() {
       this.mousePosition = null;
       this.resizing = false;
       this.moving = false;
 
-      document.removeEventListener('mouseup', this.$mouseup);
+      document.removeEventListener('mouseup', this.$actionend);
+      document.removeEventListener('touchend', this.$actionend);
     },
     onClickUpdate() {
       const { imageWidth, imageHeight, maskTop, maskLeft, maskWidth, maskHeight } = this;
@@ -188,6 +281,12 @@ export default {
     },
     onAvatarDialogClose() {
       this.imageDataUrl = null;
+    },
+    getDistance(pointA, pointB) {
+      const dx = pointA.clientX - pointB.clientX;
+      const dy = pointA.clientY - pointB.clientY;
+
+      return Math.sqrt(dx * dx + dy * dy);
     },
   },
 }
@@ -265,6 +364,7 @@ export default {
       <v-card-text
         class="mb-1"
         @mousemove="onResizing"
+        @touchmove="onResizeTouchMoving"
       >
         <v-row>
           <v-col cols="12">
@@ -324,11 +424,15 @@ export default {
                   mask="url(#circleMask)"
                     @mousedown.self="onMoveStart"
                     @mousemove.self="onMoving"
+                    @touchstart.self="onMoveTouchStart"
+                    @touchmove.self="onMoveTouchMoving"
                 />
                 <polygon class="resize"
+                  v-if="displayResizeTri"
                   :points="maskTrianglePoints"
                   fill="rgba(255,255,255,0.5)"
                   @mousedown.self="onResizeStart"
+                  @touchstart.self="onResizeTouchStart"
                 />
               </svg>
             </div>
