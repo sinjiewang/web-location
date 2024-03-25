@@ -43,9 +43,21 @@ export default {
       mdiAccountCircle,
     };
   },
+  computed: {
+    // isScrollAtBottom() {
+    //   const { msgWindow } = this.$refs;
+
+    //   console.log(msgWindow.scrollTop, msgWindow.scrollHeight, msgWindow.clientHeight)
+    //   return msgWindow.scrollTop >= msgWindow.scrollHeight - msgWindow.clientHeight;
+    // },
+  },
   methods: {
     appendMessage({ sender, time, message, avatar, align }={}) {
       this.messages.push({ sender, time, message, avatar, align });
+
+      if (this.isScrollAtBottom()) {
+        this.$nextTick(() => this.scrollToBottom());
+      }
     },
     toLocaleTimeString(timestamp) {
       return new Date(timestamp).toLocaleString();
@@ -66,6 +78,16 @@ export default {
     clear() {
       this.messages = [];
     },
+    isScrollAtBottom() {
+      const element = this.$refs.msgWindow.$el;
+
+      return Math.ceil(element.scrollTop) >= element.scrollHeight - element.clientHeight;
+    },
+    scrollToBottom() {
+      const element = this.$refs.msgWindow.$el;
+
+      element.scrollTop = Math.ceil(element.scrollHeight - element.clientHeight);
+    },
   },
 }
 </script>
@@ -78,6 +100,7 @@ export default {
         'display-input': displayInput
       }"
       outlined
+      ref="msgWindow"
     >
       <v-list>
         <v-list-item v-for="(msg, index) in messages" :key="index"
