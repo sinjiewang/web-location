@@ -4,9 +4,6 @@ import short from 'short-uuid';
 import Signaling from '@/utils/Signaling/SiteSignaling.js';
 import RTCPeerSite from '@/utils/RTCPeer/RTCPeerSite.js';
 import Protocol from './Protocol';
-// import StoreChat from '@/utils/IndexedDB/StoreChat';
-// import StoreHistory from '@/utils/IndexedDB/StoreHistory';
-
 
 export default class Service extends EventEmitter {
   constructor({ id=short.generate(), tunnel, profile={} }={}) {

@@ -1,14 +1,8 @@
 <script>
 import { mapState, mapActions } from 'vuex';
-import { /*isProxy,*/ toRaw } from 'vue';
-import ClientSignaling from '@/utils/Signaling/ClientSignaling.js';
-import RTCPeerClient from '@/utils/RTCPeer/RTCPeerClient.js';
 import AccountDialog from '@/components/AccountDialog.vue';
-
-import ChatProtocol from '../utils/ChatProtocol';
+import ClientService from '@/utils/Service/Chat/ClientService.js';
 import ChatWindow from '../ChatWindow.vue';
-import StoreHistory from '@/utils/IndexedDB/StoreHistory';
-import StoreChat from '@/utils/IndexedDB/StoreChat';
 import short from 'short-uuid';
 
 export default {
@@ -23,10 +17,8 @@ export default {
       showDisconnectedDialog: false,
       siteId: this.$route.params.siteId,
       loading: false,
-      channel: null,
-      participants: {},
-      storeChat: null,
-      storeHistory: null,
+      service: null,
+      db: null,
       id: short.generate(),
     };
   },
@@ -48,127 +40,100 @@ export default {
 
       try {
         await this.clientConnect();
-        await this.peerConnect();
+
+        this.service = await this.createService();
       } catch (err) {
         console.error('init failed', err);
+
+        this.showDisconnectedDialog = true;
       }
 
       this.loading = false;
       this.disconnect();
     },
-    async peerConnect() {
-      const { wsClient, siteId } = this;
-      const signaling = new ClientSignaling({ tunnel: wsClient });
-      const rtcConnection = new RTCPeerClient({
-        signaling,
+    async createService() {
+      const { nickname, avatar, wsClient, siteId, db } = this;
+
+      const service = new ClientService({
+        name: nickname,
+        avatar,
+        db,
+      });
+
+      service.on('profile', (profile) => this.onprofile(profile));
+      service.on('register', (data) => this.onregister(data));
+      service.on('deregister', (data) => this.onderegister(data));
+      service.on('message', (data) => this.onmessage(data));
+      service.on('close', () => this.onclose());
+
+      await service.connect({
+        tunnel: wsClient,
         siteId,
       });
 
-      await rtcConnection.connect();
-      const dataChannel = await rtcConnection.createDataChannel('data');
-      const chatProtocol = new ChatProtocol({ dataChannel })
-
-      chatProtocol.on('profile', (event) => this.onprofile(event));
-      chatProtocol.on('message', (event) => this.onmessage(event));
-      chatProtocol.on('register', (event) => this.onregister(event));
-      chatProtocol.on('deregister', (event) => this.onderegister(event));
-      chatProtocol.on('close', () => this.onclose());
-
-      this.channel = chatProtocol;
-      this.register();
+      return service;
     },
-    async onprofile({ id, position, type, title }) {
+    async onprofile({ title }) {
       this.appendMessage({
         message: `${this.$t('has joined')} (${title})`,
         time: Date.now(),
       });
-
-      try {
-        this.storeHistory.create({
-          id: this.id,
-          action: 'join',
-          siteId: id,
-          position,
-          type,
-          title,
-        });
-      } catch (err) {
-        console.warn('storeHistory.create failed:', err)
-      }
     },
-    onregister(data) {
-      const { name, avatar, clientId, time } = data;
-
-      console.log('onregister', name, clientId)
-
-      this.participants[clientId] = { name, avatar };
-      this.updateStoreHistory();
-      this.appendMessage({
+    onregister({ name }) {
+      const data = {
         message: this.$t('has joined', { name }),
-        time,
-      });
-    },
-    onmessage(data) {
-      const { time, message, clientId } = data;
-      const { name } = this.participants[clientId];
+        time: Date.now(),
+      };
 
-      this.appendMessage({
+      this.appendMessage(data);
+      this.service.storeMessage(data);
+    },
+    onmessage({ clientId='self', time, message, name, avatar }) {
+      const data = {
         sender: name,
-        time,
         message,
-      }, clientId);
+        time,
+        avatar,
+      };
+
+      if (clientId === 'self') {
+        data.sender = this.$t('You');
+        data.align = 'right';
+      }
+
+      this.appendMessageToWindow(data);
     },
     onclose() {
-      this.channel.removeAllListeners();
-      this.channel = null;
       this.showDisconnectedDialog = true;
       this.appendMessage({
         message: `Host ${this.$t('Disconnected')}`,
         time: Date.now(),
       });
+      this.service = null;
     },
-    onderegister(data) {
-      const { clientId, time } = data;
-      const participant = this.participants[clientId];
+    onderegister({ name }) {
+      const data = {
+        message: this.$t('has left', { name }),
+        time: Date.now(),
+      };
 
-      if (participant) {
-        // delete this.participants[clientId];
-        this.appendMessage({
-          message: this.$t('has left', { name: participant.name }),
-          time,
-        });
-      }
+      this.appendMessage(data);
+      this.service.storeMessage(data);
     },
     sendMessage(message) {
-      const time = Date.now();
-
-      this.channel.sendMessage({ message, time });
-      this.appendMessage({
-        sender: this.$t('You'),
-        time,
+      this.service.sendMessage(message);
+      this.onmessage({
         message,
-        align: 'right',
+        time: Date.now(),
+        name: this.nickname,
+        avatar: this.avatar,
       });
     },
-    appendMessage(data, clientId='self') {
-      const { avatar } = this.participants[clientId];
-
-      this.$refs.messageWindow.appendMessage({
-        ...data,
-        avatar,
-      });
-      this.storeChat.create({
-        ...data,
-        clientId,
-        historyId: this.id,
-      });
+    appendMessage(data) {
+      this.appendMessageToWindow(data);
     },
-    register() {
-      const name = this.nickname;
-      const avatar = this.avatar;
-
-      this.channel.sendRegister({ name, avatar });
-      this.participants['self'] = { name, avatar };
+    appendMessageToWindow(data) {
+      this.$refs.messageWindow.appendMessage(data);
     },
     async onClickReconnect() {
       this.showDisconnectedDialog = false;
@@ -180,15 +145,6 @@ export default {
     onClickCloseWindow() {
       window.close();
     },
-    updateStoreHistory() {
-      const { participants, id } = this;
-
-      console.log('updateStoreHistory', id)
-
-      this.storeHistory.update(id, {
-        participants: toRaw(participants),
-      });
-    },
     onAccount({ name, avatar }) {
       this.nickname = name;
       this.avatar = avatar;
@@ -196,10 +152,7 @@ export default {
     },
   },
   async mounted() {
-    const db = await this.idbConnect();
-
-    this.storeChat = new StoreChat({ db });
-    this.storeHistory = new StoreHistory({ db });
+    this.db = await this.idbConnect();
 
     const { nickname, avatar } = await this.getAccount();
 
@@ -209,7 +162,6 @@ export default {
     if (nickname) {
       this.init();
     } else {
-      // this.showNicknameDialog = true;
       this.$refs.accountDialog.open();
     }
   },

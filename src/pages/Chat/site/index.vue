@@ -1,5 +1,5 @@
 <script>
-import Service from '@/utils/Service/ChatService.js';
+import Service from '@/utils/Service/Chat/SiteService.js';
 import ChatWindow from '../ChatWindow.vue';
 import { mapActions } from 'vuex';
 import { /*isProxy,*/ toRaw } from 'vue';
@@ -66,7 +66,7 @@ export default {
         time: Date.now(),
       });
     },
-    onmessage({clientId, time, message, name, avatar }) {
+    onmessage({ clientId, time, message, name, avatar }) {
       const data = {
         sender: name,
         message,

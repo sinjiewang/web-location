@@ -30,7 +30,7 @@ export default {
       positionMarker: null,
       position: null,
       id: this.$route.params.id,
-      title: 'TEST',
+      title: null,
       type: 'chat',
       disableTypeSelect: false,
       qrcodeUrl: null,

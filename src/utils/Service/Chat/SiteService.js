@@ -1,11 +1,11 @@
 import EventEmitter from 'events';
-import Service from './index.js';
+import Service from '../Site.js';
 
 import StoreChat from '@/utils/IndexedDB/StoreChat';
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 
 
-export default class ChatService extends EventEmitter {
+export default class ChatSiteService extends EventEmitter {
   constructor({ id=short.generate(), tunnel, profile={}, db }={}) {
     super();
 
