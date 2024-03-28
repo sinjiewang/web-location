@@ -1,10 +1,5 @@
 <script>
-import Signaling from '@/utils/Signaling/SiteSignaling.js';
-import RTCPeerSite from '@/utils/RTCPeer/RTCPeerSite.js';
-import StoreChat from '@/utils/IndexedDB/StoreChat';
-import StoreHistory from '@/utils/IndexedDB/StoreHistory';
-import ChatProtocol from '../utils/ChatProtocol';
-
+import Service from '@/utils/Service/ChatService.js';
 import ChatWindow from '../ChatWindow.vue';
 import { mapActions } from 'vuex';
 import { /*isProxy,*/ toRaw } from 'vue';
@@ -45,218 +40,95 @@ export default {
   methods: {
     ...mapActions('Account', ['getAccount']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
-    init() {
-      const { tunnel } = this;
-      const signaling = new Signaling({ tunnel });
-      const rtcSite = new RTCPeerSite({ signaling });
-
-      rtcSite.on('connect', (event) => this.onconnect(event));
-      rtcSite.on('diconnect', (event) => this.diconnect(event));
-
-      this.rtcSite = rtcSite;
-    },
-    async onconnect({ clientId }) {
-      const dataChannel = await this.rtcSite.createDataChannel({
-        clientId, label: 'data'
+    createService({ id, profile, tunnel, db }) {
+      const service = new Service({
+        id,
+        tunnel,
+        db,
+        profile: toRaw(profile),
       });
-      const chatProtocol = new ChatProtocol({ clientId, dataChannel });
 
-      chatProtocol.on('message', (event) => this.onmessage(event));
-      chatProtocol.on('register', (event) => this.onregister(event));
-      this.dataChannels[clientId] = chatProtocol;
+      service.on('register', (event) => this.onregister(event))
+      service.on('deregister', (event) => this.onderegister(event))
+      service.on('message', (event) => this.onmessage(event))
+
+      return service;
     },
-    diconnect({ clientId }) {
-      const dataChannel = this.dataChannels[clientId];
-
-      if (dataChannel) {
-        const { name } = dataChannel;
-        const time = Date.now();
-
-        dataChannel.removeAllListeners();
-
-        delete this.dataChannels[clientId];
-        this.appendMessage({
-          message: this.$t('has left', { name }),
-          time,
-        });
-        this.broadcast({
-          data: { clientId, time },
-          type: 'unregister',
-        });
-      }
-    },
-    onmessage(data) {
-      const { time, message, clientId } = data;
-      const { name } = this.dataChannels[clientId] || {};
-      const newChat = {
-        sender: name,
-        clientId,
-        time,
-        message,
-      };
-
-      this.appendMessage(newChat, clientId);
-      this.broadcast({
-        excepts: [clientId],
-        data: newChat,
-      });
-    },
-    onregister({ clientId, name, avatar }) {
-      const { dataChannels } = this;
-      const dataChannel = dataChannels[clientId];
-      const time = Date.now();
-      const { profile } = this;
-
-      if (dataChannel) {
-        dataChannel.name = name;
-        dataChannel.avatar = avatar;
-      }
-
-      this.updateStoreHistory({ clientId, name, avatar });
+    onregister({ name }) {
       this.appendMessage({
         message: this.$t('has joined', { name }),
-        time,
-      });
-      this.broadcast({
-        excepts: [clientId],
-        data: { name, avatar, clientId, time },
-        type: 'register',
-      });
-
-      dataChannel.send({
-        type: 'profile',
-        data: {
-          ...profile,
-          time,
-        },
-      });
-      dataChannel.send({
-        type: 'register',
-        data: {
-          name: 'HOST',
-          clientId: 'host',
-          avatar: this.avatar,
-          time,
-        },
-      });
-      Object.keys(dataChannels)
-        .filter((id) => id !== clientId)
-        .forEach((id) => dataChannel.send({
-          type: 'register',
-          data: {
-            clientId: id,
-            name: dataChannels[id].name,
-            avatar: dataChannels[id].avatar,
-            time,
-          },
-        }));
-    },
-    sendMessage(message) {
-      const data = {
         time: Date.now(),
+      });
+    },
+    onderegister({ name }) {
+      this.appendMessage({
+        message: this.$t('has left', { name }),
+        time: Date.now(),
+      });
+    },
+    onmessage({clientId, time, message, name, avatar }) {
+      const data = {
+        sender: name,
         message,
+        time,
+        avatar,
       };
 
-      this.appendMessage({
-        sender: this.$t('You'),
-        align: 'right',
+      if (clientId === 'host') {
+        data.sender = this.$t('You');
+        data.align = 'right';
+      }
+
+      this.appendMessageToWindow(data);
+    },
+    appendMessage(data) {
+      this.service.storeMessage(data);
+      this.appendMessageToWindow(data);
+    },
+    appendMessageToWindow(data) {
+      this.$refs.messageWindow.appendMessage(data);
+    },
+    onSend(value) {
+      const data = {
+        clientId: 'host',
+        time: Date.now(),
+        message: value,
+      };
+
+      this.service.sendMessage(data);
+      this.onmessage({
         ...data,
-      });
-      this.broadcast({
-        data: {
-          sender: 'Host',
-          clientId: 'host',
-          ...data,
-        }
-      });
-    },
-    broadcast({ data, type='message', excepts=[] }={}) {
-      const { dataChannels } = this;
-
-      Object.keys(dataChannels)
-        .filter((clientId) => !excepts.includes(clientId))
-        .forEach((clientId) => dataChannels[clientId].send({
-          type,
-          data,
-        }));
-    },
-    appendMessage(data, clientId='host') {
-      this.storeChat.create({
-        ...data,
-        clientId,
-        historyId: this.siteId,
-      })/*.then((id) => {})*/;
-      this.appendMessageToWindow(data, clientId);
-    },
-    appendMessageToWindow(data, clientId) {
-      const { avatar, name } = this.participants[clientId] || {};
-
-      this.$refs.messageWindow.appendMessage({
-        ...data,
-        avatar,
-        name,
-      });
-    },
-    updateStoreHistory({ clientId, name, avatar }) {
-      const { participants, siteId } = this;
-
-      participants[clientId] = { name, avatar };
-
-      this.storeHistory.update(siteId, {
-        participants: toRaw(participants),
+        avatar: this.avatar,
       });
     },
   },
   async mounted() {
     const db = await this.idbConnect();
     const { avatar } = await this.getAccount();
-    const { title, position } = this.profile;
-    const { lat, lng } = position;
 
     this.avatar = avatar;
-    this.storeChat = new StoreChat({ db });
-    this.storeHistory = new StoreHistory({ db });
-    this.init();
 
-    const { siteId } = this;
-    const history =  await this.storeHistory.queryById(siteId);
+    const { siteId, title, profile, tunnel } = this;
 
-    if (history) {
-      this.participants = history.participants;
-      this.storeHistory.update(siteId, {
-        title,
-        position: { lat, lng },
-      });
+    const service = this.createService({
+      id: siteId,
+      profile,
+      tunnel,
+      db,
+    });
 
-      const messages = await this.storeChat.queryByHistoryId(siteId);
+    service.register({ id: 'host', avatar });
+    await service.init();
 
-      messages.forEach((message) => {
-        this.appendMessageToWindow(message, message.clientId)
-      });
-    } else {
-      const participants = {
-        host: {
-          name: 'HOST',
-          avatar,
-        },
-      };
-
-      this.storeHistory.create({
-        ...this.profile,
-        position: { lat, lng },
-        action: 'create',
-        participants,
-      });
-      this.participants = participants;
-    }
+    this.service = service;
     this.appendMessage({
+      message: `(${title}) ${this.$t('Established')}`,
       time: Date.now(),
-      message: `(${this.title}) ${this.$t('Established')}`,
     });
   },
   beforeUnmount() {
-    this.rtcSite.close();
-    this.rtcSite = null;
+    this.service.close();
+    this.service = null;
   },
 }
 </script>
@@ -265,7 +137,7 @@ export default {
   <ChatWindow
     ref="messageWindow"
     class="message-block"
-    @send="sendMessage"
+    @send="onSend"
   ></ChatWindow>
 </template>
 

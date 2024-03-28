@@ -47,7 +47,7 @@ export default class RTCPeerSite extends EventEmitter {
 
           delete peerConnectionMap[clientId];
 
-          this.emit('diconnect', { clientId });
+          this.emit('disconnect', { clientId });
         }
       }
     };

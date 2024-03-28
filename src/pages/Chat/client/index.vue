@@ -71,7 +71,7 @@ export default {
       chatProtocol.on('profile', (event) => this.onprofile(event));
       chatProtocol.on('message', (event) => this.onmessage(event));
       chatProtocol.on('register', (event) => this.onregister(event));
-      chatProtocol.on('unregister', (event) => this.onunregister(event));
+      chatProtocol.on('deregister', (event) => this.onderegister(event));
       chatProtocol.on('close', () => this.onclose());
 
       this.channel = chatProtocol;
@@ -99,6 +99,8 @@ export default {
     onregister(data) {
       const { name, avatar, clientId, time } = data;
 
+      console.log('onregister', name, clientId)
+
       this.participants[clientId] = { name, avatar };
       this.updateStoreHistory();
       this.appendMessage({
@@ -107,10 +109,11 @@ export default {
       });
     },
     onmessage(data) {
-      const { sender, time, message, clientId } = data;
+      const { time, message, clientId } = data;
+      const { name } = this.participants[clientId];
 
       this.appendMessage({
-        sender,
+        sender: name,
         time,
         message,
       }, clientId);
@@ -124,7 +127,7 @@ export default {
         time: Date.now(),
       });
     },
-    onunregister(data) {
+    onderegister(data) {
       const { clientId, time } = data;
       const participant = this.participants[clientId];
 
@@ -148,7 +151,7 @@ export default {
       });
     },
     appendMessage(data, clientId='self') {
-      const avatar = clientId ? this.participants[clientId].avatar : this.avatar;
+      const { avatar } = this.participants[clientId];
 
       this.$refs.messageWindow.appendMessage({
         ...data,

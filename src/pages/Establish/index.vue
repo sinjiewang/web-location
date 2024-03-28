@@ -13,7 +13,8 @@ import short from 'short-uuid';
 import QRCode from 'qrcode';
 
 const APP_MAPPING = {
-  chat: 'Chat'
+  chat: 'Chat',
+  board: 'MessageBoard',
 };
 
 export default {
@@ -29,7 +30,7 @@ export default {
       positionMarker: null,
       position: null,
       id: this.$route.params.id,
-      title: null,
+      title: 'TEST',
       type: 'chat',
       disableTypeSelect: false,
       qrcodeUrl: null,
@@ -211,7 +212,7 @@ export default {
   <v-window-item :value="1">
   <v-container>
     <v-row no-gutters>
-      <v-col cols="12" md="8">
+      <v-col cols="12" md="4">
         <v-sheet class="ma-2 pa-2">
           <component
             ref="googleMap"
@@ -222,7 +223,7 @@ export default {
           />
         </v-sheet>
       </v-col>
-      <v-col cols="12" md="4">
+      <v-col cols="12" md="8">
         <v-form
           v-model="formValid"
           ref="form"
@@ -233,9 +234,9 @@ export default {
               <svg-icon type="mdi" :path="mdiMapMarkerRightOutline"></svg-icon>
               <span class="ml-1">{{ $t('Drag to set your position') }}</span>
             </div>
-            <v-row class="mb-4">
+            <v-row>
               <v-col
-                cols="6"
+                cols="4"
               >
                 <v-text-field
                   v-model="labelX"
@@ -245,7 +246,7 @@ export default {
                 ></v-text-field>
               </v-col>
               <v-col
-                cols="6"
+                cols="4"
               >
                 <v-text-field
                   v-model="labelY"
@@ -255,24 +256,35 @@ export default {
                 ></v-text-field>
               </v-col>
             </v-row>
-            <v-select
-              v-model="type"
-              :label="$t('Type')"
-              :items="types"
-              :rules="[v => !!v || $t('Required')]"
-              :disabled="disableTypeSelect"
-              item-title="text"
-              item-value="type"
-              required
-            >
-            </v-select>
-            <v-text-field
-              v-model="title"
-              :label="$t('Title')"
-              :rules="[v => !!v || $t('Required')]"
-              hide-details
-              required
-            ></v-text-field>
+            <v-row>
+              <v-col
+                cols="3"
+              >
+                <v-select
+                  v-model="type"
+                  :label="$t('Type')"
+                  :items="types"
+                  :rules="[v => !!v || $t('Required')]"
+                  :disabled="disableTypeSelect"
+                  item-title="text"
+                  item-value="type"
+                  required
+                >
+                </v-select>
+              </v-col>
+              <v-col
+                cols="9"
+              >
+                <v-text-field
+                  v-model="title"
+                  :label="$t('Title')"
+                  :rules="[v => !!v || $t('Required')]"
+                  hide-details
+                  required
+                ></v-text-field>
+              </v-col>
+            </v-row>
+
             <div class="d-flex flex-column">
               <v-btn
                 :disabled="!formValid"

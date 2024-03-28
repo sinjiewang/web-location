@@ -12,6 +12,8 @@ export default {
     return {
       storeChat: null,
       storeHistory: null,
+      participants: {},
+      action: null,
     };
   },
   computed: {
@@ -22,26 +24,36 @@ export default {
   methods: {
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     async updateChatWindow() {
-      const { id, storeChat, participants } = this;
+      const { id, action, storeChat, participants } = this;
       const messages = await storeChat.queryByHistoryId(id);
 
       this.$refs.chatWindow.clear();
 
       messages.forEach((message) => {
-        const { avatar } = (participants && participants[message.clientId])
+        const { clientId } = message;
+        const { avatar, name } = (participants && participants[clientId])
           ? participants[message.clientId]
           : {};
-
-        this.$refs.chatWindow.appendMessage({
+        const data = {
           ...message,
+          sender: name,
           avatar,
-        });
+        }
+
+        if ((action === 'create' && clientId === 'host')
+            || clientId === 'self'
+        ) {
+          data.align = 'right';
+        }
+
+        this.$refs.chatWindow.appendMessage(data);
       });
     },
     async updateParticipants() {
       const { id, storeHistory } = this;
-      const { participants } = await storeHistory.queryById(id);
+      const { participants, action } = await storeHistory.queryById(id);
 
+      this.action = action;
       this.participants = participants;
     },
   },
