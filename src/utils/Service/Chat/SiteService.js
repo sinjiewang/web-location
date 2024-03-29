@@ -4,6 +4,7 @@ import Service from '../Site.js';
 import StoreChat from '@/utils/IndexedDB/StoreChat';
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 
+import Protocol from './Protocol.js'
 
 export default class ChatSiteService extends EventEmitter {
   constructor({ id=short.generate(), tunnel, profile={}, db }={}) {
@@ -11,15 +12,21 @@ export default class ChatSiteService extends EventEmitter {
 
     const service = new Service({ id, tunnel, profile });
 
-    service.on('register', (event) => this.onregister(event))
-    service.on('deregister', (event) => this.onderegister(event))
-    service.on('message', (event) => this.onmessage(event))
+    service.on('connect', (event) => this.onconnect(event));
+    service.on('disconnect', (event) => this.ondisconnect(event));
 
     this.service = service;
     this.storeHistory = new StoreHistory({ db });
     this.storeChat = new StoreChat({ db });
     this.id = id;
     this.profile = profile;
+    this.connections = {};
+    this.participants = {
+      'host': {
+        name: 'HOST',
+        avatar: null,
+      }
+    };
   }
 
   async init() {
@@ -68,21 +75,99 @@ export default class ChatSiteService extends EventEmitter {
     }
   }
 
+  onconnect({ clientId, dataChannel }) {
+    const connection = new Protocol({ clientId, dataChannel });
+
+    connection.on('message', (event) => this.onmessage(event));
+    connection.on('register', (event) => this.onregister(event));
+
+    this.connections[clientId] = connection;
+  }
+
+  ondisconnect({ clientId }) {
+    const { name } = this.participants[clientId] || {};
+    const connection = this.connections[clientId];
+    const time = Date.now();
+
+    if (connection) {
+      delete this.connections[clientId];
+
+      this.broadcast({
+        data: { clientId, time },
+        type: 'deregister',
+      });
+      this.emit('deregister', {
+        clientId,
+        name,
+        time,
+      });
+    }
+  }
+
   onregister(event) {
+    const { clientId, name, avatar } = event;
+    const { connections, participants, profile } = this;
+    const connection = connections[clientId];
+    const time = Date.now();
+
+    this.register({
+      id: clientId,
+      name,
+      avatar
+    });
+    this.broadcast({
+      excepts: [clientId],
+      data: { name, avatar, clientId, time },
+      type: 'register',
+    });
+    connection.send({
+      type: 'profile',
+      data: {
+        ...profile,
+        time,
+      },
+    });
+    connection.send({
+      type: 'register',
+      data: {
+        clientId: 'host',
+        name: participants['host'].name,
+        avatar: participants['host'].avatar,
+        time,
+      },
+    })
+    Object.keys(connections)
+      .filter((id) => id !== clientId)
+      .forEach((id) => connection.send({
+        type: 'register',
+        data: {
+          clientId: id,
+          name: participants[id].name,
+          avatar: participants[id].avatar,
+          time,
+        },
+      }));
+
     this.emit('register', event);
-
-    const { participants } = this.service;
-
     this.storeHistory.update(this.id, { participants });
   }
 
-  onderegister(event) {
-    this.emit('deregister', event)
-  }
-
-  onmessage(event) {
-    const { clientId, message } = event;
-    this.emit('message', event);
+  onmessage({ time, message, clientId }) {
+    const { name, avatar } = this.participants[clientId] || {};
+    const newChat = {
+      clientId,
+      time,
+      message,
+    };
+    this.broadcast({
+      excepts: [clientId],
+      data: newChat,
+    });
+    this.emit('message', {
+      ...newChat,
+      name,
+      avatar,
+    });
     this.storeChat.create({
       clientId,
       message,
@@ -92,8 +177,13 @@ export default class ChatSiteService extends EventEmitter {
   }
 
   sendMessage(data) {
-    this.service.sendMessage(data.message);
     this.storeMessage(data);
+    this.broadcast({
+      data: {
+        clientId: 'host',
+        ...data,
+      }
+    });
   }
 
   storeMessage(data) {
@@ -104,8 +194,22 @@ export default class ChatSiteService extends EventEmitter {
     });
   }
 
-  register(params) {
-    this.service.register(params);
+  broadcast({ data, type='message', excepts=[] }={}) {
+    const { connections } = this;
+    Object.keys(connections)
+      .filter((clientId) => !excepts.includes(clientId))
+      .forEach((clientId) => connections[clientId].send({
+        type,
+        data,
+      }));
+  }
+
+  register({ id='host', name, avatar }) {
+    const participant = this.participants[id] || {};
+    this.participants[id] = {
+      name: name || participant.name,
+      avatar: avatar || participant.avatar,
+    }
   }
 
   close() {

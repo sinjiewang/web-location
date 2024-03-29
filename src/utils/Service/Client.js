@@ -1,97 +1,39 @@
 import EventEmitter from 'events';
-// import short from 'short-uuid';
 import ClientSignaling from '@/utils/Signaling/ClientSignaling.js';
 import RTCPeerClient from '@/utils/RTCPeer/RTCPeerClient.js';
-import Protocol from './Protocol';
 
 export default class Service extends EventEmitter {
-  constructor({ name, avatar }={}) {
+  constructor() {
     super();
 
-    this.channel = null;
-    this.profile = null;
-    this.participants = {
-      'self': {
-        name,
-        avatar,
-      }
-    };
+    this.rtcConnection = null;
+    this.dataChannel = null;
   }
 
   async connect({ tunnel, siteId }={}) {
-    const { name, avatar } = this.participants.self;
     const signaling = new ClientSignaling({ tunnel });
-    const rtcConnection = new RTCPeerClient({
+    const rtcClient = new RTCPeerClient({
       signaling,
       siteId,
     });
 
-    await rtcConnection.connect();
-    const dataChannel = await rtcConnection.createDataChannel('data');
-    const protocol = new Protocol({ dataChannel })
+    await rtcClient.connect();
 
-    protocol.on('profile', (event) => this.onprofile(event));
-    protocol.on('message', (event) => this.onmessage(event));
-    protocol.on('register', (event) => this.onregister(event));
-    protocol.on('deregister', (event) => this.onderegister(event));
-    protocol.on('close', () => this.onclose());
+    const dataChannel = await rtcClient.createDataChannel('data');
 
-    this.channel = protocol;
-    this.channel.sendRegister({ name, avatar });
-    this.register({ name, avatar });
-  }
+    dataChannel.on('close', () => this.onclose());
 
-  async onprofile(profile) {
-    this.profile = profile;
-    this.emit('profile', profile);
-  }
-
-  onregister(data) {
-    const { name, avatar, clientId } = data;
-
-    this.participants[clientId] = { name, avatar };
-    this.emit('register', {
-      ...data,
-      time: Date.now(),
-    });
-  }
-
-  onmessage(data) {
-    const { clientId } = data;
-    const { name, avatar } = this.participants[clientId];
-
-    this.emit('message', {
-      ...data,
-      name,
-      avatar,
-    })
+    this.dataChannel = dataChannel;
+    this.rtcClient = rtcClient;
   }
 
   onclose() {
-    this.channel.removeAllListeners();
-    this.channel = null;
-    this.emit('close');
+    this.dataChannel.removeAllListeners();
+    this.dataChannel = null;
   }
 
-  onderegister(data) {
-    const { clientId } = data;
-    const participant = this.participants[clientId];
-
-    if (participant) {
-      this.emit('deregister', {
-        ...data,
-        name: participant.name,
-      });
-    }
-  }
-
-  sendMessage(message) {
-    const time = Date.now();
-
-    this.channel.sendMessage({ message, time });
-  }
-
-  register({ id='self', name, avatar }={}) {
-    this.participants[id] = { name, avatar };
+  close() {
+    this.rtcClient?.close();
+    this.rtcClient = null;
   }
 }

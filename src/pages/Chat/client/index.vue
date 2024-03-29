@@ -52,9 +52,10 @@ export default {
       this.disconnect();
     },
     async createService() {
-      const { nickname, avatar, wsClient, siteId, db } = this;
+      const { id, nickname, avatar, wsClient, siteId, db } = this;
 
       const service = new ClientService({
+        id,
         name: nickname,
         avatar,
         db,
