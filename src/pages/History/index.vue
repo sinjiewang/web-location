@@ -36,6 +36,7 @@ export default {
   },
   methods: {
     mergeProps,
+    ...mapActions('Account', ['getAccount']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     ...mapActions('IndexedDB', ['deleteHistory']),
     ...mapActions('Geopositioning', ['getUserPosition']),
@@ -98,7 +99,15 @@ export default {
 
     this.history = items;
     this.next = next;
-    this.center = await this.getUserPosition();
+
+    await this.getAccount();
+
+    if (this.position) {
+      this.center = this.position;
+    } else {
+      this.center = await this.getUserPosition();
+    }
+
     this.mapComponent = 'InteractionGoogleMap';
     this.$nextTick(() => {
       const selectedId = this.$route.params?.id;
