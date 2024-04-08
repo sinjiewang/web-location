@@ -1,16 +1,16 @@
 import EventEmitter from 'events';
-import Service from '../Site.js';
+import Site from '../Site.js';
 
 import StoreChat from '@/utils/IndexedDB/StoreChat';
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 
-import Protocol from './Protocol.js'
+import Protocol from '../Protocol.js'
 
 export default class ChatSiteService extends EventEmitter {
   constructor({ id=short.generate(), tunnel, profile={}, db }={}) {
     super();
 
-    const service = new Service({ id, tunnel, profile });
+    const service = new Site({ id, tunnel, profile });
 
     service.on('connect', (event) => this.onconnect(event));
     service.on('disconnect', (event) => this.ondisconnect(event));
@@ -63,7 +63,7 @@ export default class ChatSiteService extends EventEmitter {
         });
       });
     } else {
-      const participants = this.service.participants;
+      const participants = this.participants;
       const { lat, lng } = profile.position;
 
       this.storeHistory.create({

@@ -1,5 +1,7 @@
 <script>
 import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
+import DeleteConfirmDialog from '@/components/DeleteConfirmDialog.vue';
+import LeaveConfirmDialog from '@/components/LeaveConfirmDialog.vue';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiHelp } from '@mdi/js';
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
@@ -12,6 +14,8 @@ export default {
   components: {
     SvgIcon,
     InteractionGoogleMap,
+    DeleteConfirmDialog,
+    LeaveConfirmDialog,
   },
   data() {
     return {
@@ -21,7 +25,7 @@ export default {
       center: null,
       mapComponent: null,
       selectedHistory: null,
-      showConfirmDeleteDialog: false,
+      selectedChanged: false,
     };
   },
   computed: {
@@ -52,7 +56,7 @@ export default {
     genHistoryChildUrl(item) {
       return `${this.historyUrl}/${item.type}/${item.id}`;
     },
-    onClick(item) {
+    setSelectedItem(item) {
       const { lat, lng } = item.position;
 
       this.$refs.googleMap.removePositionMarker();
@@ -62,6 +66,19 @@ export default {
 
       this.$refs.googleMap.setMarkerUndraggable(positionMarker);
       this.selectedHistory = item;
+      this.$router.push(this.genHistoryChildUrl(item));
+    },
+    onClick(item) {
+      const confirmHandler = () => {
+        this.setSelectedItem(item);
+      };
+
+      if (this.selectedChanged) {
+        this.$refs.leaveConfirmDialog.show();
+        this.confirmHandler = confirmHandler;
+      } else {
+        confirmHandler();
+      }
     },
     onClickOpen({ id }) {
       const url = this.$router.resolve({
@@ -73,12 +90,10 @@ export default {
     },
     onClickHistoryDelete(item) {
       this.selectedHistory = item;
-      this.showConfirmDeleteDialog = true;
+      this.$refs.deleteConfirmDialog.show();
     },
-    async onClickDelete() {
+    async onClickConfirmDelete() {
       const { id } = this.selectedHistory;
-
-      this.showConfirmDeleteDialog = false;
 
       await this.deleteHistory(id);
 
@@ -88,6 +103,14 @@ export default {
         this.$refs.googleMap.removePositionMarker();
         this.$router.push('../');
       }
+    },
+    onChange(value) {
+      this.selectedChanged = value;
+    },
+    onClicConfirmLeave() {
+      this.confirmHandler();
+      this.confirmHandler = null;
+      this.selectedChanged = false;
     },
   },
   async mounted() {
@@ -143,7 +166,7 @@ export default {
               v-for="item in history"
               :key="item.id"
               :value="item.id"
-              :to="genHistoryChildUrl(item)"
+              :active="selectedHistory === item"
               class="text-start mt-1 mb-1"
               @click="onClick(item)"
             >
@@ -235,39 +258,16 @@ export default {
         </v-card>
       </v-col>
       <v-col cols="12" md="8" class="md-fill-height">
-        <router-view></router-view>
+        <router-view class="pt-0 pb-0" @change="onChange"></router-view>
       </v-col>
     </v-row>
-    <v-dialog
-      v-model="showConfirmDeleteDialog"
-      persistent
-      max-width="400px"
-      @click:outside="showConfirmDeleteDialog = false"
-    >
-      <v-card>
-        <v-card-text>
-          "{{ selectedHistory.title }}"
-          <br>
-          {{ $t('Are you sure you want to remove?') }}
-        </v-card-text>
-        <v-card-actions class="d-flex justify-end align-stretch">
-          <v-spacer></v-spacer>
-          <v-btn
-            class="bg-primary"
-            :text="$t('Cancel')"
-            variant="elevated"
-            @click="showConfirmDeleteDialog = false"
-          ></v-btn>
-          <v-btn
-            class="bg-red"
-            :text="$t('Delete')"
-            color="red"
-            variant="elevated"
-            @click="onClickDelete"
-          ></v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <DeleteConfirmDialog
+      ref="deleteConfirmDialog"
+      :name="selectedHistory?.title"
+      @delete="onClickConfirmDelete"/>
+    <LeaveConfirmDialog
+      ref="leaveConfirmDialog"
+      @confirm="onClicConfirmLeave"/>
   </v-container>
 </template>
 

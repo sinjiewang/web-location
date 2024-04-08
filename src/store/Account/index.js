@@ -48,7 +48,7 @@ export default {
         }
       }
 
-      return account
+      return account;
     },
     async updateAccount({ state, dispatch, commit }, { nickname, avatar }) {
       const storeAccount = await dispatch('getStoreConnect');

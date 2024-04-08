@@ -1,6 +1,6 @@
 export default class IndexedDBConfig {
   constructor({ sub }={}) {
-    this.version = 2;
+    this.version = 3;
     this.sub = sub || 'guest';
     this.db = null;
   }
@@ -53,6 +53,30 @@ export default class IndexedDBConfig {
           {
             indexName: 'byHistoryId',
             keyPath: 'historyId',
+            options: { unique: false },
+          },
+        ],
+      },
+      post: {
+        options: {
+          keyPath: 'id',
+        },
+        indexes: [
+          {
+            indexName: 'byHistoryId',
+            keyPath: 'historyId',
+            options: { unique: false },
+          },
+        ],
+      },
+      comment: {
+        options: {
+          keyPath: 'id',
+        },
+        indexes: [
+          {
+            indexName: 'byPostId',
+            keyPath: 'postId',
             options: { unique: false },
           },
         ],

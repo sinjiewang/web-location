@@ -3,10 +3,12 @@ import { mapState, mapGetters, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiAccountCircle } from '@mdi/js';
 import AccountDialog from './AccountDialog.vue';
+import AccountAvatar from './AccountAvatar.vue';
 
 export default {
   components: {
     SvgIcon,
+    AccountAvatar,
     AccountDialog,
   },
   data() {
@@ -70,18 +72,10 @@ export default {
         @click="onClickAccount"
       >
         <template #prepend>
-          <v-avatar color="surface-variant">
-            <v-img
-              v-if="avatar"
-              :src="avatar"
-              class="account-avatar"
-            ></v-img>
-            <svg-icon
-              v-else
-              type="mdi"
-              :path="mdiAccountCircle"
-            ></svg-icon>
-          </v-avatar>
+          <AccountAvatar
+            class="account-avatar size-24"
+            :avatar="avatar"
+          />
         </template>
       </v-list-item>
       <!-- -->
@@ -118,7 +112,7 @@ export default {
   height: 100%;
 }
 
-.v-avatar .v-img.account-avatar {
+.v-avatar.account-avatar.size-24 {
   width: 24px;
   height: 24px;
 }

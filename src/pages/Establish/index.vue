@@ -8,19 +8,21 @@ import coordinate from '@/utils/coordinate.js'
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 import SITE from '@/constants/site.js';
 import Chat from '@/pages/Chat/site/index.vue';
+import Blog from '@/pages/Blog/site/index.vue';
 
 import short from 'short-uuid';
 import QRCode from 'qrcode';
 
 const APP_MAPPING = {
   chat: 'Chat',
-  board: 'MessageBoard',
+  blog: 'Blog',
 };
 
 export default {
   components: {
     SvgIcon,
     InteractionGoogleMap,
+    Blog,
     Chat,
   },
   data() {
@@ -30,8 +32,8 @@ export default {
       positionMarker: null,
       position: null,
       id: this.$route.params.id,
-      title: null,
-      type: 'chat',
+      title: 'Blog TEST',
+      type: 'blog',
       disableTypeSelect: false,
       qrcodeUrl: null,
       showQRcodeDialog: false,
@@ -116,6 +118,7 @@ export default {
       this.nextStep();
       this.appComponent = APP_MAPPING[type];
       this.loading = false;
+      this.disableTypeSelect = true;
       this.setQRCode();
     },
     onClickDisconnect() {
@@ -360,7 +363,7 @@ export default {
                 </v-col>
                 <v-col
                   cols="4"
-                  md="1"
+                  md="2"
                 >
                   <v-select
                     v-model="type"
@@ -374,7 +377,7 @@ export default {
                 </v-col>
                 <v-col
                   cols="5"
-                  md="9"
+                  md="8"
                 >
                   <v-text-field
                     v-model="title"

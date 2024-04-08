@@ -3,7 +3,9 @@ import Browse from '@/pages/Browse/index.vue';
 import History from '@/pages/History/index.vue';
 import Establish from '@/pages/Establish/index.vue';
 import Chat from '@/pages/Chat/client/index.vue';
+import Blog from '@/pages/Blog/client/index.vue';
 import HistoryChat from '@/pages/History/Chat.vue';
+import HistoryBlog from '@/pages/History/Blog.vue';
 
 const routes = [
   {
@@ -19,6 +21,10 @@ const routes = [
       {
         path: 'chat/:id',
         component: HistoryChat,
+      },
+      {
+        path: 'blog/:id',
+        component: HistoryBlog,
       }
     ]
   },
@@ -39,6 +45,16 @@ const routes = [
       // requiresAuth: true,
       layout: false,
       type: 'chat',
+    },
+  },
+  {
+    path: '/blog/:siteId',
+    name: 'Blog',
+    component: Blog,
+    meta: {
+      // requiresAuth: true,
+      layout: false,
+      type: 'blog',
     },
   },
   {

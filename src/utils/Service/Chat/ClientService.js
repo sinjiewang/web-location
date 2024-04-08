@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import short from 'short-uuid';
-import Service from '../Client.js';
-import Protocol from './Protocol';
+import Client from '../Client.js';
+import Protocol from '../Protocol.js';
 
 import StoreChat from '@/utils/IndexedDB/StoreChat';
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
@@ -11,7 +11,7 @@ export default class ChatClientService extends EventEmitter {
   constructor({ id=short.generate(), name, avatar, db }={}) {
     super();
 
-    this.service = new Service({ name, avatar });
+    this.service = new Client({ name, avatar });
     this.channel = null;
     this.storeChat = new StoreChat({ db });
     this.storeHistory = new StoreHistory({ db });
