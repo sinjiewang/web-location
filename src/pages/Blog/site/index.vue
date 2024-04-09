@@ -50,12 +50,15 @@ export default {
 
       // service.on('register', (event) => this.onregister(event))
       // service.on('deregister', (event) => this.onderegister(event))
-      service.on('message', (event) => this.onmessage(event));
+      // service.on('message', (event) => this.onmessage(event));
+      service.on('comment', (comment) => this.oncomment(comment));
 
       return service;
     },
-    onmessage({ clientId, time, message, name, avatar }) {
-
+    oncomment(comment) {
+      if ( this.postId === comment.postId) {
+        this.comments.push(comment);
+      }
     },
     async onGetComments(postId) {
       this.getComments(postId);
@@ -72,9 +75,12 @@ export default {
       await this.service.deletePost(id);
       await this.getPosts();
     },
-    async onCreateComment(data) {
-      await this.service.createComment(data);
-      await this.getComments(data.postId);
+    async onCreateComment(data, post) {
+      await this.service.createComment({
+        ...data,
+        postId: post.id,
+      });
+      await this.getComments(post.id);
     },
     async onDeleteComment(id) {
       await this.service.deleteComment(id)
@@ -87,6 +93,7 @@ export default {
     },
     async getComments(postId) {
       this.comments = await this.service.getCommentsByPostId(postId);
+      this.postId = postId;
     },
   },
   async mounted() {
@@ -103,6 +110,7 @@ export default {
       db,
     });
 
+    service.register({ name: nickname, avatar });
     await service.init(tunnel);
 
     this.service = service;

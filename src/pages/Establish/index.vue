@@ -239,7 +239,7 @@ export default {
             </div>
             <v-row>
               <v-col
-                cols="4"
+                cols="6"
               >
                 <v-text-field
                   v-model="labelX"
@@ -249,7 +249,7 @@ export default {
                 ></v-text-field>
               </v-col>
               <v-col
-                cols="4"
+                cols="6"
               >
                 <v-text-field
                   v-model="labelY"
@@ -261,7 +261,7 @@ export default {
             </v-row>
             <v-row>
               <v-col
-                cols="3"
+                cols="5"
               >
                 <v-select
                   v-model="type"
@@ -276,7 +276,7 @@ export default {
                 </v-select>
               </v-col>
               <v-col
-                cols="9"
+                cols="7"
               >
                 <v-text-field
                   v-model="title"

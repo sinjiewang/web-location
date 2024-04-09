@@ -17,6 +17,7 @@ export default class BlogSiteService extends EventEmitter {
     this.storeComment = new StoreComment({ db });
     this.id = id;
     this.profile = profile;
+    this.host = {};
     this.connections = {};
     this.service = null;
   }
@@ -55,136 +56,88 @@ export default class BlogSiteService extends EventEmitter {
 
   onconnect({ clientId, dataChannel }) {
     const connection = new Protocol({ clientId, dataChannel });
+    const { profile, host } = this;
+    const time = Date.now()
 
     connection.on('message', (event) => this.onmessage(event));
     // connection.on('register', (event) => this.onregister(event));
 
     this.connections[clientId] = connection;
+
+    connection.send({
+      type: 'profile',
+      data: {
+        ...profile,
+        time,
+      },
+    });
+
+    connection.send({
+      type: 'register',
+      data: {
+        clientId: 'host',
+        name: host.name,
+        avatar: host.avatar,
+        time,
+      },
+    })
   }
 
   ondisconnect({ clientId }) {
-    // const { name } = this.participants[clientId] || {};
     const connection = this.connections[clientId];
-    // const time = Date.now();
 
     if (connection) {
       delete this.connections[clientId];
-
-      // this.broadcast({
-      //   data: { clientId, time },
-      //   type: 'deregister',
-      // });
-      // this.emit('deregister', {
-      //   clientId,
-      //   name,
-      //   time,
-      // });
     }
   }
 
-  // onregister(event) {
-  //   const { clientId, name, avatar } = event;
-  //   const { connections, participants, profile } = this;
-  //   const connection = connections[clientId];
-  //   const time = Date.now();
+  onmessage({ message, clientId }) {
+    const data = {
+      clientId,
+      ...message,
+    };
 
-  //   this.register({
-  //     id: clientId,
-  //     name,
-  //     avatar
-  //   });
-  //   this.broadcast({
-  //     excepts: [clientId],
-  //     data: { name, avatar, clientId, time },
-  //     type: 'register',
-  //   });
-  //   connection.send({
-  //     type: 'profile',
-  //     data: {
-  //       ...profile,
-  //       time,
-  //     },
-  //   });
-  //   connection.send({
-  //     type: 'register',
-  //     data: {
-  //       clientId: 'host',
-  //       name: participants['host'].name,
-  //       avatar: participants['host'].avatar,
-  //       time,
-  //     },
-  //   })
-  //   Object.keys(connections)
-  //     .filter((id) => id !== clientId)
-  //     .forEach((id) => connection.send({
-  //       type: 'register',
-  //       data: {
-  //         clientId: id,
-  //         name: participants[id].name,
-  //         avatar: participants[id].avatar,
-  //         time,
-  //       },
-  //     }));
-
-  //   this.emit('register', event);
-  //   this.storeHistory.update(this.id, { participants });
-  // }
-
-  onmessage({ time, message, clientId }) {
-    const { name, avatar } = this.participants[clientId] || {};
-    // const newChat = {
-    //   clientId,
-    //   time,
-    //   message,
-    // };
-    // this.broadcast({
-    //   excepts: [clientId],
-    //   data: newChat,
-    // });
-    // this.emit('message', {
-    //   ...newChat,
-    //   name,
-    //   avatar,
-    // });
-    // this.storeChat.create({
-    //   clientId,
-    //   message,
-    //   historyId: this.id,
-    //   time: Date.now(),
-    // });
+    switch(message.action) {
+      case 'getPosts':
+        return this.responsePosts(data);
+      case 'getComments':
+        return this.responseComments(data);
+      case 'appendComment':
+        return this.appendComment(data);
+    }
   }
 
-  sendMessage(data) {
-    // this.storeMessage(data);
-    // this.broadcast({
-    //   data: {
-    //     clientId: 'host',
-    //     ...data,
-    //   }
-    // });
-  }
-
-  // storeMessage(data) {
-  //   this.storeChat.create({
-  //     historyId: this.id,
-  //     time: Date.now(),
-  //     ...data,
-  //   });
-  // }
-  createPost(data) {
+  async createPost(data) {
     this.updateHistory();
 
-    return this.storePost.create({
+    const post = await this.storePost.create({
       ...data,
       id: short.generate(),
       historyId: this.id,
     });
+
+    this.broadcast({
+      data: {
+        type: 'post',
+        method: 'add',
+        item: post,
+      },
+    });
+
+    return post;
   }
 
-  updatePost(id, data) {
-    this.updateHistory();
+  async updatePost(id, data) {
+    const post = await this.storePost.update(id, data);
 
-    return this.storePost.update(id, data);
+    this.updateHistory();
+    this.broadcast({
+      data: {
+        type: 'post',
+        method: 'update',
+        item: post,
+      },
+    });
   }
 
   async deletePost(id) {
@@ -196,13 +149,33 @@ export default class BlogSiteService extends EventEmitter {
       .catch((err) => console.error('storeComment.delete failed', err)));
 
     this.updateHistory();
+    this.broadcast({
+      data: {
+        type: 'post',
+        method: 'delete',
+        item: { id },
+      },
+    });
   }
 
-  createComment(data) {
-    return this.storeComment.create({
-      ...data,
+  async createComment({ postId, content, name, avatar }) {
+    const comment = await  this.storeComment.create({
+      postId,
+      content,
+      name,
+      avatar,
       id: short.generate(),
     });
+
+    this.broadcast({
+      data: {
+        type: 'comment',
+        method: 'add',
+        item: comment,
+      },
+    });
+
+    return comment;
   }
 
   updateHistory(data={}) {
@@ -211,17 +184,65 @@ export default class BlogSiteService extends EventEmitter {
     });
   }
 
-  getPosts() {
+  $getPosts() {
     return this.storePost.queryByHistoryId(this.id)
       .then((posts) => posts.sort((a, b) => b.createdTime - a.createdTime));
   }
 
-  getCommentsByPostId(id) {
-    return this.storeComment.queryByPostId(id);
+  getPosts() {
+    const { name, avatar } = this.host;
+
+    return this.$getPosts()
+      .then((posts) => posts.map((post) => ({ ...post, name, avatar })));
   }
 
-  deleteComment(id) {
-    return this.storeComment.delete(id);
+  async responsePosts({messageId, clientId}={}) {
+    const posts = await this.$getPosts();
+    const connection = this.connections[clientId];
+
+    connection.sendMessage({
+      messageId,
+      items: posts,
+    });
+  }
+
+  getCommentsByPostId(id) {
+    return this.storeComment.queryByPostId(id)
+      .then((posts) => posts.sort((a, b) => a.createdTime - b.createdTime));
+  }
+
+  async deleteComment(id) {
+    await this.storeComment.delete(id);
+    this.broadcast({
+      data: {
+        type: 'comment',
+        method: 'delete',
+        item: { id },
+      },
+    });
+  }
+
+  async responseComments({messageId, clientId, postId}={}) {
+    const comments = await this.getCommentsByPostId(postId);
+    const connection = this.connections[clientId];
+
+    connection.sendMessage({
+      messageId,
+      items: comments,
+    });
+  }
+
+  async appendComment({ clientId, postId, content, name, avatar, messageId}) {
+    const comment = await this.createComment({ postId, content, name, avatar });
+
+    this.emit('comment', comment);
+
+    const connection = this.connections[clientId];
+
+    connection.sendMessage({
+      messageId,
+      comment,
+    });
   }
 
   broadcast({ data, type='message', excepts=[] }={}) {
@@ -232,6 +253,10 @@ export default class BlogSiteService extends EventEmitter {
         type,
         data,
       }));
+  }
+
+  register({ name, avatar }={}) {
+    this.host = { name, avatar };
   }
 
   close() {

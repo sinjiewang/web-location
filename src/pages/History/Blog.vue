@@ -3,6 +3,7 @@ import { mapActions } from 'vuex';
 import { /*isProxy,*/ toRaw } from 'vue';
 import Service from '@/utils/Service/Blog/SiteService.js';
 import Blog from '@/pages/Blog/index.vue';
+import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 
 export default {
   components: {
@@ -15,6 +16,8 @@ export default {
       signaling: null,
       rtcSite: null,
       dataChannels: {},
+      storeHistory: null,
+      history: null,
       posts: [],
       comments: [],
     };
@@ -22,6 +25,9 @@ export default {
   computed: {
     id() {
       return this.$route.params.id;
+    },
+    enableEdit() {
+      return this.history?.action === 'create';
     },
   },
   methods: {
@@ -73,7 +79,10 @@ export default {
       this.$emit('change', value);
     },
     async getPosts() {
-      this.posts = await this.service.getPosts();
+      const { name, avatar } = this.history?.host || {};
+      const posts = await this.service.getPosts();
+
+      this.posts = posts.map((post) => ({...post, name, avatar }));
     },
     async getComments(postId) {
       this.comments = await this.service.getCommentsByPostId(postId);
@@ -84,12 +93,15 @@ export default {
       this.service.id = value;
       this.$refs.blog.clear();
       this.getPosts();
+      this.history = await this.storeHistory.queryById(value);
     },
   },
   async mounted() {
     const db = await this.idbConnect();
     const { nickname, avatar } = await this.getAccount();
 
+    this.storeHistory = new StoreHistory({ db });
+    this.history = await this.storeHistory.queryById(this.id);
     this.name = nickname;
     this.avatar = avatar;
 
@@ -99,6 +111,7 @@ export default {
       db,
     });
 
+    // service.register({ name: nickname, avatar });
     // await service.init(tunnel);
 
     this.service = service;
@@ -118,6 +131,7 @@ export default {
     :avatar="avatar"
     :posts="posts"
     :comments="comments"
+    :enableEdit="enableEdit"
     @getComments="onGetComments"
     @createPost="onCreatePost"
     @updatePost="onUpdatePost"

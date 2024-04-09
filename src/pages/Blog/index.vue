@@ -5,6 +5,7 @@ import LeaveConfirmDialog from '@/components/LeaveConfirmDialog.vue';
 import AccountAvatar from '@/components/AccountAvatar.vue';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiCommentPlusOutline, mdiAccountCircle } from '@mdi/js';
+import { /*isProxy,*/ toRaw, mergeProps } from 'vue';
 
 export default {
   components: {
@@ -42,6 +43,8 @@ export default {
       selected: null,
       postTitle: null,
       postContent: null,
+      postName: null,
+      postAvatar: null,
       commentContent: null,
       changed: false,
       confirmHandler: null,
@@ -54,8 +57,19 @@ export default {
     selectedId() {
       return this.selected?.id || '';
     },
+    menuButtonLabel() {
+      const title = this.selected?.title || '--';
+      const updatedTime = this.selected?.updatedTime
+        ? `(${this.toLocaleString(this.selected?.updatedTime)})`
+        : '';
+
+      return this.selected
+        ? `${title} ${updatedTime}`
+        : this.$t('Please select...');
+    },
   },
   methods: {
+    mergeProps,
     toLocaleString(timestamp) {
       return new Date(timestamp).toLocaleString();
     },
@@ -66,12 +80,16 @@ export default {
       };
       this.postTitle = null;
       this.postContent = null;
+      this.postName = this.name;
+      this.postAvatar = this.avatar;
     },
     async onSelect(item) {
-      const { id, title, content } = item;
+      const { id, title, content, avatar, name } = item;
       const confirmHandler = () => {
         this.postTitle = title;
         this.postContent = content;
+        this.postName = name;
+        this.postAvatar = avatar;
         this.selected = item;
         this.$emit('getComments', id);
         this.$nextTick(() => {
@@ -79,7 +97,7 @@ export default {
         });
       }
 
-      if (this.changed) {
+      if (this.enableEdit && this.changed) {
         this.$refs.leaveConfirmDialog.show();
         this.confirmHandler = confirmHandler;
       } else {
@@ -138,7 +156,7 @@ export default {
         content,
         name,
         avatar,
-      });
+      }, toRaw(selected));
       this.commentContent = null;
     },
     onDeleteComment({ id }) {
@@ -168,7 +186,18 @@ export default {
     },
     changed(value) {
       this.$emit('change', value);
-    }
+    },
+    posts(values) {
+      const id = this.selected?.id;
+      const selectedPost = values.find((post) => post.id === id);
+
+      if (id && !selectedPost) {
+        this.clear();
+      } else if (selectedPost) {
+        this.postTitle = selectedPost.title;
+        this.postContent = selectedPost.content;
+      }
+    },
   }
 }
 </script>
@@ -176,7 +205,60 @@ export default {
 <template>
   <v-container class="h-100">
     <v-row no-gutters class="h-100">
-      <v-col cols="3" class="h-100 overflow-auto">
+      <div class="text-center hidden-md-and-up w-100 mb-2">
+        <v-btn
+          v-if="enableEdit"
+          class="form-button create mb-2"
+          @click="onClickCreate"
+        >
+          <svg-icon type="mdi" width="36" height="36" :path="mdiCommentPlusOutline"></svg-icon>
+        </v-btn>
+        <v-menu>
+          <template v-slot:activator="{ props: menu }">
+            <v-tooltip location="top">
+              <template v-slot:activator="{ props: tooltip }">
+                <div class="d-flex flex-column">
+                  <v-btn
+                    class="menu-btn"
+                    variant="outlined"
+                    color="primary"
+                    v-bind="mergeProps(menu, tooltip)"
+                  >
+                    {{ menuButtonLabel }}
+                  </v-btn>
+                </div>
+              </template>
+            </v-tooltip>
+          </template>
+          <v-list>
+            <v-list-item
+              v-for="(item) in posts"
+              :key="item.id"
+              class="mt-1 mb-1"
+              @click="onSelect(item)"
+            >
+              <v-list-item-title>
+                <span class="ml-2">{{ item.title }}</span>
+              </v-list-item-title>
+              <v-list-item-subtitle>
+                <span class="ml-2">
+                  {{ toLocaleString(item.updatedTime) }}
+                </span>
+              </v-list-item-subtitle>
+              <template v-slot:append>
+                <v-btn
+                  color="red"
+                  icon="mdi-delete"
+                  variant="text"
+                  @click="onClicPostkDelete(post)"
+                ></v-btn>
+              </template>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </div>
+      <!-- MD size -->
+      <v-col cols="0" md="4" class="h-100 overflow-auto hidden-md-and-down">
         <v-card>
           <v-btn
             v-if="enableEdit"
@@ -219,7 +301,7 @@ export default {
           </v-list>
         </v-card>
       </v-col>
-      <v-col cols="9" class="h-100 overflow-auto">
+      <v-col cols="12" md="8" class="h-100 overflow-auto">
         <v-container
           v-if="selected"
           class="pt-0 pb-0"
@@ -229,7 +311,7 @@ export default {
               <div class="d-flex">
                 <AccountAvatar
                   class="account-avatar mr-2 mt-2 mb-2"
-                  :avatar="avatar"
+                  :avatar="postAvatar"
                 />
                 <v-text-field
                   v-if="enableEdit"
@@ -238,10 +320,12 @@ export default {
                   :rules="[v => !!v || $t('Required')]"
                   hide-details
                 ></v-text-field>
-                <span
-                  v-else
-                  class="ml-2 line-height-56"
-                >{{ postTitle }}</span>
+                <div v-else>
+                  <span
+                    class="ml-2 line-height-56"
+                  >{{ postTitle }}</span>
+                  <span class="ml-2 text-caption text-secondary">by {{ postName }}</span>
+                </div>
               </div>
               <br>
               <v-textarea
@@ -359,10 +443,18 @@ export default {
 
 .v-btn.form-button {
   height: 56px;
+
+  &.h-40 {
+    height: 40px;
+  }
 }
 
 .v-btn.create {
   width: 100%;
+}
+
+.menu-btn.v-btn {
+  height: 40px;
 }
 
 .line-height-56 {

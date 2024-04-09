@@ -1,13 +1,13 @@
 <script>
 import { mapState, mapActions } from 'vuex';
 import AccountDialog from '@/components/AccountDialog.vue';
-import ClientService from '@/utils/Service/Chat/ClientService.js';
-// import ChatWindow from '../ChatWindow.vue';
+import ClientService from '@/utils/Service/Blog/ClientService.js';
+import Blog from '../index.vue';
 import short from 'short-uuid';
 
 export default {
   components: {
-    // ChatWindow,
+    Blog,
     AccountDialog,
   },
   data() {
@@ -19,7 +19,8 @@ export default {
       loading: false,
       service: null,
       db: null,
-      id: short.generate(),
+      posts: [],
+      comments: [],
     };
   },
   computed: {
@@ -42,6 +43,7 @@ export default {
         await this.clientConnect();
 
         this.service = await this.createService();
+        this.posts = await this.getPosts();
       } catch (err) {
         console.error('init failed', err);
 
@@ -52,19 +54,21 @@ export default {
       this.disconnect();
     },
     async createService() {
-      const { id, nickname, avatar, wsClient, siteId, db } = this;
+      const { nickname, avatar, wsClient, siteId, db } = this;
 
       const service = new ClientService({
-        id,
+        id: siteId,
         name: nickname,
         avatar,
         db,
       });
 
-      service.on('profile', (profile) => this.onprofile(profile));
-      service.on('register', (data) => this.onregister(data));
-      service.on('deregister', (data) => this.onderegister(data));
-      service.on('message', (data) => this.onmessage(data));
+      // service.on('profile', (profile) => this.onprofile(profile));
+      // service.on('register', (data) => this.onregister(data));
+      // service.on('deregister', (data) => this.onderegister(data));
+      // service.on('message', (data) => this.onmessage(data));
+      service.on('post', (post) => this.onpost(post));
+      service.on('comment', (comment) => this.oncomment(comment));
       service.on('close', () => this.onclose());
 
       await service.connect({
@@ -74,62 +78,59 @@ export default {
 
       return service;
     },
-    // async onprofile({ title }) {
+    getPosts() {
+      return this.service.getPosts();
+    },
+    getComments(postId) {
+      return this.service.getComments(postId);
+    },
+    async onprofile({ title }) {
     //   this.appendMessage({
     //     message: `${this.$t('has joined')} (${title})`,
     //     time: Date.now(),
     //   });
-    // },
-    // onregister({ name }) {
-    //   const data = {
-    //     message: this.$t('has joined', { name }),
-    //     time: Date.now(),
-    //   };
+    },
+    onpost(post) {
+      const { method, item } = post;
 
-    //   this.appendMessage(data);
-    //   this.service.storeMessage(data);
-    // },
-    // onmessage({ clientId='self', time, message, name, avatar }) {
-    //   const data = {
-    //     sender: name,
-    //     message,
-    //     time,
-    //     avatar,
-    //   };
+      switch(method) {
+        case 'add':
+          this.posts.unshift(item);
+          break;
+        case 'update':
+          this.posts = this.posts.map(post => (post.id !== item.id) ? post : {
+              ...post,
+              ...item,
+            });
+          break;
+        case 'delete':
+          this.posts = this.posts.filter(post => post.id !== item.id);
+          break;
+      }
+    },
+    oncomment(data) {
+      const { method, item } = data;
 
-    //   if (clientId === 'self') {
-    //     data.sender = this.$t('You');
-    //     data.align = 'right';
-    //   }
+      switch(method) {
+        case 'add':
+          this.comments.push(item);
+          break;
+        case 'delete':
+          this.comments = this.comments.filter(comment => comment.id !== item.id);
+          break;
+      }
+    },
+    onclose() {
+      this.showDisconnectedDialog = true;
+    },
+    async onGetComments(postId) {
+      const { items } = await this.getComments(postId);
 
-    //   this.appendMessageToWindow(data);
-    // },
-    // onclose() {
-    //   this.showDisconnectedDialog = true;
-    //   this.appendMessage({
-    //     message: `Host ${this.$t('Disconnected')}`,
-    //     time: Date.now(),
-    //   });
-    //   this.service = null;
-    // },
-    // onderegister({ name }) {
-    //   const data = {
-    //     message: this.$t('has left', { name }),
-    //     time: Date.now(),
-    //   };
-
-    //   this.appendMessage(data);
-    //   this.service.storeMessage(data);
-    // },
-    // sendMessage(message) {
-    //   this.service.sendMessage(message);
-    //   this.onmessage({
-    //     message,
-    //     time: Date.now(),
-    //     name: this.nickname,
-    //     avatar: this.avatar,
-    //   });
-    // },
+      this.comments = items;
+    },
+    onCreateComment({ content, name, avatar }, post) {
+      this.service.appendComment({ postId: post.id, content, name, avatar }, post);
+    },
     appendMessage(data) {
       this.appendMessageToWindow(data);
     },
@@ -172,7 +173,15 @@ export default {
 <template>
   <v-app>
     <v-container class="fill-height" fluid>
-
+      <Blog
+        :name="nickname"
+        :avatar="avatar"
+        :posts="posts"
+        :comments="comments"
+        :enableEdit="false"
+        @getComments="onGetComments"
+        @createComment="onCreateComment"
+      />
     </v-container>
 
     <v-overlay

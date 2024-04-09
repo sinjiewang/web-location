@@ -6,7 +6,7 @@ import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiHelp } from '@mdi/js';
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 import { mapActions } from 'vuex';
-import { mergeProps } from 'vue'
+import { mergeProps } from 'vue';
 
 import SITE from '@/constants/site.js';
 
@@ -36,7 +36,7 @@ export default {
       return this.selectedHistory
         ? `${this.selectedHistory.title} (${this.toLocaleString(this.selectedHistory.updatedTime)})`
         : this.$t('Please select...');
-    }
+    },
   },
   methods: {
     mergeProps,
@@ -258,7 +258,10 @@ export default {
         </v-card>
       </v-col>
       <v-col cols="12" md="8" class="md-fill-height">
-        <router-view class="pt-0 pb-0" @change="onChange"></router-view>
+        <router-view
+          class="pt-0 pb-0"
+          @change="onChange"
+        ></router-view>
       </v-col>
     </v-row>
     <DeleteConfirmDialog
