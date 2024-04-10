@@ -21,7 +21,7 @@ export default {
       return this.$i18n.locale;
     },
     establishPath() {
-      return this.$router.resolve({ name: 'Establish' }).href;
+      return this.$router.resolve({ name: 'establish' }).href;
     },
   },
   methods: {

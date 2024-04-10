@@ -3,10 +3,12 @@ import { mapActions } from 'vuex';
 import { /*isProxy,*/ toRaw } from 'vue';
 import Service from '@/utils/Service/Blog/SiteService.js';
 import Blog from '../index.vue';
+import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
 
 export default {
   components: {
     Blog,
+    InteractionGoogleMap,
   },
   props: {
     tunnel: {
@@ -27,6 +29,8 @@ export default {
       dataChannels: {},
       posts: [],
       comments: [],
+      mapCenter: null,
+      mapComponent: null,
     };
   },
   computed: {
@@ -95,6 +99,18 @@ export default {
       this.comments = await this.service.getCommentsByPostId(postId);
       this.postId = postId;
     },
+    showPosition({ lat, lng }) {
+      this.mapCenter = { lat, lng };
+      this.mapComponent = 'InteractionGoogleMap';
+      this.$nextTick(() => {
+        const { googleMap } = this.$refs;
+        googleMap.setMapUndraggable();
+        googleMap.removePositionMarker();
+        // googleMap.setMapCenter({ lat, lng });
+        const positionMarker = googleMap.addPositionMarker({ lat, lng });
+        googleMap.setMarkerUndraggable(positionMarker);
+      });
+    },
   },
   async mounted() {
     const db = await this.idbConnect();
@@ -115,6 +131,10 @@ export default {
 
     this.service = service;
     this.getPosts();
+
+    const { lat, lng } = profile.position;
+
+    this.showPosition({ lat, lng });
   },
   beforeUnmount() {
     this.service.close();
@@ -124,20 +144,37 @@ export default {
 </script>
 
 <template>
-  <Blog
-    :name="name"
-    :avatar="avatar"
-    :posts="posts"
-    :comments="comments"
-    @getComments="onGetComments"
-    @createPost="onCreatePost"
-    @updatePost="onUpdatePost"
-    @deletePost="onDeletePost"
-    @createComment="onCreateComment"
-    @deleteComment="onDeleteComment"
-  />
+  <v-container class="pa-0">
+    <v-row>
+      <v-container class="pb-0">
+        <v-col cols="12">
+          <component
+            ref="googleMap"
+            class="interaction-google-map mt-2"
+            :is="mapComponent"
+            :center="mapCenter"
+          />
+        </v-col>
+      </v-container>
+    </v-row>
+    <Blog
+      ref="blog"
+      :name="name"
+      :avatar="avatar"
+      :posts="posts"
+      :comments="comments"
+      @getComments="onGetComments"
+      @createPost="onCreatePost"
+      @updatePost="onUpdatePost"
+      @deletePost="onDeletePost"
+      @createComment="onCreateComment"
+      @deleteComment="onDeleteComment"
+    />
+  </v-container>
 </template>
 
 <style scoped>
-
+.interaction-google-map {
+  max-height: 56px;
+}
 </style>

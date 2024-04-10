@@ -1,6 +1,7 @@
 <script>
 import { mapState, mapActions } from 'vuex';
 import AccountDialog from '@/components/AccountDialog.vue';
+import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
 import ClientService from '@/utils/Service/Blog/ClientService.js';
 import Blog from '../index.vue';
 import short from 'short-uuid';
@@ -9,6 +10,7 @@ export default {
   components: {
     Blog,
     AccountDialog,
+    InteractionGoogleMap,
   },
   data() {
     return {
@@ -21,6 +23,9 @@ export default {
       db: null,
       posts: [],
       comments: [],
+      mapCenter: null,
+      mapComponent: null,
+      title: '',
     };
   },
   computed: {
@@ -63,7 +68,7 @@ export default {
         db,
       });
 
-      // service.on('profile', (profile) => this.onprofile(profile));
+      service.on('profile', (profile) => this.onprofile(profile));
       // service.on('register', (data) => this.onregister(data));
       // service.on('deregister', (data) => this.onderegister(data));
       // service.on('message', (data) => this.onmessage(data));
@@ -84,11 +89,25 @@ export default {
     getComments(postId) {
       return this.service.getComments(postId);
     },
-    async onprofile({ title }) {
+    async onprofile(profile) {
     //   this.appendMessage({
     //     message: `${this.$t('has joined')} (${title})`,
     //     time: Date.now(),
     //   });
+      const { lat, lng } = profile.position;
+
+      this.title = profile.title;
+      this.mapCenter = { lat, lng };
+      this.mapComponent = 'InteractionGoogleMap';
+      this.$nextTick(() => {
+        const { googleMap } = this.$refs;
+
+        googleMap.setMapUndraggable();
+        googleMap.removePositionMarker();
+        // googleMap.setMapCenter({ lat, lng });
+        const positionMarker = googleMap.addPositionMarker({ lat, lng });
+        googleMap.setMarkerUndraggable(positionMarker);
+      });
     },
     onpost(post) {
       const { method, item } = post;
@@ -172,8 +191,30 @@ export default {
 
 <template>
   <v-app>
-    <v-container class="fill-height" fluid>
+    <v-container>
+      <v-container class="pb-0">
+        <v-row>
+          <v-col cols="12" md="8">
+            <component
+              ref="googleMap"
+              class="interaction-google-map"
+              :is="mapComponent"
+              :center="mapCenter"
+            />
+          </v-col>
+          <v-col cols="12" md="4">
+            <v-text-field
+              v-model="title"
+              :label="$t('Title')"
+              hide-details
+              required
+              disabled
+            ></v-text-field>
+          </v-col>
+        </v-row>
+      </v-container>
       <Blog
+        ref="blog"
         :name="nickname"
         :avatar="avatar"
         :posts="posts"
@@ -245,5 +286,9 @@ export default {
 /* .message-row {
   margin: auto;
 } */
+
+.interaction-google-map {
+  max-height: 56px;
+}
 
 </style>

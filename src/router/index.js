@@ -10,12 +10,12 @@ import HistoryBlog from '@/pages/History/Blog.vue';
 const routes = [
   {
     path: '/browse',
-    name: 'Browse',
+    name: 'browse',
     component: Browse,
   },
   {
     path: '/history',
-    name: 'History',
+    name: 'history',
     component: History,
     children: [
       {
@@ -30,7 +30,7 @@ const routes = [
   },
   {
     path: '/establish/:id?',
-    name: 'Establish',
+    name: 'establish',
     component: Establish,
     meta: {
       // requiresAuth: true,
@@ -39,7 +39,7 @@ const routes = [
   },
   {
     path: '/chat/:siteId',
-    name: 'Chat',
+    name: 'chat',
     component: Chat,
     meta: {
       // requiresAuth: true,
@@ -49,7 +49,7 @@ const routes = [
   },
   {
     path: '/blog/:siteId',
-    name: 'Blog',
+    name: 'blog',
     component: Blog,
     meta: {
       // requiresAuth: true,

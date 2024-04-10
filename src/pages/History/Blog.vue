@@ -92,8 +92,8 @@ export default {
     async id(value) {
       this.service.id = value;
       this.$refs.blog.clear();
-      this.getPosts();
       this.history = await this.storeHistory.queryById(value);
+      this.getPosts();
     },
   },
   async mounted() {
@@ -132,6 +132,7 @@ export default {
     :posts="posts"
     :comments="comments"
     :enableEdit="enableEdit"
+    :enableComment="false"
     @getComments="onGetComments"
     @createPost="onCreatePost"
     @updatePost="onUpdatePost"

@@ -80,11 +80,23 @@ export default {
         confirmHandler();
       }
     },
-    onClickOpen({ id }) {
-      const url = this.$router.resolve({
-        name: 'Establish',
-        params: { id },
-      }).href;
+    onClickOpen(item) {
+      const { id, action, siteId, type } = item;
+      let url;
+
+      switch(action) {
+        case 'create':
+          url = this.$router.resolve({
+            name: 'establish',
+            params: { id },
+          }).href;
+          break;
+        default:
+          url = this.$router.resolve({
+            name: type,
+            params: { siteId },
+          }).href;
+      }
 
       window.open(url, '_blank');
     },
@@ -155,7 +167,7 @@ export default {
         >
           <component
             ref="googleMap"
-            class="interaction-google-map mb-3"
+            class="mb-3"
             :is="mapComponent"
             :center="center"
           />
@@ -183,7 +195,6 @@ export default {
               </v-list-item-subtitle>
               <template v-slot:append>
                 <v-btn
-                  v-if="item.action === 'create'"
                   color="grey-lighten-1"
                   icon="mdi-arrow-top-right-bold-box-outline"
                   variant="text"
@@ -238,7 +249,6 @@ export default {
                   </v-list-item-subtitle>
                   <template v-slot:append>
                     <v-btn
-                      v-if="item.action === 'create'"
                       color="grey-lighten-1"
                       icon="mdi-arrow-top-right-bold-box-outline"
                       variant="text"

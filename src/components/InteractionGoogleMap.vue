@@ -1,5 +1,6 @@
 <script>
 import { v4 as uuidv4 } from 'uuid';
+import short from 'short-uuid';
 
 export default {
   name: 'InteractionMap',
@@ -36,6 +37,7 @@ export default {
       },
       LABEL_ID_PREFIX: 'label',
       POSITION_ID_PREFIX: 'position',
+      id: short.generate(),
       mapHeight: '100%',
       map: null,
       markers: new Map(),
@@ -63,7 +65,7 @@ export default {
   },
   methods: {
     createMap(config) {
-      return new google.maps.Map(document.getElementById('map'), config);
+      return new google.maps.Map(document.getElementById(this.id), config);
     },
     getMarker(id) {
       return this.markers.get(id);
@@ -192,14 +194,14 @@ export default {
       this.$emit('label', position);
     },
     setMapHeight() {
-      this.mapHeight = document.getElementById('map').offsetWidth + 'px';
+      this.mapHeight = document.getElementById(this.id).offsetWidth + 'px';
     }
   }
 };
 </script>
 
 <template>
-  <div class="google-map" id="map"
+  <div class="google-map" :id="id"
     :style="{
       height: mapHeight
     }"

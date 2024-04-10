@@ -2,6 +2,7 @@
 import DOMPurify from 'dompurify';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog.vue';
 import LeaveConfirmDialog from '@/components/LeaveConfirmDialog.vue';
+// import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
 import AccountAvatar from '@/components/AccountAvatar.vue';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiCommentPlusOutline, mdiAccountCircle } from '@mdi/js';
@@ -10,12 +11,17 @@ import { /*isProxy,*/ toRaw, mergeProps } from 'vue';
 export default {
   components: {
     SvgIcon,
+    // InteractionGoogleMap,
     DeleteConfirmDialog,
     LeaveConfirmDialog,
     AccountAvatar,
   },
   props: {
     enableEdit: {
+      type: Boolean,
+      default: () => true,
+    },
+    enableComment: {
       type: Boolean,
       default: () => true,
     },
@@ -48,6 +54,8 @@ export default {
       commentContent: null,
       changed: false,
       confirmHandler: null,
+      // mapComponent: null,
+      // mapCenter: null,
     };
   },
   computed: {
@@ -176,6 +184,21 @@ export default {
         this.confirmHandler = null;
       }
     },
+    // showPosition({ lat, lng }) {
+    //   this.mapCenter = { lat, lng };
+    //   this.mapComponent = 'InteractionGoogleMap';
+    //   this.$nextTick(() => {
+    //     const { googleMap } = this.$refs;
+
+    //     googleMap.setMapUndraggable();
+    //     googleMap.removePositionMarker();
+    //     // googleMap.setMapCenter({ lat, lng });
+
+    //     const positionMarker = googleMap.addPositionMarker({ lat, lng });
+
+    //     googleMap.setMarkerUndraggable(positionMarker);
+    //   });
+    // }
   },
   watch: {
     postTitle() {
@@ -219,7 +242,7 @@ export default {
               <template v-slot:activator="{ props: tooltip }">
                 <div class="d-flex flex-column">
                   <v-btn
-                    class="menu-btn"
+                    class="menu-btn ellipsis"
                     variant="outlined"
                     color="primary"
                     v-bind="mergeProps(menu, tooltip)"
@@ -262,7 +285,7 @@ export default {
         <v-card>
           <v-btn
             v-if="enableEdit"
-            class="form-button create mt-2"
+            class="form-button create"
             @click="onClickCreate"
           >
             <svg-icon type="mdi" width="36" height="36" :path="mdiCommentPlusOutline"></svg-icon>
@@ -304,7 +327,7 @@ export default {
       <v-col cols="12" md="8" class="h-100 overflow-auto">
         <v-container
           v-if="selected"
-          class="pt-0 pb-0"
+          class="pt-0 pb-0 pr-0"
         >
           <v-card>
             <v-container>
@@ -320,7 +343,10 @@ export default {
                   :rules="[v => !!v || $t('Required')]"
                   hide-details
                 ></v-text-field>
-                <div v-else>
+                <div
+                  v-else
+                  class="ellipsis"
+                >
                   <span
                     class="ml-2 line-height-56"
                   >{{ postTitle }}</span>
@@ -401,7 +427,7 @@ export default {
                     ></v-btn>
                   </template>
                 </v-list-item>
-                <v-list-item>
+                <v-list-item v-if="enableComment">
                   <template #prepend>
                     <AccountAvatar
                       class="account-avatar size-24"
@@ -466,4 +492,14 @@ export default {
   padding-top: 12px;
   padding-bottom: 4px;
 }
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* .interaction-google-map {
+  max-height: 56px;
+} */
 </style>
