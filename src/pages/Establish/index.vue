@@ -51,7 +51,7 @@ export default {
   computed: {
     ...mapState('Account', ['sub']),
     ...mapState('Account', { accountPostion: 'position' }),
-    ...mapState('CloudTunnel', ['wsClient']),
+    ...mapState('CloudTunnel', ['wsConnection']),
     types() {
       return Object.keys(SITE.TYPE).map((type) => ({
         type,
@@ -408,7 +408,7 @@ export default {
       <v-divider></v-divider>
       <v-row no-gutters class="app-content">
         <component
-          :tunnel="wsClient"
+          :tunnel="wsConnection"
           :is="appComponent"
           :profile="appProfile"
         ></component>

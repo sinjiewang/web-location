@@ -3,7 +3,7 @@ import APIGatewayConnect from '@/utils/APIGatewayConnect';
 export default {
   namespaced: true,
   state: () => ({
-    wsClient: null,
+    wsConnection: null,
   }),
   // getters: {
 
@@ -11,23 +11,23 @@ export default {
   actions: {
     connect ({ state, dispatch }, url) {
       return new Promise((reslove, reject) => {
-        const wsClient = new APIGatewayConnect({ url });
+        const connection = new APIGatewayConnect({ url });
 
-        wsClient.on('close', () => {
+        connection.on('close', () => {
           reject();
-          state.wsClient = null;
+          state.wsConnection = null;
         });
-        wsClient.on('position', (event) => {
+        connection.on('position', (event) => {
           dispatch('onposition', event);
         });
-        wsClient.connect().then(reslove, reject);
+        connection.connect().then(reslove, reject);
 
-        state.wsClient = wsClient;
+        state.wsConnection = connection;
       })
     },
     async clientConnect({ state, dispatch }, position=null) {
-      if (state.wsClient) {
-        return Promise.resolve(state.wsClient);
+      if (state.wsConnection) {
+        return Promise.resolve(state.wsConnection);
       }
 
       let url = import.meta.env.VITE_AWS_API_GATEWAY_CLIENT_URL;
@@ -36,33 +36,33 @@ export default {
         url = `${url}?lat=${position.lat}&lng=${position.lng}`;
       }
 
-      const wsClient = await dispatch('connect', url);
+      const connection = await dispatch('connect', url);
 
-      return wsClient;
+      return connection;
     },
     async siteConnect({ state, dispatch }, { siteId='', lat=0, lng=0, type='', title='' }={}) {
-      if (state.wsClient) {
-        return Promise.resolve(state.wsClient);
+      if (state.wsConnection) {
+        return Promise.resolve(state.wsConnection);
       }
 
       let  url = `${import.meta.env.VITE_AWS_API_GATEWAY_SITE_URL}?siteId=${siteId}&lat=${lat}&lng=${lng}&type=${type}`;
 
-      const wsClient = await dispatch('connect', url);
+      const wsConnection = await dispatch('connect', url);
 
       await dispatch('updateSiteTitle', title);
 
-      return wsClient;
+      return wsConnection;
     },
     async disconnect({ state }) {
-      if (state.wsClient) {
-        state.wsClient.destroy();
-        state.wsClient = null;
+      if (state.wsConnection) {
+        state.wsConnection.destroy();
+        state.wsConnection = null;
       }
     },
     async sendBySite({ dispatch }, options) {
-      const wsClient = await dispatch('siteConnect');
+      const wsSite = await dispatch('siteConnect');
 
-      wsClient.send(options);
+      wsSite.send(options);
     },
     async updateSiteTitle({ dispatch }, title ) {
      await dispatch('sendBySite', {
@@ -71,9 +71,9 @@ export default {
       });
     },
     async sendByClient({ dispatch }, options) {
-      const wsClient = await dispatch('clientConnect');
+      const connection = await dispatch('clientConnect');
 
-      wsClient.send(options);
+      connection.send(options);
     },
     async updateClientPosition({ dispatch }, { lat, lng }) {
       await dispatch('sendByClient', {

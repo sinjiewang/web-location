@@ -1,4 +1,5 @@
 import EventEmitter from 'events';
+import { clearTimeout, setTimeout } from 'worker-timers';
 
 const KEEPALIVE_TIMEOUT = 1000 * 60 * 9; // 9 min
 const WS_READY_STATE = {

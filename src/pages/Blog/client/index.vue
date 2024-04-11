@@ -29,7 +29,7 @@ export default {
     };
   },
   computed: {
-    ...mapState('CloudTunnel', ['wsClient']),
+    ...mapState('CloudTunnel', ['wsConnection']),
     connected() {
       return this.channel;
     },
@@ -59,7 +59,7 @@ export default {
       this.disconnect();
     },
     async createService() {
-      const { nickname, avatar, wsClient, siteId, db } = this;
+      const { nickname, avatar, wsConnection, siteId, db } = this;
 
       const service = new ClientService({
         id: siteId,
@@ -77,7 +77,7 @@ export default {
       service.on('close', () => this.onclose());
 
       await service.connect({
-        tunnel: wsClient,
+        tunnel: wsConnection,
         siteId,
       });
 
