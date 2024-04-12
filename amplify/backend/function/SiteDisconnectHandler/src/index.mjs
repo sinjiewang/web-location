@@ -36,24 +36,24 @@ export async function handler(event) {
     }));
 
     await Promise.all(Array.from(positionIds).map((positionId) => {
-      return new Promise(async (reslove, reject) => {
+      return new Promise(async (resolve, reject) => {
         const result = await ddbSiteConnection.queryByPositionId({ positionId }).catch(err => {
           console.error('ddbSiteConnection.queryByPositionId fail: ', err)
 
           return reject(err);
         });
-  
+
         if (result && result.Count) {
-          return reslove();
+          return resolve();
         }
-  
+
         await ddbPosition.delete({ positionId }).catch(err => {
           console.error('ddbPosition.delete fail: ', err);
 
           return reject(err);
         });
 
-        reslove();
+        resolve();
       });
     }));
   }

@@ -66,6 +66,7 @@ export const createSiteConnection = /* GraphQL */ `
     createSiteConnection(input: $input, condition: $condition) {
       id
       title
+      passwordRequired
       type
       connectionId
       siteId
@@ -92,6 +93,7 @@ export const updateSiteConnection = /* GraphQL */ `
     updateSiteConnection(input: $input, condition: $condition) {
       id
       title
+      passwordRequired
       type
       connectionId
       siteId
@@ -118,6 +120,7 @@ export const deleteSiteConnection = /* GraphQL */ `
     deleteSiteConnection(input: $input, condition: $condition) {
       id
       title
+      passwordRequired
       type
       connectionId
       siteId

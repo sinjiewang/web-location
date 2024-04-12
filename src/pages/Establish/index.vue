@@ -34,6 +34,8 @@ export default {
       id: this.$route.params.id,
       title: null,
       type: 'chat',
+      pwdRequired: false,
+      password: null,
       disableTypeSelect: false,
       qrcodeUrl: null,
       showQRcodeDialog: false,
@@ -41,6 +43,7 @@ export default {
       formValid: false,
       appComponent: null,
       step: 1,
+      showPassword: false,
       // svg-icon
       copyIcon: mdiContentCopy,
       mdiMapMarkerRightOutline,
@@ -100,7 +103,7 @@ export default {
       this.position = coordinate.transform({ lat, lng });
     },
     async onClickEstablish() {
-      const { id, type, title, position } = this;
+      const { id, type, title, position, pwdRequired, password } = this;
       const { lat, lng } = position;
       const siteId = id || short.generate();
 
@@ -111,7 +114,13 @@ export default {
       this.setUndraggable();
       this.loading = true;
 
-      await this.siteConnect({ siteId, lat, lng, type, title });
+      const params = { siteId, lat, lng, type, title };
+
+      if (pwdRequired) {
+        params.password = password;
+      }
+
+      await this.siteConnect(params);
 
       this.id = siteId;
       this.$router.push({ params: { id: siteId }});
@@ -120,6 +129,9 @@ export default {
       this.loading = false;
       this.disableTypeSelect = true;
       this.setQRCode();
+    },
+    onClickPWDRequired() {
+      this.$refs.password.focus();
     },
     onClickDisconnect() {
       setTimeout(() => {
@@ -148,12 +160,12 @@ export default {
       return this.$router.getRoutes().find(route => route.meta?.type === type).name;
     },
     async setQRCode() {
-      const dataUrl = await new Promise((reslove, reject) => {
+      const dataUrl = await new Promise((resolve, reject) => {
         QRCode.toDataURL(this.appUrl, (err, url) => {
           if (err) {
             reject(err);
           } else {
-            reslove(url);
+            resolve(url);
           }
         });
       });
@@ -239,29 +251,8 @@ export default {
             </div>
             <v-row>
               <v-col
-                cols="6"
-              >
-                <v-text-field
-                  v-model="labelX"
-                  label="x"
-                  disabled
-                  hide-details
-                ></v-text-field>
-              </v-col>
-              <v-col
-                cols="6"
-              >
-                <v-text-field
-                  v-model="labelY"
-                  label="y"
-                  disabled
-                  hide-details
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col
                 cols="5"
+                md="4"
               >
                 <v-select
                   v-model="type"
@@ -269,14 +260,44 @@ export default {
                   :items="types"
                   :rules="[v => !!v || $t('Required')]"
                   :disabled="disableTypeSelect"
+                  hide-details
                   item-title="text"
                   item-value="type"
                   required
                 >
                 </v-select>
               </v-col>
+              <v-col cols="2" class="hidden-md-and-down"></v-col>
+              <v-col cols="1">
+                <v-tooltip bottom>
+                  <template #activator="{ props }">
+                    <v-checkbox
+                      v-model="pwdRequired"
+                      v-bind="props"
+                      hide-details
+                      @click="onClickPWDRequired"
+                    ></v-checkbox>
+                  </template>
+                  <span>{{ $t('Password Required') }}</span>
+                </v-tooltip>
+              </v-col>
+              <v-col cols="6" md="5">
+                <v-text-field
+                  ref="password"
+                  v-model="password"
+                  :label="$t('Password')"
+                  :rules="[v => !pwdRequired || !!v || $t('Required')]"
+                  :required="pwdRequired"
+                  :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                  :type="showPassword ? 'text' : 'password'"
+                  @click:append="showPassword = !showPassword"
+                  hide-details
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
               <v-col
-                cols="7"
+                cols="12"
               >
                 <v-text-field
                   v-model="title"
@@ -287,7 +308,6 @@ export default {
                 ></v-text-field>
               </v-col>
             </v-row>
-
             <div class="d-flex flex-column">
               <v-btn
                 :disabled="!formValid"
@@ -433,6 +453,10 @@ export default {
 
 .app-content {
   height: calc(100vh - 110px);
+}
+
+.max-h-80 {
+  max-height: 80px;
 }
 
 @keyframes spin {

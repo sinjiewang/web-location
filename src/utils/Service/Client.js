@@ -7,11 +7,18 @@ export default class Service extends EventEmitter {
     super();
 
     this.rtcConnection = null;
+    this.signaling = null;
     this.dataChannel = null;
   }
 
-  async connect({ tunnel, siteId }={}) {
-    const signaling = new ClientSignaling({ tunnel });
+  async connect({ tunnel, siteId, password }={}) {
+    const signaling = new ClientSignaling({ tunnel, password });
+
+    this.$onerror = (error) => this.onerror(error);
+    this.signaling = signaling;
+
+    signaling.on('error', this.$onerror);
+
     const rtcClient = new RTCPeerClient({
       signaling,
       siteId,
@@ -27,12 +34,20 @@ export default class Service extends EventEmitter {
     this.rtcClient = rtcClient;
   }
 
+  onerror(error) {
+    console.warn('signaling error:', error);
+
+    this.emit('error', error);
+  }
+
   onclose() {
     this.dataChannel.removeAllListeners();
     this.dataChannel = null;
   }
 
   close() {
+    this.signaling?.off('error', this.$onerror);
+
     this.rtcClient?.close();
     this.rtcClient = null;
   }

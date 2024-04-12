@@ -12,7 +12,11 @@ export default class Signaling extends EventEmitter {
   }
 
   onmessage(event) {
-    const { action, data, clientId, siteId } = JSON.parse(event.data);
+    const { action, data, clientId, siteId, error } = JSON.parse(event.data);
+
+    if (error) {
+      return this.emit('error', error);
+    }
 
     if (!data || !data.sdp) {
       return;

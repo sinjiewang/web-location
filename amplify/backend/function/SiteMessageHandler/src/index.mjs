@@ -38,7 +38,7 @@ export async function handler(event) {
     console.error('DdbSiteConnection.query fail: ', err);
   });
 
-  if (res.Items && res.Items.length) {
+  if (res?.Items && res?.Items.length) {
     await Promise.all(res.Items.map(({ connectionId }) => {
       return apiGateway.postToConnection({
         ConnectionId: connectionId,

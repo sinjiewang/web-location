@@ -114,12 +114,12 @@ export default {
     },
     onClickClose() {
       if (this.changed) {
-        return new Promise((reslove) => {
+        return new Promise((resolve) => {
           this.$refs.leaveConfirmDialog.show();
           this.confirmHandler = () => {
             this.clear();
 
-            reslove();
+            resolve();
           };
         });
       } else {

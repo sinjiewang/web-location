@@ -12,6 +12,8 @@ export default class ChatClientService extends EventEmitter {
     super();
 
     this.service = new Client({ name, avatar });
+    this.service.on('error', (error) => this.emit('error', error));
+
     this.channel = null;
     this.storeChat = new StoreChat({ db });
     this.storeHistory = new StoreHistory({ db });
@@ -26,10 +28,10 @@ export default class ChatClientService extends EventEmitter {
     };
   }
 
-  async connect({ tunnel, siteId }={}) {
+  async connect({ tunnel, siteId, password }={}) {
     const { service } = this;
 
-    await service.connect({ tunnel, siteId });
+    await service.connect({ tunnel, siteId, password });
 
     const { dataChannel } = service;
     const channel = new Protocol({ dataChannel })
@@ -124,5 +126,9 @@ export default class ChatClientService extends EventEmitter {
       time: Date.now(),
       ...data,
     });
+  }
+
+  close() {
+    this.service?.close();
   }
 }

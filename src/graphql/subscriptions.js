@@ -56,6 +56,7 @@ export const onCreateSiteConnection = /* GraphQL */ `
     onCreateSiteConnection(filter: $filter) {
       id
       title
+      passwordRequired
       type
       connectionId
       siteId
@@ -81,6 +82,7 @@ export const onUpdateSiteConnection = /* GraphQL */ `
     onUpdateSiteConnection(filter: $filter) {
       id
       title
+      passwordRequired
       type
       connectionId
       siteId
@@ -106,6 +108,7 @@ export const onDeleteSiteConnection = /* GraphQL */ `
     onDeleteSiteConnection(filter: $filter) {
       id
       title
+      passwordRequired
       type
       connectionId
       siteId

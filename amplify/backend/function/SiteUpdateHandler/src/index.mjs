@@ -16,21 +16,28 @@ export async function handler(event) {
 
   const { connectionId } = event.requestContext;
   const body = JSON.parse(event.body);
-  const { title } = body.data;
+  const { title, password } = body.data;
   const ddbSiteConnection = new DdbSiteConnection();
   const res = await ddbSiteConnection.query({ connectionId }).catch(err => {
     console.error('ddbSiteConnection.query fail: ', err);
   });
 
   if (res.Items && res.Items.length) {
-    await Promise.all(res.Items.map(({ id }) => {
-      console.log('ddbSiteConnection.update id:', id);
+    const site = res.Items.shift();
+    const { id } = site;
+    const data = { title };
 
-      return ddbSiteConnection.update({
-        id,
-        data: { title },
-      });
-    }));
+    if (password) {
+      data.password = password;
+      data.passwordRequired = true;
+    }
+
+    console.log('ddbSiteConnection.update id:', id);
+
+    await ddbSiteConnection.update({
+      id,
+      data,
+    });
   }
 
   return {

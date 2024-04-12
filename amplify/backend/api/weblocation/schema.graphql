@@ -12,6 +12,7 @@ type Position @model {
 type SiteConnection @model {
   id: ID!
   title: String
+  passwordRequired: Boolean
   type: String
   connectionId: String! @index
   siteId: String! @index

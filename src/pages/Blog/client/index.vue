@@ -2,6 +2,7 @@
 import { mapState, mapActions } from 'vuex';
 import AccountDialog from '@/components/AccountDialog.vue';
 import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
+import ConnectionPasswordDialog from '@/components/ConnectionPasswordDialog.vue';
 import ClientService from '@/utils/Service/Blog/ClientService.js';
 import Blog from '../index.vue';
 import short from 'short-uuid';
@@ -11,6 +12,7 @@ export default {
     Blog,
     AccountDialog,
     InteractionGoogleMap,
+    ConnectionPasswordDialog,
   },
   data() {
     return {
@@ -26,6 +28,8 @@ export default {
       mapCenter: null,
       mapComponent: null,
       title: '',
+      password: null,
+      pwdRequired: false,
     };
   },
   computed: {
@@ -42,6 +46,12 @@ export default {
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     ...mapActions('CloudTunnel', ['clientConnect', 'disconnect']),
     async init() {
+      const { pwdRequired, password } = this;
+
+      if (pwdRequired && password === null) {
+        return this.$nextTick(() => this.$refs.passwordDialog.show())
+      }
+
       this.loading = true;
 
       try {
@@ -52,14 +62,24 @@ export default {
       } catch (err) {
         console.error('init failed', err);
 
-        this.showDisconnectedDialog = true;
+        const { code } = err;
+
+        switch(code) {
+          case 401:
+            this.pwdRequired = true;
+            this.password = null;
+            this.$refs.passwordDialog.show();
+            break;
+          default:
+            this.showDisconnectedDialog = true;
+        }
       }
 
       this.loading = false;
       this.disconnect();
     },
     async createService() {
-      const { nickname, avatar, wsConnection, siteId, db } = this;
+      const { nickname, avatar, wsConnection, siteId, db, password } = this;
 
       const service = new ClientService({
         id: siteId,
@@ -68,20 +88,26 @@ export default {
         db,
       });
 
-      service.on('profile', (profile) => this.onprofile(profile));
-      // service.on('register', (data) => this.onregister(data));
-      // service.on('deregister', (data) => this.onderegister(data));
-      // service.on('message', (data) => this.onmessage(data));
-      service.on('post', (post) => this.onpost(post));
-      service.on('comment', (comment) => this.oncomment(comment));
-      service.on('close', () => this.onclose());
+      return new Promise(async (resolve, reject) => {
+        service.on('error', (error) => {
+          service.close();
 
-      await service.connect({
-        tunnel: wsConnection,
-        siteId,
+          reject(error);
+        });
+        service.on('profile', (profile) => this.onprofile(profile));
+        service.on('post', (post) => this.onpost(post));
+        service.on('comment', (comment) => this.oncomment(comment));
+        service.on('close', () => this.onclose());
+
+        await service.connect({
+          tunnel: wsConnection,
+          siteId,
+          password,
+        });
+
+        resolve(service);
       });
 
-      return service;
     },
     getPosts() {
       return this.service.getPosts();
@@ -169,6 +195,10 @@ export default {
     onAccount({ name, avatar }) {
       this.nickname = name;
       this.avatar = avatar;
+      this.init();
+    },
+    onPassword(password) {
+      this.password = password;
       this.init();
     },
   },
@@ -265,6 +295,10 @@ export default {
       ref="accountDialog"
       :showCloseButton="false"
       @account="onAccount"
+    />
+    <ConnectionPasswordDialog
+      ref="passwordDialog"
+      @password="onPassword"
     />
   </v-app>
 </template>

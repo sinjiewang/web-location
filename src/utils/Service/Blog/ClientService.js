@@ -13,6 +13,7 @@ export default class ChatClientService extends EventEmitter {
     super();
 
     this.service = new Client({ name, avatar });
+    this.service.on('error', (error) => this.emit('error', error));
     this.channel = null;
     this.storePost = new StorePost({ db });
     this.storeComment = new StoreComment({ db });
@@ -26,10 +27,10 @@ export default class ChatClientService extends EventEmitter {
     this.host = {};
   }
 
-  async connect({ tunnel, siteId }={}) {
+  async connect({ tunnel, siteId, password }={}) {
     const { service } = this;
 
-    await service.connect({ tunnel, siteId });
+    await service.connect({ tunnel, siteId, password });
 
     const { dataChannel } = service;
     const channel = new Protocol({ dataChannel })
@@ -83,7 +84,7 @@ export default class ChatClientService extends EventEmitter {
     const promise = this.promises[messageId]
 
     if (promise) {
-      promise.reslove(data);
+      promise.resolve(data);
     }
 
     const { type } = data;
@@ -127,10 +128,10 @@ export default class ChatClientService extends EventEmitter {
       messageId,
     })
 
-    return new Promise((reslove, reject) => {
+    return new Promise((resolve, reject) => {
       timeout = setTimeout(() => reject(new Error('Request Timeout')), 30 * 1000);
 
-      this.promises[messageId] = { reslove, reject };
+      this.promises[messageId] = { resolve, reject };
     })
     .finally(() => {
       clearTimeout(timeout);
@@ -188,11 +189,7 @@ export default class ChatClientService extends EventEmitter {
     this.storeComment.create(comment);
   }
 
-  storeMessage(data) {
-    // this.storeChat.create({
-    //   historyId: this.id,
-    //   time: Date.now(),
-    //   ...data,
-    // });
+  close() {
+    this.service?.close();
   }
 }

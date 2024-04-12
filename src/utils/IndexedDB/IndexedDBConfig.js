@@ -11,11 +11,11 @@ export default class IndexedDBConfig {
 
   async open() {
     const { dbName, version } = this;
-    const db = await new Promise((reslove, reject) => {
+    const db = await new Promise((resolve, reject) => {
       const request = indexedDB.open(dbName, version);
 
       request.onupgradeneeded = (event) => this.onupgradeneeded(event);
-      request.onsuccess = (event) => reslove(event.target.result);
+      request.onsuccess = (event) => resolve(event.target.result);
       request.onerror = (event) => reject(event);
     });
 

@@ -46,8 +46,8 @@ export default class APIGatewayConnect extends EventEmitter {
 
     const wesocket = new WebSocket(url, protocol);
 
-    this.ws = new Promise((reslove, reject) => {
-      this.$resolve = reslove;
+    this.ws = new Promise((resolve, reject) => {
+      this.$resolve = resolve;
       this.$reject = reject;
 
       wesocket.addEventListener('open', this);

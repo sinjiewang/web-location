@@ -14,6 +14,7 @@ export const getPosition = /* GraphQL */ `
           createdAt
           positionId
           title
+          passwordRequired
           type
           updatedAt
         }
@@ -57,6 +58,7 @@ export const getSiteConnection = /* GraphQL */ `
     getSiteConnection(id: $id) {
       id
       title
+      passwordRequired
       type
       connectionId
       siteId
@@ -85,6 +87,7 @@ export const listSiteConnections = /* GraphQL */ `
       items {
         id
         title
+        passwordRequired
         type
         connectionId
         siteId
@@ -212,6 +215,7 @@ export const siteConnectionsByConnectionId = /* GraphQL */ `
       items {
         id
         title
+        passwordRequired
         type
         connectionId
         siteId
@@ -243,6 +247,7 @@ export const siteConnectionsBySiteId = /* GraphQL */ `
       items {
         id
         title
+        passwordRequired
         type
         connectionId
         siteId
@@ -274,6 +279,7 @@ export const siteConnectionsByPositionId = /* GraphQL */ `
       items {
         id
         title
+        passwordRequired
         type
         connectionId
         siteId

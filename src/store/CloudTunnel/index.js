@@ -10,7 +10,7 @@ export default {
   // },
   actions: {
     connect ({ state, dispatch }, url) {
-      return new Promise((reslove, reject) => {
+      return new Promise((resolve, reject) => {
         const connection = new APIGatewayConnect({ url });
 
         connection.on('close', () => {
@@ -20,7 +20,7 @@ export default {
         connection.on('position', (event) => {
           dispatch('onposition', event);
         });
-        connection.connect().then(reslove, reject);
+        connection.connect().then(resolve, reject);
 
         state.wsConnection = connection;
       })
@@ -40,7 +40,9 @@ export default {
 
       return connection;
     },
-    async siteConnect({ state, dispatch }, { siteId='', lat=0, lng=0, type='', title='' }={}) {
+    async siteConnect({ state, dispatch }, config={}) {
+      const { siteId='', lat=0, lng=0, type='', title, password } = config;
+
       if (state.wsConnection) {
         return Promise.resolve(state.wsConnection);
       }
@@ -49,7 +51,7 @@ export default {
 
       const wsConnection = await dispatch('connect', url);
 
-      await dispatch('updateSiteTitle', title);
+      await dispatch('updateSiteTitle', { title, password });
 
       return wsConnection;
     },
@@ -64,10 +66,10 @@ export default {
 
       wsSite.send(options);
     },
-    async updateSiteTitle({ dispatch }, title ) {
+    async updateSiteTitle({ dispatch }, { title, password }={}) {
      await dispatch('sendBySite', {
         action: 'update',
-        data: { title },
+        data: { title, password },
       });
     },
     async sendByClient({ dispatch }, options) {
