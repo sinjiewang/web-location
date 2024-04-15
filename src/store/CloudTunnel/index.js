@@ -1,3 +1,4 @@
+import { sha256 } from 'js-sha256';
 import APIGatewayConnect from '@/utils/APIGatewayConnect';
 
 export default {
@@ -51,7 +52,7 @@ export default {
 
       const wsConnection = await dispatch('connect', url);
 
-      await dispatch('updateSiteTitle', { title, password });
+      await dispatch('updateSiteOptions', { title, password });
 
       return wsConnection;
     },
@@ -66,10 +67,14 @@ export default {
 
       wsSite.send(options);
     },
-    async updateSiteTitle({ dispatch }, { title, password }={}) {
-     await dispatch('sendBySite', {
+    async updateSiteOptions({ dispatch }, { title, password }={}) {
+      const data = {
+        title,
+        password: password ? sha256(password) : null,
+      }
+      await dispatch('sendBySite', {
         action: 'update',
-        data: { title, password },
+        data,
       });
     },
     async sendByClient({ dispatch }, options) {

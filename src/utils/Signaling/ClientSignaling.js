@@ -1,10 +1,11 @@
+import { sha256 } from 'js-sha256';
 import Signaling from './index';
 
 export default class ClientSignaling extends Signaling {
   constructor({ tunnel, password }={}) {
     super({ tunnel });
 
-    this.password = password;
+    this.password = password ? sha256(password) : null;
   }
 
   sendOffer({ siteId, desc }) {

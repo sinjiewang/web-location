@@ -272,6 +272,7 @@ export default {
                 <v-tooltip bottom>
                   <template #activator="{ props }">
                     <v-checkbox
+                      class="password-checbox"
                       v-model="pwdRequired"
                       v-bind="props"
                       hide-details
@@ -397,7 +398,7 @@ export default {
                 </v-col>
                 <v-col
                   cols="5"
-                  md="8"
+                  md="6"
                 >
                   <v-text-field
                     v-model="title"
@@ -407,7 +408,18 @@ export default {
                   ></v-text-field>
                 </v-col>
                 <v-col
-                  cols="12"
+                  cols="6"
+                  md="2"
+                >
+                  <v-checkbox
+                    v-model="pwdRequired"
+                    :label="$t('Password Required')"
+                    hide-details
+                    disabled
+                  ></v-checkbox>
+                </v-col>
+                <v-col
+                  cols="6"
                   md="1"
                 >
                   <v-btn
@@ -457,6 +469,12 @@ export default {
 
 .max-h-80 {
   max-height: 80px;
+}
+
+.password-checbox {
+  @media (max-width: 960px) {
+    margin-left: -16px;
+  }
 }
 
 @keyframes spin {

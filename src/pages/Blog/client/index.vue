@@ -116,10 +116,6 @@ export default {
       return this.service.getComments(postId);
     },
     async onprofile(profile) {
-    //   this.appendMessage({
-    //     message: `${this.$t('has joined')} (${title})`,
-    //     time: Date.now(),
-    //   });
       const { lat, lng } = profile.position;
 
       this.title = profile.title;
