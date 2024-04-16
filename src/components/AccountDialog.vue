@@ -67,6 +67,10 @@ export default {
     displayResizeTri() {
       return navigator.maxTouchPoints < 2;
     },
+    isIOS() {
+      return true
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    },
   },
   methods: {
     open() {
@@ -393,14 +397,14 @@ export default {
                   height: imageHeight,
                 }"
               >
-                <rect
+                <!-- <rect
                   :x="maskLeft"
                   :y="maskTop"
                   :width="maskWidth"
                   :height="maskHeight"
                   fill="rgba(0,0,0,0)"
                   stroke="rgba(0,0,0,0.7)"
-                />
+                /> -->
                 <mask id="circleMask">
                   <rect
                     :width="imageWidth"
@@ -445,7 +449,15 @@ export default {
           @change="onFileSelected"
           style="display: none"
         />
+        <button
+          v-if="isIOS"
+          class="v-btn v-btn--elevated v-btn--slim v-theme--dark bg-primary v-btn--density-default v-btn--size-default v-btn--variant-elevated"
+          @click="onClickSelectImage"
+        >
+          {{ $t('Select Image') }}
+        </button>
         <v-btn
+          v-else
           color="primary"
           variant="elevated"
           @click="onClickSelectImage"
