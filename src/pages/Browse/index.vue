@@ -2,7 +2,7 @@
 import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
 import { mapState, mapGetters, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiHelp } from '@mdi/js';
+import { mdiHelp, mdiKeyAlert } from '@mdi/js';
 import SITE from '@/constants/site.js';
 
 export default {
@@ -17,6 +17,7 @@ export default {
       selectedLabel: null,
       selectedLabelSites: [],
       selectedLabelSitesNextToken: null,
+      mdiKeyAlert,
     };
   },
   computed: {
@@ -128,6 +129,7 @@ export default {
             >
               <v-card-title class="custom-title">
                 <svg-icon type="mdi" :path="getSiteTypeIcon(site.type)"></svg-icon>
+                <svg-icon type="mdi" :path="mdiKeyAlert" v-if="site.passwordRequired" class="ml-2"></svg-icon>
               </v-card-title>
               <v-card-text>{{ site.title }}</v-card-text>
               <v-card-actions class="d-flex justify-end align-stretch">

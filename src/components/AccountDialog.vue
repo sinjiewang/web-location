@@ -153,7 +153,6 @@ export default {
       }
     },
     onResizeTouchStart(event) {
-      console.error('onResizeTouchStart')
       const touch = event.touches[0] || event.changedTouches[0];
       const { clientX } = touch;
 
