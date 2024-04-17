@@ -1,0 +1,433 @@
+{
+  "api": {
+    "weblocation": {
+      "dependsOn": [],
+      "output": {
+        "authConfig": {
+          "additionalAuthenticationProviders": [],
+          "defaultAuthentication": {
+            "apiKeyConfig": {
+              "apiKeyExpirationDate": "2025-02-14T05:38:50.131Z",
+              "apiKeyExpirationDays": 365,
+              "description": ""
+            },
+            "authenticationType": "API_KEY"
+          }
+        }
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "AppSync"
+    }
+  },
+  "auth": {},
+  "function": {
+    "ClientConnectHandler": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        },
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "ClientDisconnectHandler": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        },
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "ClientIceServersHandler": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "ClientMessageHandler": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
+        },
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "ClientPositionHandler": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
+        },
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "DdbPostionHandler": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput",
+            "GraphQLAPIEndpointOutput",
+            "GraphQLAPIKeyOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
+        },
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "SiteConnectHandler": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
+        },
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "SiteDisconnectHandler": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
+        },
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "SiteIceServersHandler": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "SiteMessageHandler": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
+        },
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "SiteUpdateHandler": {
+      "build": true,
+      "dependsOn": [
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
+        },
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "weblocationawssdk": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "LambdaLayer"
+    }
+  },
+  "hosting": {
+    "S3AndCloudFront": {
+      "providerPlugin": "awscloudformation",
+      "service": "S3AndCloudFront"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_ClientConnectHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "ClientConnectHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_ClientConnectHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "ClientConnectHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_ClientDisconnectHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "ClientDisconnectHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_ClientDisconnectHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "ClientDisconnectHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_ClientIceServersHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "ClientIceServersHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_ClientIceServersHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "ClientIceServersHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_ClientMessageHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "ClientMessageHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_ClientMessageHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "ClientMessageHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_ClientPositionHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "ClientPositionHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_ClientPositionHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "ClientPositionHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_DdbPostionHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "DdbPostionHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_DdbPostionHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "DdbPostionHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_SiteConnectHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "SiteConnectHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_SiteConnectHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "SiteConnectHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_SiteDisconnectHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "SiteDisconnectHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_SiteDisconnectHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "SiteDisconnectHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_SiteMessageHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "SiteMessageHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_SiteMessageHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "SiteMessageHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_SiteUpdateHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "SiteUpdateHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_SiteUpdateHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "SiteUpdateHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_weblocationawssdk_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        }
+      ]
+    },
+    "AMPLIFY_function_weblocationawssdk_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "weblocationawssdk"
+        }
+      ]
+    }
+  }
+}

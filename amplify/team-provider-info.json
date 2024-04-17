@@ -1,0 +1,70 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-weblocation-dev-150159-authRole",
+      "UnauthRoleArn": "arn:aws:iam::301856136276:role/amplify-weblocation-dev-150159-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::301856136276:role/amplify-weblocation-dev-150159-authRole",
+      "Region": "ap-northeast-1",
+      "DeploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+      "UnauthRoleName": "amplify-weblocation-dev-150159-unauthRole",
+      "StackName": "amplify-weblocation-dev-150159",
+      "StackId": "arn:aws:cloudformation:ap-northeast-1:301856136276:stack/amplify-weblocation-dev-150159/75c07dd0-c3f4-11ee-94a0-0e97f8e60551",
+      "AmplifyAppId": "deadx317c0yx2"
+    },
+    "categories": {
+      "hosting": {
+        "S3AndCloudFront": {}
+      },
+      "function": {
+        "weblocationawssdk": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/weblocationawssdk-LambdaLayerVersionc87acd41-build.zip"
+        },
+        "ClientConnectHandler": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/ClientConnectHandler-4a786a70764974486869-build.zip"
+        },
+        "ClientDisconnectHandler": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/ClientDisconnectHandler-726b7231467370377631-build.zip"
+        },
+        "ClientMessageHandler": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/ClientMessageHandler-5063534a422f4b794c37-build.zip"
+        },
+        "ClientPositionHandler": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/ClientPositionHandler-35664a7a6b5030376143-build.zip"
+        },
+        "SiteConnectHandler": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/SiteConnectHandler-7175506447526a49504d-build.zip"
+        },
+        "SiteDisconnectHandler": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/SiteDisconnectHandler-6b61784d703471656174-build.zip"
+        },
+        "SiteMessageHandler": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/SiteMessageHandler-6d5236776f56434e4e76-build.zip"
+        },
+        "DdbPostionHandler": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/DdbPostionHandler-307938537078786e5754-build.zip"
+        },
+        "SiteUpdateHandler": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/SiteUpdateHandler-4a34616468784d474c4a-build.zip"
+        },
+        "ClientIceServersHandler": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/ClientIceServersHandler-3443343756593256664d-build.zip"
+        },
+        "SiteIceServersHandler": {}
+      },
+      "api": {
+        "weblocation": {}
+      }
+    }
+  }
+}
