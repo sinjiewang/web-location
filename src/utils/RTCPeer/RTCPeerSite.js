@@ -12,15 +12,19 @@ export default class RTCPeerSite extends EventEmitter {
     this.$iceBufferMap = {};
     this.$createPeerConnection = this.createPeerConnection.bind(this);
     this.$addIceCandidate = this.addIceCandidate.bind(this);
+    this.$updateIceServers = this.updateIceServers.bind(this);
+    this.iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
 
+    signaling.on('iceServers', this.$updateIceServers);
     signaling.on('offer', this.$createPeerConnection);
     signaling.on('icecand', this.$addIceCandidate);
+    signaling.sendIceServers();
   }
   async createPeerConnection({
-    iceServers = [{ urls: 'stun:stun.l.google.com:19302' }],
+    // iceServers = [{ urls: 'stun:stun.l.google.com:19302' }],
     clientId, desc,
   }) {
-    const { signaling, peerConnectionMap } = this;
+    const { signaling, peerConnectionMap, iceServers } = this;
     const peerConnection = new RTCPeerConnection({ iceServers }, { optional: [] });
 
     if (peerConnectionMap[clientId]) {
@@ -133,6 +137,18 @@ export default class RTCPeerSite extends EventEmitter {
     });
   }
 
+  updateIceServers({ iceServers=[], expireTime=0 }) {
+    const next = expireTime - Date.now() - 10;
+
+    this.iceServers = iceServers;
+
+    if (this.$timeout) {
+      clearTimeout(this.$timeout);
+    }
+
+    this.$timeout = setTimeout(() => this.signaling.sendIceServers(), next);
+  }
+
   close() {
     const { peerConnectionMap } = this;
 
@@ -142,5 +158,9 @@ export default class RTCPeerSite extends EventEmitter {
 
         console.log('peerConnection', clientId, 'closed')
       });
+
+    if (this.$timeout) {
+      clearTimeout(this.$timeout);
+    }
   }
 }

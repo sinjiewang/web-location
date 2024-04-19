@@ -44,7 +44,17 @@ class RTCPeerClient extends EventEmitter {
     this.signaling.on('answer', setRemoteDescription);
     this.signaling.on('icecand', addIceCandidate);
 
-    return this.createPeerConnection()
+    const iceServers = await new Promise(resolve => {
+      const onIceServers = ({ iceServers=[{ urls: 'stun:stun.l.google.com:19302' }] }) => {
+        this.signaling.off('iceServers', onIceServers);
+
+        resolve(iceServers);
+      }
+      this.signaling.on('iceServers', onIceServers);
+      this.signaling.sendIceServers();
+    });
+
+    return this.createPeerConnection({ iceServers })
       .finally(() => {
         this.signaling.off('answer', setRemoteDescription);
         this.signaling.off('icecand', addIceCandidate);

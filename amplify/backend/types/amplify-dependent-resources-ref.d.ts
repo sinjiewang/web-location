@@ -63,6 +63,13 @@ export type AmplifyDependentResourcesAttributes = {
       "Name": "string",
       "Region": "string"
     },
+    "SiteIceServersHandler": {
+      "Arn": "string",
+      "LambdaExecutionRole": "string",
+      "LambdaExecutionRoleArn": "string",
+      "Name": "string",
+      "Region": "string"
+    },
     "SiteMessageHandler": {
       "Arn": "string",
       "LambdaExecutionRole": "string",

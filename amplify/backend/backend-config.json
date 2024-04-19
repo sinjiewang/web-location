@@ -381,6 +381,22 @@
         }
       ]
     },
+    "AMPLIFY_function_SiteIceServersHandler_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "SiteIceServersHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_SiteIceServersHandler_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "SiteIceServersHandler"
+        }
+      ]
+    },
     "AMPLIFY_function_SiteMessageHandler_deploymentBucketName": {
       "usedBy": [
         {

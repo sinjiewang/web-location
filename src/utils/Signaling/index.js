@@ -18,7 +18,9 @@ export default class Signaling extends EventEmitter {
       return this.emit('error', error);
     }
 
-    if (!data || !data.sdp) {
+    if (data && !data.sdp) {
+      return this.emit(action, data);
+    } else if (!data?.sdp) {
       return;
     }
 
@@ -33,6 +35,12 @@ export default class Signaling extends EventEmitter {
     }
 
     this.emit(action, actionData);
+  }
+
+  sendIceServers() {
+    this.tunnel.send({
+      action: 'iceServers',
+    });
   }
 
   destroy() {

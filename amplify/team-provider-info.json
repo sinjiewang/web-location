@@ -58,9 +58,12 @@
         },
         "ClientIceServersHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
-          "s3Key": "amplify-builds/ClientIceServersHandler-3443343756593256664d-build.zip"
+          "s3Key": "amplify-builds/ClientIceServersHandler-433930786b556372382f-build.zip"
         },
-        "SiteIceServersHandler": {}
+        "SiteIceServersHandler": {
+          "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
+          "s3Key": "amplify-builds/SiteIceServersHandler-74356450513047564372-build.zip"
+        }
       },
       "api": {
         "weblocation": {}

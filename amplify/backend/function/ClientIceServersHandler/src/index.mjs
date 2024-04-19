@@ -24,19 +24,23 @@ export async function handler(event) {
   const expiry = 60 * 15; // 15 min
   const expireTime = Date.now() + expiry * 1000;
   const { username, credential } = createCredentials(user, key, expiry);
-  const iceServer = {
+  const turnServer = {
     urls: ['turn:35.79.18.12:3478'],
     username,
     credential,
   };
+  const googleStun = { urls: 'stun:stun.l.google.com:19302' };
   const data = {
-    iceServers: [ iceServer ],
+    iceServers: [ googleStun, turnServer ],
     expireTime,
   }
 
   await apiGateway.postToConnection({
     ConnectionId: connectionId,
-    Data: JSON.stringify(data),
+    Data: JSON.stringify({
+      action: 'iceServers',
+      data,
+    }),
   }).promise();
 
   return { statusCode: 200 };
