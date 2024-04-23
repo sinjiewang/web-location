@@ -1,6 +1,6 @@
 <script>
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiAccountCircle } from '@mdi/js';
+import { mdiAccountCircle, mdiMinusCircle } from '@mdi/js';
 
 export default {
   components: {
@@ -15,6 +15,8 @@ export default {
   data() {
     return {
       newMessage: null,
+      newImages: [],
+      dragover: false,
       messages: [
         // {
         //   message: 'has joined',
@@ -41,6 +43,7 @@ export default {
         // },
       ],
       mdiAccountCircle,
+      mdiMinusCircle,
     };
   },
   computed: {
@@ -50,6 +53,11 @@ export default {
     //   console.log(msgWindow.scrollTop, msgWindow.scrollHeight, msgWindow.clientHeight)
     //   return msgWindow.scrollTop >= msgWindow.scrollHeight - msgWindow.clientHeight;
     // },
+    disabled() {
+      const { newMessage, newImages } = this;
+
+      return !newMessage && newImages.length <= 0;
+    }
   },
   methods: {
     appendMessage({ sender, time, message, avatar, align }={}) {
@@ -63,10 +71,16 @@ export default {
       return new Date(timestamp).toLocaleString();
     },
     sendMessage() {
-      const message = this.newMessage;
+      const { newMessage, newImages } = this;
 
-      this.newMessage = null;
-      this.$emit('send', message);
+      if (newMessage) {
+        this.newMessage = null;
+        this.$emit('message', newMessage);
+      }
+      else if (newImages.length) {
+        this.newImages = [];
+        this.$emit('image', newImages);
+      }
     },
     itemAlign(message) {
       return !message.sender
@@ -87,6 +101,36 @@ export default {
       const element = this.$refs.msgWindow.$el;
 
       element.scrollTop = Math.ceil(element.scrollHeight - element.clientHeight);
+    },
+    onDragover() {
+      this.dragover = true;
+      this.$refs.messageInput?.focus();
+    },
+    onDragleave() {
+      this.dragover = false;
+    },
+    onDrop(event) {
+      const files = event.dataTransfer.files;
+
+      if (files.length > 0) {
+        const file = files[0];
+
+        if (file.type.startsWith('image/') && !this.$dropLock) {
+          const reader = new FileReader();
+
+          reader.onload = (evt) => this.newImages = [...this.newImages, evt.target.result];
+          reader.readAsDataURL(file);
+
+          this.$dropLock = true;
+
+          setTimeout(() => delete this.$dropLock, 500);
+        }
+      }
+
+      this.dragover = false;
+    },
+    onClickRemoveImage(index) {
+      this.newImages = this.newImages.filter((_, i) => i != index);
     },
   },
 }
@@ -171,11 +215,48 @@ export default {
     </v-card>
     <v-row v-if="displayInput">
       <v-col cols="9" md="10">
+        <v-field
+          v-if="newImages.length"
+          :color="dragover ? 'primary' : ''"
+          @drop.prevent="onDrop"
+          @dragover.prevent="onDragover"
+          @dragleave.prevent="onDragleave"
+        >
+          <template #default>
+            <v-container
+              class="d-flex justify-start pt-0 pb-0"
+            >
+              <v-card v-for="(newImage, index) in newImages"
+                class="image-message-card max-h-56 mr-2"
+              >
+                <v-card-text
+                  class="pa-0"
+                >
+                  <img
+                    class="image-message"
+                    :src="newImage" />
+                  <svg-icon
+                    type="mdi"
+                    :path="mdiMinusCircle"
+                    class="image-remove"
+                    @click="onClickRemoveImage(index)"
+                  ></svg-icon>
+                </v-card-text>
+              </v-card>
+            </v-container>
+          </template>
+        </v-field>
         <v-text-field
+          v-else
+          ref="messageInput"
           v-model="newMessage"
           :label="$t('Type a message')"
+          :color="dragover ? 'primary' : ''"
           filled
           @keyup.enter="sendMessage"
+          @drop.prevent="onDrop"
+          @dragover.prevent="onDragover"
+          @dragleave.prevent="onDragleave"
         ></v-text-field>
       </v-col>
       <v-col cols="3" md="2">
@@ -183,7 +264,7 @@ export default {
           class="form-btn"
           color="primary"
           @click="sendMessage"
-          :disabled="!newMessage">{{ $t('Send') }}</v-btn>
+          :disabled="disabled">{{ $t('Send') }}</v-btn>
       </v-col>
     </v-row>
   </v-container>
@@ -213,4 +294,40 @@ export default {
   }
 }
 
+.v-list-item-subtitle {
+  user-select: text;
+}
+
+.h-56 {
+  height: 56px;
+}
+
+.pos-relative {
+  position: relative;
+}
+
+.image-message-card:hover .image-remove {
+  display: inherit;
+}
+
+.image-remove {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #F44336;
+}
+
+.image-message {
+  height: 56px;
+  width: auto;
+  position: relative;
+}
+
+.max-h-56 {
+  max-height: 56px;
+}
 </style>

@@ -137,7 +137,7 @@ export default {
   <ChatWindow
     ref="messageWindow"
     class="message-block"
-    @send="onSend"
+    @message="onSend"
   ></ChatWindow>
 </template>
 

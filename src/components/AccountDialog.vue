@@ -68,7 +68,6 @@ export default {
       return navigator.maxTouchPoints < 2;
     },
     isIOS() {
-      return true
       return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     },
   },

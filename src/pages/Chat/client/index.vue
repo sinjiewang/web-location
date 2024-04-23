@@ -208,7 +208,7 @@ export default {
         ref="messageWindow"
         class="fill-height-100"
         disabled
-        @send="sendMessage">
+        @message="sendMessage">
       </ChatWindow>
     </v-container>
 
