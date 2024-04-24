@@ -1,12 +1,14 @@
 <script>
 import Service from '@/utils/Service/Chat/SiteService.js';
 import ChatWindow from '../ChatWindow.vue';
+import ImageDialog from '@/components/ImageDialog.vue';
 import { mapActions } from 'vuex';
 import { /*isProxy,*/ toRaw } from 'vue';
 
 export default {
   components: {
     ChatWindow,
+    ImageDialog,
   },
   props: {
     tunnel: {
@@ -27,6 +29,7 @@ export default {
       storeHistory: null,
       dataChannels: {},
       participants: {},
+      imageSrc: null,
     };
   },
   computed: {
@@ -88,18 +91,25 @@ export default {
     appendMessageToWindow(data) {
       this.$refs.messageWindow.appendMessage(data);
     },
-    onSend(value) {
-      const data = {
-        clientId: 'host',
-        time: Date.now(),
-        message: value,
-      };
-
-      this.service.sendMessage(data);
-      this.onmessage({
-        ...data,
-        avatar: this.avatar,
+    onSendMessage(message) {
+      this.service.sendMessage({
+        message,
       });
+    },
+    async onSendImage(images=[]) {
+      this.service.sendImages({
+        images,
+      });
+    },
+    async onShowImage({ id, src }) {
+      this.imageSrc = src;
+      this.$refs.imageDialog.show();
+
+      try {
+        this.imageSrc = await this.service.getImageSrc(id);
+      } catch (err) {
+        console.warn('service.getImage failed', id);
+      }
     },
   },
   async mounted() {
@@ -137,8 +147,14 @@ export default {
   <ChatWindow
     ref="messageWindow"
     class="message-block"
-    @message="onSend"
+    @message="onSendMessage"
+    @image="onSendImage"
+    @showImage="onShowImage"
   ></ChatWindow>
+  <ImageDialog
+    ref="imageDialog"
+    :src="imageSrc"
+  />
 </template>
 
 <style scoped>

@@ -72,7 +72,7 @@ export default {
     },
   },
   methods: {
-    open() {
+    show() {
       this.newName = this.name;
       this.showAccountDialog = true;
     },

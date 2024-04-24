@@ -1,6 +1,6 @@
 export default class IndexedDBConfig {
   constructor({ sub }={}) {
-    this.version = 3;
+    this.version = 4;
     this.sub = sub || 'guest';
     this.db = null;
   }
@@ -80,7 +80,10 @@ export default class IndexedDBConfig {
             options: { unique: false },
           },
         ],
-      }
+      },
+      file: {
+        options: { keyPath: 'id' },
+      },
     }
   }
 

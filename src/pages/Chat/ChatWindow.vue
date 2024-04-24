@@ -132,6 +132,9 @@ export default {
     onClickRemoveImage(index) {
       this.newImages = this.newImages.filter((_, i) => i != index);
     },
+    onClickImage(id) {
+      this.$emit('showImage', id);
+    },
   },
 }
 </script>
@@ -158,7 +161,28 @@ export default {
                   {{ msg.sender }}
                   <span class="text-primary">{{ toLocaleTimeString(msg.time) }}</span>
                 </v-list-item-title>
-                <v-list-item-subtitle>{{ msg.message }}</v-list-item-subtitle>
+                <v-list-item-subtitle v-if="Array.isArray(msg.message)">
+                  <v-container
+                    class="d-flex justify-end pa-0"
+                  >
+                    <v-card v-for="(imageInfo) in msg.message"
+                      class="ml-2"
+                    >
+                      <v-card-text
+                        class="pa-0"
+                      >
+                        <img
+                          class="image-message"
+                          :src="imageInfo.src"
+                          @click="onClickImage(imageInfo)"
+                        />
+                      </v-card-text>
+                    </v-card>
+                  </v-container>
+                </v-list-item-subtitle>
+                <v-list-item-subtitle v-else-if="typeof msg.message === 'string'">
+                  {{ msg.message }}
+                </v-list-item-subtitle>
               </v-col>
               <v-col class="flex-grow-0">
                 <v-avatar>
@@ -198,7 +222,28 @@ export default {
                     {{ msg.sender }}
                     <span class="text-primary">{{ toLocaleTimeString(msg.time) }}</span>
                 </v-list-item-title>
-                <v-list-item-subtitle>{{ msg.message }}</v-list-item-subtitle>
+                <v-list-item-subtitle v-if="Array.isArray(msg.message)">
+                  <v-container
+                    class="d-flex justify-start pa-0"
+                  >
+                    <v-card v-for="(imageInfo) in msg.message"
+                      class="image-message-card max-h-56 mr-2"
+                    >
+                      <v-card-text
+                        class="pa-0"
+                      >
+                        <img
+                          class="image-message"
+                          :src="imageInfo.src"
+                          @click="onClickImage(imageInfo)"
+                        />
+                      </v-card-text>
+                    </v-card>
+                  </v-container>
+                </v-list-item-subtitle>
+                <v-list-item-subtitle v-else-if="typeof msg.message === 'string'">
+                  {{ msg.message }}
+                </v-list-item-subtitle>
               </v-col>
             </template>
             <!-- system message -->

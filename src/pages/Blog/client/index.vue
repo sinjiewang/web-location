@@ -209,7 +209,7 @@ export default {
     if (nickname) {
       this.init();
     } else {
-      this.$refs.accountDialog.open();
+      this.$refs.accountDialog.show();
     }
   },
 }

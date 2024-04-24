@@ -5,6 +5,7 @@ import Protocol from '../Protocol.js';
 
 import StoreChat from '@/utils/IndexedDB/StoreChat';
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
+import StoreFile from '@/utils/IndexedDB/StoreFile';
 
 
 export default class ChatClientService extends EventEmitter {
@@ -17,6 +18,7 @@ export default class ChatClientService extends EventEmitter {
     this.channel = null;
     this.storeChat = new StoreChat({ db });
     this.storeHistory = new StoreHistory({ db });
+    this.storeFile = new StoreFile({ db });
 
     this.id = id;
     this.profile = null;
@@ -40,6 +42,7 @@ export default class ChatClientService extends EventEmitter {
     channel.on('message', (data) => this.onmessage(data));
     channel.on('register', (data) => this.onregister(data));
     channel.on('deregister', (data) => this.onderegister(data));
+    channel.on('response', (data) => this.onresponse(data));
     channel.on('close', () => this.onclose());
 
     this.channel = channel;
@@ -109,14 +112,25 @@ export default class ChatClientService extends EventEmitter {
     }
   }
 
+  onresponse(data) {
+    console.log('onresponse', data)
+  }
+
   sendMessage(message) {
     const time = Date.now();
     const data = { message, time };
+    const clientId = 'self';
+    const { avatar } = this.participants[clientId];
 
     this.channel.sendMessage(data);
     this.storeMessage({
       ...data,
-      clientId: 'self',
+      clientId,
+    });
+    this.emit('message', {
+      ...data,
+      clientId,
+      avatar,
     });
   }
 
@@ -125,6 +139,56 @@ export default class ChatClientService extends EventEmitter {
       historyId: this.id,
       time: Date.now(),
       ...data,
+    });
+  }
+
+  async getImageSrc(id) {
+    let src;
+
+    src = await this.storeFile.queryById(id)
+      .then(({ src }) => src)
+      .catch(() => null);
+
+    if (!src) {
+      src = await this.channel.sendRequest({
+        id,
+        type: 'image',
+      });
+      this.storeFile.create({
+        id,
+        src,
+      });
+    }
+
+    return src;
+  }
+
+  async sendImages({ images, time }) {
+    const promises = images.map(async (src) => {
+      const id = short.generate();
+
+      await this.storeFile.create({ id, src });
+
+      const { thumbnail, length } = await this.genImageMessage(src);
+
+      return {
+        id,
+        thumbnail,
+        length,
+      };
+    });
+    const message = await Promise.all(promises);
+    const data = {
+      clientId: 'host',
+      message,
+      time,
+    };
+
+    // this.storeMessage(data);
+    // this.broadcast({ data });
+    this.emit('message', {
+      ...data,
+      avatar: this.participants['host'].avatar,
     });
   }
 

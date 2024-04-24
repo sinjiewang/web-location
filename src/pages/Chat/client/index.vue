@@ -2,6 +2,7 @@
 import { mapState, mapActions } from 'vuex';
 import AccountDialog from '@/components/AccountDialog.vue';
 import ConnectionPasswordDialog from '@/components/ConnectionPasswordDialog.vue';
+import ImageDialog from '@/components/ImageDialog.vue';
 import ClientService from '@/utils/Service/Chat/ClientService.js';
 import ChatWindow from '../ChatWindow.vue';
 import short from 'short-uuid';
@@ -11,6 +12,7 @@ export default {
     ChatWindow,
     AccountDialog,
     ConnectionPasswordDialog,
+    ImageDialog,
   },
   data() {
     return {
@@ -24,6 +26,7 @@ export default {
       id: short.generate(),
       password: null,
       pwdRequired: false,
+      imageSrc: null,
     };
   },
   computed: {
@@ -151,12 +154,6 @@ export default {
     },
     sendMessage(message) {
       this.service.sendMessage(message);
-      this.onmessage({
-        message,
-        time: Date.now(),
-        name: this.nickname,
-        avatar: this.avatar,
-      });
     },
     appendMessage(data) {
       this.appendMessageToWindow(data);
@@ -183,6 +180,22 @@ export default {
       this.password = password;
       this.init();
     },
+    async onShowImage({ id, src }) {
+      this.imageSrc = src;
+      this.$refs.imageDialog.show();
+
+      try {
+        this.imageSrc = await this.service.getImageSrc(id);
+      } catch (err) {
+        console.warn('service.getImage failed', id);
+      }
+    },
+    async onSendImage(images=[]) {
+      this.service.sendImages({
+        images,
+        time: Date.now(),
+      });
+    },
   },
   async mounted() {
     this.db = await this.idbConnect();
@@ -195,7 +208,7 @@ export default {
     if (nickname) {
       this.init();
     } else {
-      this.$refs.accountDialog.open();
+      this.$refs.accountDialog.show();
     }
   },
 }
@@ -208,8 +221,14 @@ export default {
         ref="messageWindow"
         class="fill-height-100"
         disabled
-        @message="sendMessage">
-      </ChatWindow>
+        @message="sendMessage"
+        @image="onSendImage"
+        @showImage="onShowImage"
+      />
+      <ImageDialog
+        ref="imageDialog"
+        :src="imageSrc"
+      />
     </v-container>
 
     <v-overlay

@@ -47,7 +47,7 @@ export default {
   methods: {
     ...mapActions('Account', ['updateAccount']),
     onClickAccount() {
-      this.$refs.accountDialog.open();
+      this.$refs.accountDialog.show();
     },
     async onAccount({ name, avatar }) {
       await this.updateAccount({

@@ -26,7 +26,7 @@ export default class Service extends EventEmitter {
 
     await rtcClient.connect();
 
-    const dataChannel = await rtcClient.createDataChannel('data');
+    const dataChannel = await rtcClient.createDataChannel('data', { ordered: true });
 
     dataChannel.on('close', () => this.onclose());
 

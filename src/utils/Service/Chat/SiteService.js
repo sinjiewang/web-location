@@ -1,10 +1,13 @@
 import EventEmitter from 'events';
+import short from 'short-uuid';
 import Site from '../Site.js';
 
 import StoreChat from '@/utils/IndexedDB/StoreChat';
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
+import StoreFile from '@/utils/IndexedDB/StoreFile';
 
-import Protocol from '../Protocol.js'
+import Protocol from '../Protocol.js';
+import genThumbnail from '../../genThumbnail.js';
 
 export default class ChatSiteService extends EventEmitter {
   constructor({ id=short.generate(), tunnel, profile={}, db }={}) {
@@ -18,6 +21,7 @@ export default class ChatSiteService extends EventEmitter {
     this.service = service;
     this.storeHistory = new StoreHistory({ db });
     this.storeChat = new StoreChat({ db });
+    this.storeFile = new StoreFile({ db });
     this.id = id;
     this.profile = profile;
     this.connections = {};
@@ -80,6 +84,7 @@ export default class ChatSiteService extends EventEmitter {
 
     connection.on('message', (event) => this.onmessage(event));
     connection.on('register', (event) => this.onregister(event));
+    connection.on('request', (event) => this.onrequest(event));
 
     this.connections[clientId] = connection;
   }
@@ -152,7 +157,7 @@ export default class ChatSiteService extends EventEmitter {
     this.storeHistory.update(this.id, { participants });
   }
 
-  onmessage({ time, message, clientId }) {
+  onmessage({ time=Date.now(), message, clientId }) {
     const { name, avatar } = this.participants[clientId] || {};
     const newChat = {
       clientId,
@@ -176,13 +181,56 @@ export default class ChatSiteService extends EventEmitter {
     });
   }
 
-  sendMessage(data) {
+  async onrequest({ id, clientId, messageId }) {
+    const connection = this.connections[clientId];
+
+    try {
+      const { src } = await this.storeFile.queryById(id);
+
+      connection.sendResponse(messageId, src);
+    } catch (err) {
+      console.warn('handle request failed', err);
+    }
+  }
+
+  sendMessage({ message, time=Date.now() }) {
+    const data = {
+      clientId: 'host',
+      message,
+      time,
+    }
     this.storeMessage(data);
-    this.broadcast({
-      data: {
-        clientId: 'host',
-        ...data,
-      }
+    this.broadcast({ data });
+    this.emit('message', {
+      ...data,
+      avatar: this.participants['host'].avatar,
+    });
+  }
+
+  async sendImages({ images, time=Date.now() }) {
+    const promises = images.map(async (src) => {
+      const id = short.generate();
+      const { thumbnailSrc } = await genThumbnail(src);
+
+      await this.storeFile.create({ id, src });
+
+      return {
+        id,
+        src: thumbnailSrc,
+      };
+    });
+    const message = await Promise.all(promises);
+    const data = {
+      clientId: 'host',
+      message,
+      time,
+    };
+
+    this.storeMessage(data);
+    this.broadcast({ data });
+    this.emit('message', {
+      ...data,
+      avatar: this.participants['host'].avatar,
     });
   }
 
@@ -210,6 +258,12 @@ export default class ChatSiteService extends EventEmitter {
       name: name || participant.name,
       avatar: avatar || participant.avatar,
     }
+  }
+
+  async getImageSrc(id) {
+    const { src } = await this.storeFile.queryById(id);
+
+    return src;
   }
 
   close() {
