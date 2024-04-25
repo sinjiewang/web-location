@@ -120,12 +120,13 @@ export default {
       this.appendMessage(data);
       this.service.storeMessage(data);
     },
-    onmessage({ clientId='self', time, message, name, avatar }) {
+    onmessage({ clientId='self', time, message, name, avatar, accepted }) {
       const data = {
         sender: name,
         message,
         time,
         avatar,
+        accepted,
       };
 
       if (clientId === 'self') {
@@ -190,10 +191,16 @@ export default {
         console.warn('service.getImage failed', id);
       }
     },
-    async onSendImage(images=[]) {
+    onSendImage(images=[]) {
       this.service.sendImages({
         images,
-        time: Date.now(),
+      }).then((message) => {
+        const item = this.$refs.messageWindow.findMessage((item) => {
+          return typeof item.message === typeof message
+            && item.message.every((msg, i) => msg.id === message[i].id)
+        });
+
+        this.$refs.messageWindow.removeMessage(item);
       });
     },
   },
@@ -221,6 +228,7 @@ export default {
         ref="messageWindow"
         class="fill-height-100"
         disabled
+        :acceptable="false"
         @message="sendMessage"
         @image="onSendImage"
         @showImage="onShowImage"

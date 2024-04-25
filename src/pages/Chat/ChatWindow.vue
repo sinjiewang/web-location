@@ -1,5 +1,6 @@
 <script>
 import SvgIcon from '@jamescoyle/vue-icon';
+import short from 'short-uuid';
 import { mdiAccountCircle, mdiMinusCircle } from '@mdi/js';
 
 export default {
@@ -8,6 +9,10 @@ export default {
   },
   props: {
     displayInput: {
+      type: Boolean,
+      default: true,
+    },
+    acceptable: {
       type: Boolean,
       default: true,
     },
@@ -60,12 +65,18 @@ export default {
     }
   },
   methods: {
-    appendMessage({ sender, time, message, avatar, align }={}) {
-      this.messages.push({ sender, time, message, avatar, align });
+    appendMessage({ id=short.generate(), sender, time, message, avatar, align, messageId, accepted }={}) {
+      this.messages.push({ id, sender, time, message, avatar, align, messageId, accepted });
 
       if (this.isScrollAtBottom()) {
         this.$nextTick(() => this.scrollToBottom());
       }
+    },
+    removeMessage(msg) {
+      this.messages = this.messages.filter((message) => msg !== message);
+    },
+    findMessage(filterFn) {
+      return this.messages.find(filterFn);
     },
     toLocaleTimeString(timestamp) {
       return new Date(timestamp).toLocaleString();
@@ -135,6 +146,11 @@ export default {
     onClickImage(id) {
       this.$emit('showImage', id);
     },
+    onClickAccept(message) {
+      message.loading = true;
+
+      this.$emit('acceptMessage', message);
+    },
   },
 }
 </script>
@@ -150,7 +166,7 @@ export default {
       ref="msgWindow"
     >
       <v-list>
-        <v-list-item v-for="(msg, index) in messages" :key="index"
+        <v-list-item v-for="(msg) in messages" :key="msg.id"
           three-line
           :class="itemAlign(msg)"
         >
@@ -178,6 +194,9 @@ export default {
                         />
                       </v-card-text>
                     </v-card>
+                    <div class="pt-40 pl-2"
+                      v-if="msg.accepted===false"
+                    >({{ $t('Wait for acceptance') }})</div>
                   </v-container>
                 </v-list-item-subtitle>
                 <v-list-item-subtitle v-else-if="typeof msg.message === 'string'">
@@ -239,6 +258,12 @@ export default {
                         />
                       </v-card-text>
                     </v-card>
+                    <v-btn
+                      v-if="msg.accepted===false"
+                      color="success"
+                      :loading="msg.loading"
+                      @click="onClickAccept(msg)"
+                    >{{ $t('Accept') }}</v-btn>
                   </v-container>
                 </v-list-item-subtitle>
                 <v-list-item-subtitle v-else-if="typeof msg.message === 'string'">
@@ -375,4 +400,9 @@ export default {
 .max-h-56 {
   max-height: 56px;
 }
+
+.pt-40 {
+  padding-top: 40px;
+}
+
 </style>

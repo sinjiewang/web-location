@@ -31,6 +31,7 @@ export default class ChatSiteService extends EventEmitter {
         avatar: null,
       }
     };
+    this.$submit = {};
   }
 
   async init() {
@@ -85,6 +86,7 @@ export default class ChatSiteService extends EventEmitter {
     connection.on('message', (event) => this.onmessage(event));
     connection.on('register', (event) => this.onregister(event));
     connection.on('request', (event) => this.onrequest(event));
+    connection.on('submit', (event) => this.onsubmit(event));
 
     this.connections[clientId] = connection;
   }
@@ -193,6 +195,39 @@ export default class ChatSiteService extends EventEmitter {
     }
   }
 
+  onsubmit(submit) {
+    const { clientId, messageId } = submit;
+    const { name, avatar } = this.participants[clientId];
+
+    this.$submit[messageId] = submit;
+    this.emit('message', {
+      ...submit,
+      avatar,
+      name,
+      accepted: false,
+    });
+  }
+
+  async acceptMessage(messageId) {
+    const submit = this.$submit[messageId];
+
+    if (!submit) return Promise.reject(new Error('message does not exist'));
+
+    const { clientId, message } = submit;
+    const promises = message.map(({id}) => this.getFileFromClient({
+      clientId,
+      fileId: id,
+    }));
+
+    await Promise.all(promises);
+
+    this.onmessage({ message, clientId });
+
+    const connection = this.connections[clientId];
+
+    connection.sendAccept(messageId);
+  }
+
   sendMessage({ message, time=Date.now() }) {
     const data = {
       clientId: 'host',
@@ -262,6 +297,24 @@ export default class ChatSiteService extends EventEmitter {
 
   async getImageSrc(id) {
     const { src } = await this.storeFile.queryById(id);
+
+    return src;
+  }
+
+  async getFileFromClient({ clientId, fileId }) {
+    const connection = this.connections[clientId];
+
+    if (!connection) return Promise.reject(new Error('Disconnect'));
+
+    const src = await connection.sendRequest({
+      id: fileId,
+      type: 'image',
+    });
+
+    this.storeFile.create({
+      id: fileId,
+      src,
+    });
 
     return src;
   }

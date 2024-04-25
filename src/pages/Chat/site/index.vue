@@ -69,12 +69,15 @@ export default {
         time: Date.now(),
       });
     },
-    onmessage({ clientId, time, message, name, avatar }) {
+    onmessage(msg) {
+      const { clientId, time, message, name, avatar, accepted, messageId } = msg;
       const data = {
         sender: name,
         message,
         time,
         avatar,
+        accepted,
+        messageId,
       };
 
       if (clientId === 'host') {
@@ -109,6 +112,19 @@ export default {
         this.imageSrc = await this.service.getImageSrc(id);
       } catch (err) {
         console.warn('service.getImage failed', id);
+      }
+    },
+    async onAcceptMessage(msg) {
+      const { messageId } = msg;
+
+      try {
+        await this.service.acceptMessage(messageId);
+
+        this.$refs.messageWindow.removeMessage(msg);
+      } catch (err) {
+        console.error('service.acceptMessage failed', msg);
+
+        delete msg.loading;
       }
     },
   },
@@ -150,6 +166,7 @@ export default {
     @message="onSendMessage"
     @image="onSendImage"
     @showImage="onShowImage"
+    @acceptMessage="onAcceptMessage"
   ></ChatWindow>
   <ImageDialog
     ref="imageDialog"

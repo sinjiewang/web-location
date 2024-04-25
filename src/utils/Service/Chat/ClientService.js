@@ -2,6 +2,7 @@ import EventEmitter from 'events';
 import short from 'short-uuid';
 import Client from '../Client.js';
 import Protocol from '../Protocol.js';
+import genThumbnail from '../../genThumbnail.js';
 
 import StoreChat from '@/utils/IndexedDB/StoreChat';
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
@@ -28,6 +29,7 @@ export default class ChatClientService extends EventEmitter {
         avatar,
       }
     };
+    this.$submit = {};
   }
 
   async connect({ tunnel, siteId, password }={}) {
@@ -42,7 +44,8 @@ export default class ChatClientService extends EventEmitter {
     channel.on('message', (data) => this.onmessage(data));
     channel.on('register', (data) => this.onregister(data));
     channel.on('deregister', (data) => this.onderegister(data));
-    channel.on('response', (data) => this.onresponse(data));
+    channel.on('request', (event) => this.onrequest(event));
+    // channel.on('accept', (event) => this.onaccept(event));
     channel.on('close', () => this.onclose());
 
     this.channel = channel;
@@ -112,8 +115,24 @@ export default class ChatClientService extends EventEmitter {
     }
   }
 
-  onresponse(data) {
-    console.log('onresponse', data)
+  async onrequest({ id, messageId }) {
+    try {
+      const { src } = await this.storeFile.queryById(id);
+
+      this.channel.sendResponse(messageId, src);
+    } catch (err) {
+      console.warn('handle request failed', err);
+    }
+  }
+
+  async onaccept({ messageId }) {
+    // try {
+    //   const { src } = await this.storeFile.queryById(id);
+
+    //   this.channel.sendResponse(messageId, src);
+    // } catch (err) {
+    //   console.warn('handle request failed', err);
+    // }
   }
 
   sendMessage(message) {
@@ -163,33 +182,48 @@ export default class ChatClientService extends EventEmitter {
     return src;
   }
 
-  async sendImages({ images, time }) {
+  async sendImages({ images, time=Date.now() }) {
     const promises = images.map(async (src) => {
       const id = short.generate();
 
       await this.storeFile.create({ id, src });
 
-      const { thumbnail, length } = await this.genImageMessage(src);
+      const { thumbnailSrc } = await genThumbnail(src);
 
       return {
         id,
-        thumbnail,
-        length,
+        src: thumbnailSrc,
       };
     });
     const message = await Promise.all(promises);
     const data = {
-      clientId: 'host',
       message,
       time,
     };
+    const clientId = 'self';
+    const { avatar } = this.participants[clientId];
 
-    // this.storeMessage(data);
-    // this.broadcast({ data });
     this.emit('message', {
       ...data,
-      avatar: this.participants['host'].avatar,
+      clientId,
+      avatar,
+      accepted: false,
     });
+
+    return this.channel.sendSubmit(data)
+      .then(() => {
+        this.storeMessage({
+          ...data,
+          clientId,
+        });
+        this.emit('message', {
+          ...data,
+          clientId,
+          avatar,
+        });
+
+        return message;
+      });
   }
 
   close() {

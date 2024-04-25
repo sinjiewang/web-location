@@ -18,7 +18,7 @@ export default class Protocol extends EventEmitter {
     dataChannel.on('message', this.$onmessage);
     dataChannel.on('close', this.$onclose);
 
-    this.$requests = {};
+    this.$response = {};
   }
 
   onclose() {
@@ -37,8 +37,12 @@ export default class Protocol extends EventEmitter {
   onmessage(event) {
     const { data, type } = JSON.parse(event.data);
 
-    if (type === 'response') {
-      return this.onresponse(data);
+    switch(type) {
+      case 'response':
+        return this.onresponse(data);
+      case 'accept':
+        return this.onaccept(data);
+      default:
     }
 
     if (this.clientId) {
@@ -49,7 +53,7 @@ export default class Protocol extends EventEmitter {
   }
 
   onresponse({messageId, contentLength, body}) {
-    const res = this.$requests[messageId];
+    const res = this.$response[messageId];
 
     if (!res) return;
 
@@ -63,6 +67,12 @@ export default class Protocol extends EventEmitter {
     if (res.body.length >= contentLength) {
       res.resolve(res.body);
     }
+  }
+
+  onaccept({ messageId }) {
+    const res = this.$response[messageId];
+
+    if (res && res.resolve) res.resolve();
   }
 
   sendRegister(data) {
@@ -79,30 +89,38 @@ export default class Protocol extends EventEmitter {
     });
   }
 
-  sendRequest(data={}) {
+  sendRespondCommand(data={}, type='', timeout=-1) {
     const messageId = uuidv4();
 
     return new Promise(( resolve, reject ) => {
-      const timeout = setTimeout(() => reject(new Error('Request Timeout')), 30 * 1000);
+      let $timeout;
 
-      this.$requests[messageId] = {
+      if (timeout >= 0) {
+        $timeout = setTimeout(() => reject(new Error('Request Timeout')), timeout * 1000);
+      }
+
+      this.$response[messageId] = {
         resolve,
-        timeout,
+        $timeout,
       };
       this.send({
-        type: 'request',
+        type,
         data: {
           messageId,
           ...data
         },
       });
     }).finally(() => {
-      const { timeout } = this.$requests[messageId];
+      const { $timeout } = this.$response[messageId];
 
-      clearTimeout(timeout);
+      if ($timeout) clearTimeout($timeout);
 
-      delete this.$requests[messageId];
+      delete this.$response[messageId];
     });
+  }
+
+  sendRequest(data={}) {
+    return this.sendRespondCommand(data, 'request', 30);
   }
 
   sendResponse(messageId, data) {
@@ -121,6 +139,19 @@ export default class Protocol extends EventEmitter {
         },
       });
     }
+  }
+
+  sendSubmit(data={}) {
+    return this.sendRespondCommand(data, 'submit');
+  }
+
+  sendAccept(messageId) {
+    this.send({
+      type: 'accept',
+      data: {
+        messageId,
+      },
+    });
   }
 
   send(data) {
