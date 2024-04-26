@@ -1,7 +1,7 @@
 <script>
 import SvgIcon from '@jamescoyle/vue-icon';
 import short from 'short-uuid';
-import { mdiAccountCircle, mdiMinusCircle } from '@mdi/js';
+import { mdiAccountCircle, mdiMinusCircle, mdiPlusBoxOutline, mdiFileEyeOutline } from '@mdi/js';
 
 export default {
   components: {
@@ -49,6 +49,8 @@ export default {
       ],
       mdiAccountCircle,
       mdiMinusCircle,
+      mdiPlusBoxOutline,
+      mdiFileEyeOutline,
     };
   },
   computed: {
@@ -151,6 +153,40 @@ export default {
 
       this.$emit('acceptMessage', message);
     },
+    onClickInputFile() {
+      this.$refs.inputFile.click();
+    },
+    getFileAsDataUrl(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+
+        reader.onload = (event) => resolve(event.target.result);
+        reader.readAsDataURL(file);
+      })
+    },
+    async onFileSelected(event) {
+      const file = event.target.files[0];
+      const dataUrl = await this.getFileAsDataUrl(file);
+
+      this.newImages.push(dataUrl);
+    },
+    async onPaste(event) {
+      const { types } = event.clipboardData;
+
+      if (event.clipboardData.files.length > 0) {
+        const file = event.clipboardData.files[0];
+
+        if (file.type.startsWith('image/')) {
+          const dataUrl = await this.getFileAsDataUrl(file);
+
+          this.newImages.push(dataUrl);
+        }
+      } else if (types.includes('text/plain')) {
+        const text = event.clipboardData.getData('text/plain');
+
+        this.newMessage = text;
+      }
+    },
   },
 }
 </script>
@@ -194,9 +230,18 @@ export default {
                         />
                       </v-card-text>
                     </v-card>
-                    <div class="pt-40 pl-2"
-                      v-if="msg.accepted===false"
-                    >({{ $t('Wait for acceptance') }})</div>
+                    <v-tooltip bottom>
+                      <template #activator="{ props }">
+                        <svg-icon
+                          v-if="msg.accepted===false"
+                          v-bind="props"
+                          class="mt-8 ml-2 text-red-lighten-2"
+                          type="mdi" :path="mdiFileEyeOutline"
+                        >
+                        </svg-icon>
+                      </template>
+                      <span>{{ $t('Wait for HOST acceptance') }}</span>
+                    </v-tooltip>
                   </v-container>
                 </v-list-item-subtitle>
                 <v-list-item-subtitle v-else-if="typeof msg.message === 'string'">
@@ -284,7 +329,23 @@ export default {
       </v-list>
     </v-card>
     <v-row v-if="displayInput">
-      <v-col cols="9" md="10">
+      <input
+        ref="inputFile"
+        type="file"
+        class="hide"
+        accept="image/*"
+        @change="onFileSelected"
+      />
+      <v-col cols="1">
+        <v-btn
+          class="form-btn"
+          @click="onClickInputFile"
+          block
+        >
+          <svg-icon type="mdi" width="36" height="36" :path="mdiPlusBoxOutline"></svg-icon>
+        </v-btn>
+      </v-col>
+      <v-col cols="8" md="9">
         <v-field
           v-if="newImages.length"
           :color="dragover ? 'primary' : ''"
@@ -327,6 +388,7 @@ export default {
           @drop.prevent="onDrop"
           @dragover.prevent="onDragover"
           @dragleave.prevent="onDragleave"
+          @paste.prevent="onPaste"
         ></v-text-field>
       </v-col>
       <v-col cols="3" md="2">
@@ -403,6 +465,10 @@ export default {
 
 .pt-40 {
   padding-top: 40px;
+}
+
+.hide {
+  display: none;
 }
 
 </style>

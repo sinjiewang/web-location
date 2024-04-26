@@ -445,6 +445,7 @@ export default {
         <input
           type="file"
           ref="fileInput"
+          accept="image/*"
           @change="onFileSelected"
           style="display: none"
         />
