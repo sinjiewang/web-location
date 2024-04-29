@@ -29,6 +29,11 @@ export default {
           route: '/browse',
         },
         {
+          text: this.$t('File'),
+          icon: 'mdi-file-cog',
+          route: '/file',
+        },
+        {
           text: this.$t('History'),
           icon: 'mdi-history',
           route: '/history',

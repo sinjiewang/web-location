@@ -34,13 +34,25 @@ export default {
     @click:outside="showImageDialog=false"
   >
     <v-card>
-      <v-card-text>
-        <v-img :src="src" />
-      </v-card-text>
+      <v-img :src="src"
+        max-width="95vw"
+        max-height="95vh"
+      />
+      <v-btn
+        class="close-button"
+        icon
+        @click="showImageDialog=false"
+      >
+        <v-icon>mdi-close</v-icon>
+      </v-btn>
     </v-card>
   </v-dialog>
 </template>
 
 <style scoped>
-
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
 </style>

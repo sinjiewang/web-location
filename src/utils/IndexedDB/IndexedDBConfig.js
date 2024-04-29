@@ -1,6 +1,6 @@
 export default class IndexedDBConfig {
   constructor({ sub }={}) {
-    this.version = 4;
+    this.version = 5;
     this.sub = sub || 'guest';
     this.db = null;
   }
@@ -83,6 +83,13 @@ export default class IndexedDBConfig {
       },
       file: {
         options: { keyPath: 'id' },
+        indexes: [
+          {
+            indexName: 'byUpdatedTime',
+            keyPath: 'updatedTime',
+            options: { unique: false },
+          },
+        ]
       },
     }
   }

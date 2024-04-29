@@ -22,31 +22,7 @@ export default {
       newMessage: null,
       newImages: [],
       dragover: false,
-      messages: [
-        // {
-        //   message: 'has joined',
-        //   time: 1709277935214,
-        // },
-        // {
-        //   sender: 'Alice',
-        //   message: 'Hello, how are you?',
-        //   time: 1709277935214,
-        //   // avatar: 'https://cdn.vuetifyjs.com/images/lists/1.jpg',
-        // },
-        // {
-        //   sender: 'Bob',
-        //   message: 'I\'m good, thanks! And you?',
-        //   time: 1709278055214,
-        //   // avatar: 'https://cdn.vuetifyjs.com/images/lists/2.jpg',
-        //   align: 'right',
-        // },
-        // {
-        //   sender: 'John',
-        //   message: 'Hi, two guys.',
-        //   time: 1709278115214,
-        //   // avatar: '',
-        // },
-      ],
+      messages: [],
       mdiAccountCircle,
       mdiMinusCircle,
       mdiPlusBoxOutline,
@@ -54,12 +30,6 @@ export default {
     };
   },
   computed: {
-    // isScrollAtBottom() {
-    //   const { msgWindow } = this.$refs;
-
-    //   console.log(msgWindow.scrollTop, msgWindow.scrollHeight, msgWindow.clientHeight)
-    //   return msgWindow.scrollTop >= msgWindow.scrollHeight - msgWindow.clientHeight;
-    // },
     disabled() {
       const { newMessage, newImages } = this;
 
@@ -127,11 +97,17 @@ export default {
 
       if (files.length > 0) {
         const file = files[0];
+      const { name, type, size } = file;
 
-        if (file.type.startsWith('image/') && !this.$dropLock) {
+        if (type.startsWith('image/') && !this.$dropLock) {
           const reader = new FileReader();
 
-          reader.onload = (evt) => this.newImages = [...this.newImages, evt.target.result];
+          reader.onload = (evt) => this.newImages = [...this.newImages, {
+            name,
+            type,
+            size,
+            src: evt.target.result,
+          }];
           reader.readAsDataURL(file);
 
           this.$dropLock = true;
@@ -166,20 +142,35 @@ export default {
     },
     async onFileSelected(event) {
       const file = event.target.files[0];
-      const dataUrl = await this.getFileAsDataUrl(file);
+      const { name, type, size } = file;
 
-      this.newImages.push(dataUrl);
+      if (type.startsWith('image/')) {
+        const dataUrl = await this.getFileAsDataUrl(file);
+
+        this.newImages.push({
+          name,
+          type,
+          size,
+          src: dataUrl,
+        });
+      }
     },
     async onPaste(event) {
       const { types } = event.clipboardData;
 
       if (event.clipboardData.files.length > 0) {
         const file = event.clipboardData.files[0];
+        const { name, type, size } = file;
 
-        if (file.type.startsWith('image/')) {
+        if (type.startsWith('image/')) {
           const dataUrl = await this.getFileAsDataUrl(file);
 
-          this.newImages.push(dataUrl);
+          this.newImages.push({
+            name,
+            type,
+            size,
+            src: dataUrl,
+          });
         }
       } else if (types.includes('text/plain')) {
         const text = event.clipboardData.getData('text/plain');
@@ -332,7 +323,7 @@ export default {
       <input
         ref="inputFile"
         type="file"
-        class="hide"
+        class="d-none"
         accept="image/*"
         @change="onFileSelected"
       />
@@ -365,7 +356,7 @@ export default {
                 >
                   <img
                     class="image-message"
-                    :src="newImage" />
+                    :src="newImage.src" />
                   <svg-icon
                     type="mdi"
                     :path="mdiMinusCircle"

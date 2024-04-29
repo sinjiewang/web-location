@@ -183,12 +183,9 @@ export default class ChatClientService extends EventEmitter {
   }
 
   async sendImages({ images, time=Date.now() }) {
-    const promises = images.map(async (src) => {
+    const promises = images.map(async (imageInfo) => {
       const id = short.generate();
-
-      await this.storeFile.create({ id, src });
-
-      const { thumbnailSrc } = await genThumbnail(src);
+      const { thumbnailSrc } = await this.storeFile.createImage({ id, ...imageInfo });
 
       return {
         id,

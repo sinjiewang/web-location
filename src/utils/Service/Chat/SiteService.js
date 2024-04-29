@@ -7,7 +7,7 @@ import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 import StoreFile from '@/utils/IndexedDB/StoreFile';
 
 import Protocol from '../Protocol.js';
-import genThumbnail from '../../genThumbnail.js';
+// import genThumbnail from '../../genThumbnail.js';
 
 export default class ChatSiteService extends EventEmitter {
   constructor({ id=short.generate(), tunnel, profile={}, db }={}) {
@@ -243,11 +243,9 @@ export default class ChatSiteService extends EventEmitter {
   }
 
   async sendImages({ images, time=Date.now() }) {
-    const promises = images.map(async (src) => {
+    const promises = images.map(async (imageInfo) => {
       const id = short.generate();
-      const { thumbnailSrc } = await genThumbnail(src);
-
-      await this.storeFile.create({ id, src });
+      const { thumbnailSrc } = await this.storeFile.createImage({ id, ...imageInfo });
 
       return {
         id,

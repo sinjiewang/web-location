@@ -48,6 +48,7 @@ export default {
         </v-col>
         <v-col cols="auto">
           <v-btn icon
+            :title="$t('Establish a site')"
             @click="onMapPlusClick"
           >
             <svg-icon type="mdi" :path="mdiMapPlus"></svg-icon>
