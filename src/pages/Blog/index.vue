@@ -1,5 +1,8 @@
 <script>
 import DOMPurify from 'dompurify';
+import { QuillEditor } from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css';
+
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog.vue';
 import LeaveConfirmDialog from '@/components/LeaveConfirmDialog.vue';
 // import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
@@ -15,6 +18,7 @@ export default {
     DeleteConfirmDialog,
     LeaveConfirmDialog,
     AccountAvatar,
+    QuillEditor,
   },
   props: {
     enableEdit: {
@@ -56,6 +60,10 @@ export default {
       confirmHandler: null,
       // mapComponent: null,
       // mapCenter: null,
+      quillOptions: {
+        theme: 'bubble',
+        bounds: '#content-block'
+      },
     };
   },
   computed: {
@@ -184,21 +192,6 @@ export default {
         this.confirmHandler = null;
       }
     },
-    // showPosition({ lat, lng }) {
-    //   this.mapCenter = { lat, lng };
-    //   this.mapComponent = 'InteractionGoogleMap';
-    //   this.$nextTick(() => {
-    //     const { googleMap } = this.$refs;
-
-    //     googleMap.setMapUndraggable();
-    //     googleMap.removePositionMarker();
-    //     // googleMap.setMapCenter({ lat, lng });
-
-    //     const positionMarker = googleMap.addPositionMarker({ lat, lng });
-
-    //     googleMap.setMarkerUndraggable(positionMarker);
-    //   });
-    // }
   },
   watch: {
     postTitle() {
@@ -221,7 +214,7 @@ export default {
         this.postContent = selectedPost.content;
       }
     },
-  }
+  },
 }
 </script>
 
@@ -354,19 +347,23 @@ export default {
                 </div>
               </div>
               <br>
-              <v-textarea
-                v-if="enableEdit"
-                v-model="postContent"
-                :label="$t('Post content')"
-                auto-grow
-              ></v-textarea>
-              <div
-                v-else
-              >
-                <div v-for="(str) in postContent.split('\n')"
-                  class="text-left"
+              <div class="content-block" id="content-block">
+                <QuillEditor
+                  v-if="enableEdit"
+                  v-model:content="postContent"
+                  :options="quillOptions"
+                  contentType="html"
+                  theme="snow"
+                />
+                <div
+                  v-else
+                  class="ql-container"
                 >
-                  {{ str }}
+                  <div
+                    v-html="postContent"
+                    class="ql-editor"
+                  >
+                  </div>
                 </div>
               </div>
               <v-card-actions
@@ -497,6 +494,10 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.content-block {
+  text-align: left;
 }
 
 /* .interaction-google-map {

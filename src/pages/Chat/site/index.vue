@@ -86,6 +86,12 @@ export default {
       }
 
       this.appendMessageToWindow(data);
+
+      if (document.visibilityState === 'hidden') {
+        this.newMessageCount += 1;
+
+        this.updateDocumentTitle(`${ this.$t('New message') }(${ this.newMessageCount })`);
+      }
     },
     appendMessage(data) {
       this.service.storeMessage(data);
@@ -127,6 +133,15 @@ export default {
         delete msg.loading;
       }
     },
+    onvisibilitychange() {
+      if (document.visibilityState !== 'hidden') {
+        this.updateDocumentTitle();
+        this.newMessageCount = 0;
+      }
+    },
+    updateDocumentTitle(title='MapUS') {
+      document.title = title;
+    },
   },
   async mounted() {
     const db = await this.idbConnect();
@@ -151,10 +166,14 @@ export default {
       message: `(${title}) ${this.$t('Established')}`,
       time: Date.now(),
     });
+
+    document.addEventListener('visibilitychange', this.onvisibilitychange);
   },
   beforeUnmount() {
     this.service.close();
     this.service = null;
+
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   },
 }
 </script>

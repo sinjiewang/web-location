@@ -27,6 +27,7 @@ export default {
       password: null,
       pwdRequired: false,
       imageSrc: null,
+      newMessageCount: 0,
     };
   },
   computed: {
@@ -135,6 +136,12 @@ export default {
       }
 
       this.appendMessageToWindow(data);
+
+      if (document.visibilityState === 'hidden') {
+        this.newMessageCount += 1;
+
+        this.updateDocumentTitle(`${ this.$t('New message') }(${ this.newMessageCount })`);
+      }
     },
     onclose() {
       this.showDisconnectedDialog = true;
@@ -203,6 +210,15 @@ export default {
         this.$refs.messageWindow.removeMessage(item);
       });
     },
+    onvisibilitychange() {
+      if (document.visibilityState !== 'hidden') {
+        this.updateDocumentTitle();
+        this.newMessageCount = 0;
+      }
+    },
+    updateDocumentTitle(title='MapUS') {
+      document.title = title;
+    },
   },
   async mounted() {
     this.db = await this.idbConnect();
@@ -217,6 +233,11 @@ export default {
     } else {
       this.$refs.accountDialog.show();
     }
+
+    document.addEventListener('visibilitychange', this.onvisibilitychange);
+  },
+  beforeUnmount() {
+    document.removeEventListener('visibilitychange', this.onvisibilitychange);
   },
 }
 </script>
