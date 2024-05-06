@@ -9,6 +9,8 @@ import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 import SITE from '@/constants/site.js';
 import Chat from '@/pages/Chat/site/index.vue';
 import Blog from '@/pages/Blog/site/index.vue';
+import Access from '@/pages/Access/site/index.vue';
+// import AccessConfig from './AccessConfig.vue';
 
 import short from 'short-uuid';
 import QRCode from 'qrcode';
@@ -16,6 +18,7 @@ import QRCode from 'qrcode';
 const APP_MAPPING = {
   chat: 'Chat',
   blog: 'Blog',
+  access: 'Access',
 };
 
 export default {
@@ -24,6 +27,7 @@ export default {
     InteractionGoogleMap,
     Blog,
     Chat,
+    Access,
   },
   data() {
     return {
@@ -33,7 +37,7 @@ export default {
       position: null,
       id: this.$route.params.id,
       title: null,
-      type: 'chat',
+      type: 'access',
       pwdRequired: false,
       password: null,
       disableTypeSelect: false,
@@ -348,7 +352,6 @@ export default {
                   </v-btn>
                   <v-dialog
                     v-model="showQRcodeDialog"
-                    persistent
                     max-width="400px"
                     @click:outside="showQRcodeDialog = false"
                   >
@@ -475,6 +478,10 @@ export default {
   @media (max-width: 960px) {
     margin-left: -16px;
   }
+}
+
+.content-max-h {
+  height: calc(640px);
 }
 
 @keyframes spin {

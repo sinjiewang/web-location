@@ -4,9 +4,11 @@ import History from '@/pages/History/index.vue';
 import Establish from '@/pages/Establish/index.vue';
 import Chat from '@/pages/Chat/client/index.vue';
 import Blog from '@/pages/Blog/client/index.vue';
+import Access from '@/pages/Access/client/index.vue';
 import File from '@/pages/File/index.vue';
 import HistoryChat from '@/pages/History/Chat.vue';
 import HistoryBlog from '@/pages/History/Blog.vue';
+import HistoryAccess from '@/pages/History/Access.vue';
 
 const routes = [
   {
@@ -26,7 +28,11 @@ const routes = [
       {
         path: 'blog/:id',
         component: HistoryBlog,
-      }
+      },
+      {
+        path: 'access/:id',
+        component: HistoryAccess,
+      },
     ]
   },
   {
@@ -56,6 +62,16 @@ const routes = [
       // requiresAuth: true,
       layout: false,
       type: 'blog',
+    },
+  },
+  {
+    path: '/access/:siteId',
+    name: 'access',
+    component: Access,
+    meta: {
+      // requiresAuth: true,
+      layout: false,
+      type: 'access',
     },
   },
   {

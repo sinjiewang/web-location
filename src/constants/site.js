@@ -4,6 +4,8 @@ import {
   mdiCommentText,
   mdiCommentEdit,
   mdiCommentEyeOutline,
+  mdiFileEye,
+  mdiFileArrowUpDown,
 } from '@mdi/js';
 
 const TYPE = Object.freeze({
@@ -15,6 +17,10 @@ const TYPE = Object.freeze({
     name: ($t) => $t('Chat'),
     icon: mdiChatProcessingOutline,
   },
+  access: {
+    name: ($t) => $t('Access'),
+    icon: mdiFileEye,
+  },
 });
 
 const TYPE_ACTION_ICON = Object.freeze({
@@ -25,6 +31,10 @@ const TYPE_ACTION_ICON = Object.freeze({
   blog: {
     create: mdiCommentEdit,
     join: mdiCommentEyeOutline,
+  },
+  access: {
+    create: mdiFileArrowUpDown,
+    join: mdiFileEye,
   },
 })
 

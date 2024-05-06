@@ -8,13 +8,16 @@ export default class Service extends EventEmitter {
   constructor({ id=short.generate(), tunnel }={}) {
     super();
 
-    const signaling = new Signaling({ tunnel });
-    const rtcSite = new RTCPeerSite({ signaling });
+    if (tunnel) {
+      const signaling = new Signaling({ tunnel });
+      const rtcSite = new RTCPeerSite({ signaling });
 
-    rtcSite.on('connect', (event) => this.onconnect(event));
-    rtcSite.on('disconnect', (event) => this.ondisconnect(event));
+      rtcSite.on('connect', (event) => this.onconnect(event));
+      rtcSite.on('disconnect', (event) => this.ondisconnect(event));
 
-    this.rtcSite = rtcSite;
+      this.rtcSite = rtcSite;
+    }
+
     this.siteId = id;
     this.dataChannels = {};
   }

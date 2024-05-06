@@ -14,7 +14,7 @@ export default async function genThumbnail(src) {
         h = MAX_LENGTH / width * height;
       } else {
         h = MAX_LENGTH;
-        w = MAX_LENGTH / width * height;
+        w = MAX_LENGTH / height * width;
       }
 
       canvas.width = w;

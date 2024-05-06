@@ -52,20 +52,28 @@ export default class Protocol extends EventEmitter {
     this.emit(type, data);
   }
 
-  onresponse({messageId, contentLength, body}) {
-    const res = this.$response[messageId];
+  onresponse(response) {
+    const res = this.$response[response.messageId];
 
     if (!res) return;
 
-    if (res.body) {
-      res.body += body;
-    } else {
-      res.body = body;
+    if (response.error) {
+      return res.reject(new Error(response.error));
     }
 
-    console.log('received', res.body.length, Math.round(res.body.length / contentLength * 100) + '%')
-    if (res.body.length >= contentLength) {
-      res.resolve(res.body);
+    if (response.body && response.contentLength) {
+      const { body, contentLength } = response;
+
+      if (res.body) {
+        res.body += body;
+      } else {
+        res.body = body;
+      }
+
+      console.log('received', res.body.length, Math.round(res.body.length / contentLength * 100) + '%')
+      if (res.body.length >= contentLength) {
+        res.resolve(res.body);
+      }
     }
   }
 
@@ -75,7 +83,7 @@ export default class Protocol extends EventEmitter {
     if (res && res.resolve) res.resolve();
   }
 
-  sendRegister(data) {
+  sendRegister(data={}) {
     this.send({
       type: 'register',
       data,
@@ -101,6 +109,7 @@ export default class Protocol extends EventEmitter {
 
       this.$response[messageId] = {
         resolve,
+        reject,
         $timeout,
       };
       this.send({
@@ -139,6 +148,16 @@ export default class Protocol extends EventEmitter {
         },
       });
     }
+  }
+
+  sendReject(messageId, data) {
+    this.send({
+      type: 'response',
+      data: {
+        messageId,
+        ...data,
+      },
+    });
   }
 
   sendSubmit(data={}) {

@@ -2,10 +2,14 @@ import IndexedDBConfig from "@/utils/IndexedDB/IndexedDBConfig";
 import StoreChat from '@/utils/IndexedDB/StoreChat';
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 
+const STORAGE_WAIT = 150; // msec
+
 export default {
   namespaced: true,
   state: () => ({
     db: null,
+    quota: null,
+    usage: null,
   }),
   // getters: {
 
@@ -40,10 +44,30 @@ export default {
 
       await storeHistory.delete(id);
     },
+    refreshStorageCapacity({ commit }) {
+      if ('storage' in navigator && 'estimate' in navigator.storage) {
+        setTimeout(() => {
+          navigator.storage.estimate().then(estimate => {
+            commit('updateQuota', estimate.quota);
+            commit('updateUsage', estimate.usage);
+          }).catch((err) => {
+            console.error('storage.estimate() failed', err);
+          });
+        }, STORAGE_WAIT);
+      } else {
+        console.warn('Unsupport Storage Estimation API');
+      }
+    },
   },
   mutations: {
     updateDb(state, db) {
       state.db = db;
+    },
+    updateQuota(state, quota) {
+      state.quota = quota;
+    },
+    updateUsage(state, usage) {
+      state.usage = usage;
     },
   },
 }
