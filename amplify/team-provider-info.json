@@ -54,7 +54,7 @@
         },
         "SiteUpdateHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
-          "s3Key": "amplify-builds/SiteUpdateHandler-4a34616468784d474c4a-build.zip"
+          "s3Key": "amplify-builds/SiteUpdateHandler-62532f444c68377a5278-build.zip"
         },
         "ClientIceServersHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",

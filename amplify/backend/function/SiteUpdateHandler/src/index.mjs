@@ -16,7 +16,7 @@ export async function handler(event) {
 
   const { connectionId } = event.requestContext;
   const body = JSON.parse(event.body);
-  const { title, password } = body.data;
+  const { title, name, password } = body.data;
   const ddbSiteConnection = new DdbSiteConnection();
   const res = await ddbSiteConnection.query({ connectionId }).catch(err => {
     console.error('ddbSiteConnection.query fail: ', err);
@@ -25,7 +25,7 @@ export async function handler(event) {
   if (res.Items && res.Items.length) {
     const site = res.Items.shift();
     const { id } = site;
-    const data = { title };
+    const data = { title, owner: name };
 
     if (password) {
       data.password = password;

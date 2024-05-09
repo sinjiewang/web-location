@@ -14,6 +14,7 @@
   "Confirm": "확인",
   "Connect": "연결",
   "Create": "생성",
+  "Created by": "{name}에 의해 생성됨",
   "Delete": "삭제",
   "Disconnected": "연결이 끊겼습니다",
   "Disconnected from the Host": "호스트와의 연결이 끊겼습니다",

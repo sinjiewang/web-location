@@ -1,6 +1,6 @@
 <script>
 import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
-import { mapState, mapActions } from 'vuex';
+import { mapState, mapGetters, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiMapMarkerRightOutline, mdiQrcode, mdiContentCopy, mdiCheckBold } from '@mdi/js';
 import coordinate from '@/utils/coordinate.js'
@@ -58,6 +58,7 @@ export default {
   computed: {
     ...mapState('Account', ['sub']),
     ...mapState('Account', { accountPostion: 'position' }),
+    ...mapGetters('Account', { ownerName: 'getNickname' }),
     ...mapState('CloudTunnel', ['wsConnection']),
     types() {
       return Object.keys(SITE.TYPE).map((type) => ({
@@ -110,6 +111,7 @@ export default {
       const { id, type, title, position, pwdRequired, password } = this;
       const { lat, lng } = position;
       const siteId = id || short.generate();
+      const name = this.ownerName;
 
       this.$refs.form.validate();
 
@@ -118,7 +120,7 @@ export default {
       this.setUndraggable();
       this.loading = true;
 
-      const params = { siteId, lat, lng, type, title };
+      const params = { siteId, lat, lng, type, title, name };
 
       if (pwdRequired) {
         params.password = password;

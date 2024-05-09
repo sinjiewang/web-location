@@ -14,6 +14,7 @@ type SiteConnection @model {
   title: String
   passwordRequired: Boolean
   type: String
+  owner: String
   connectionId: String! @index
   siteId: String! @index
   positionId: String! @index(name: "siteConnectionsByPositionId")

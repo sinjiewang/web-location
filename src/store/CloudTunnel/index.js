@@ -42,7 +42,7 @@ export default {
       return connection;
     },
     async siteConnect({ state, dispatch }, config={}) {
-      const { siteId='', lat=0, lng=0, type='', title, password } = config;
+      const { siteId='', lat=0, lng=0, type='', title, password, name } = config;
 
       if (state.wsConnection) {
         return Promise.resolve(state.wsConnection);
@@ -52,7 +52,7 @@ export default {
 
       const wsConnection = await dispatch('connect', url);
 
-      await dispatch('updateSiteOptions', { title, password });
+      await dispatch('updateSiteOptions', { title, password, name });
 
       return wsConnection;
     },
@@ -67,9 +67,10 @@ export default {
 
       wsSite.send(options);
     },
-    async updateSiteOptions({ dispatch }, { title, password }={}) {
+    async updateSiteOptions({ dispatch }, { title='', name='', password }={}) {
       const data = {
         title,
+        name,
         password: password ? sha256(password) : null,
       }
       await dispatch('sendBySite', {

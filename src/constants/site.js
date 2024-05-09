@@ -1,7 +1,6 @@
 import {
   mdiChatProcessingOutline,
   mdiChatPlus,
-  mdiCommentText,
   mdiCommentEdit,
   mdiCommentEyeOutline,
   mdiFileEye,
@@ -11,15 +10,15 @@ import {
 const TYPE = Object.freeze({
   blog: {
     name: ($t) => $t('Blog'),
-    icon: mdiCommentText,
+    icon: 'mdi-comment-text',
   },
   chat: {
     name: ($t) => $t('Chat'),
-    icon: mdiChatProcessingOutline,
+    icon: 'mdi-chat-processing-outline',
   },
   access: {
     name: ($t) => $t('Access'),
-    icon: mdiFileEye,
+    icon: 'mdi-file-eye',
   },
 });
 
@@ -36,6 +35,18 @@ const TYPE_ACTION_ICON = Object.freeze({
     create: mdiFileArrowUpDown,
     join: mdiFileEye,
   },
+  // chat: {
+  //   create: 'mdi-chat-plus',
+  //   join: 'mdi-chat-processing-outline',
+  // },
+  // blog: {
+  //   create: 'mdi-comment-edit',
+  //   join: 'mdi-comment-eye-outline',
+  // },
+  // access: {
+  //   create: 'mdi-file-arrow-up-down',
+  //   join: 'mdi-file-eye',
+  // },
 })
 
 export default {

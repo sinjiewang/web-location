@@ -14,6 +14,7 @@
   "Confirm": "確認",
   "Connect": "連線",
   "Create": "創建",
+  "Created by": "由 {name} 創建",
   "Delete": "刪除",
   "Disconnected": "已斷線",
   "Disconnected from the Host": "與主機斷線",

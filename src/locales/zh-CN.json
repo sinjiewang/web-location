@@ -14,6 +14,7 @@
   "Confirm": "确认",
   "Connect": "连接",
   "Create": "创建",
+  "Created by": "由 {name} 创建",
   "Delete": "删除",
   "Disconnected": "已断线",
   "Disconnected from the Host": "与主机断线",

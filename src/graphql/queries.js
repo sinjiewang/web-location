@@ -14,6 +14,7 @@ export const getPosition = /* GraphQL */ `
           createdAt
           positionId
           title
+          owner
           passwordRequired
           type
           updatedAt

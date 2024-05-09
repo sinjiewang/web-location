@@ -59,7 +59,7 @@ export default {
       return this.updateSites(label.positionId);
     },
     getSiteTypeIcon(type) {
-      return SITE.TYPE[type]?.icon || mdiHelp;
+      return SITE.TYPE[type]?.icon || 'mdi-help';
     },
     getTypeName(type) {
       return this.$router.getRoutes().find(route => route.meta?.type === type).name;
@@ -128,8 +128,9 @@ export default {
               class="text-start"
             >
               <v-card-title class="custom-title">
-                <svg-icon type="mdi" :path="getSiteTypeIcon(site.type)"></svg-icon>
-                <svg-icon type="mdi" :path="mdiKeyAlert" v-if="site.passwordRequired" class="ml-2"></svg-icon>
+                <v-icon :icon="getSiteTypeIcon(site.type)"></v-icon>
+                <v-icon icon="mdi-key-alert" v-if="site.passwordRequired" class="ml-2"></v-icon>
+                <span class="ml-2 text-subtitle-2 opacity-70" v-if="site.owner">{{ $t('Created by', { name: site.owner }) }}</span>
               </v-card-title>
               <v-card-text>{{ site.title }}</v-card-text>
               <v-card-actions class="d-flex justify-end align-stretch">
@@ -151,5 +152,8 @@ export default {
 <style scoped>
 .interaction-google-map {
   width: 100%;
+}
+.opacity-70 {
+  opacity: 0.7;
 }
 </style>
