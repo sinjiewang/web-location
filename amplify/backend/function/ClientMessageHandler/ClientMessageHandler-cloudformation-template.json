@@ -23,6 +23,10 @@
     "functionweblocationawssdkArn": {
       "Type": "String",
       "Default": "functionweblocationawssdkArn"
+    },
+    "functionweblocationconfigArn": {
+      "Type": "String",
+      "Default": "functionweblocationconfigArn"
     }
   },
   "Conditions": {
@@ -145,6 +149,9 @@
         "Layers": [
           {
             "Ref": "functionweblocationawssdkArn"
+          },
+          {
+            "Ref": "functionweblocationconfigArn"
           }
         ],
         "Timeout": 25

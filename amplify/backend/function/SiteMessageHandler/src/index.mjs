@@ -9,10 +9,11 @@
 Amplify Params - DO NOT EDIT */
 
 import AWS from 'aws-sdk';
+import config from '/opt/nodejs/config.json' assert { type: 'json' };
 
-const ClientConnectionWebSocketAPI_URL = 'https://vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com/dev/';
+const env = process.env.NODE_ENV || 'dev';
 const apiGateway = new AWS.ApiGatewayManagementApi({
-    endpoint: ClientConnectionWebSocketAPI_URL
+    endpoint: config[env]['CLIENT_WEBSOCKET_API_URL'],
 });
 
 import DdbClientConnection from './utils/DdbClientConnection.mjs';

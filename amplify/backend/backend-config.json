@@ -82,17 +82,24 @@
       "dependsOn": [
         {
           "attributes": [
-            "GraphQLAPIIdOutput"
+            "Arn"
           ],
-          "category": "api",
-          "resourceName": "weblocation"
+          "category": "function",
+          "resourceName": "weblocationawssdk"
         },
         {
           "attributes": [
             "Arn"
           ],
           "category": "function",
-          "resourceName": "weblocationawssdk"
+          "resourceName": "weblocationconfig"
+        },
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
         }
       ],
       "providerPlugin": "awscloudformation",
@@ -124,19 +131,26 @@
       "dependsOn": [
         {
           "attributes": [
-            "GraphQLAPIIdOutput",
-            "GraphQLAPIEndpointOutput",
-            "GraphQLAPIKeyOutput"
+            "Arn"
           ],
-          "category": "api",
-          "resourceName": "weblocation"
+          "category": "function",
+          "resourceName": "weblocationawssdk"
         },
         {
           "attributes": [
             "Arn"
           ],
           "category": "function",
-          "resourceName": "weblocationawssdk"
+          "resourceName": "weblocationconfig"
+        },
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput",
+            "GraphQLAPIEndpointOutput",
+            "GraphQLAPIKeyOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
         }
       ],
       "providerPlugin": "awscloudformation",
@@ -193,6 +207,13 @@
           ],
           "category": "function",
           "resourceName": "weblocationawssdk"
+        },
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationconfig"
         }
       ],
       "providerPlugin": "awscloudformation",
@@ -203,17 +224,24 @@
       "dependsOn": [
         {
           "attributes": [
-            "GraphQLAPIIdOutput"
+            "Arn"
           ],
-          "category": "api",
-          "resourceName": "weblocation"
+          "category": "function",
+          "resourceName": "weblocationawssdk"
         },
         {
           "attributes": [
             "Arn"
           ],
           "category": "function",
-          "resourceName": "weblocationawssdk"
+          "resourceName": "weblocationconfig"
+        },
+        {
+          "attributes": [
+            "GraphQLAPIIdOutput"
+          ],
+          "category": "api",
+          "resourceName": "weblocation"
         }
       ],
       "providerPlugin": "awscloudformation",
@@ -241,6 +269,11 @@
       "service": "Lambda"
     },
     "weblocationawssdk": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "LambdaLayer"
+    },
+    "weblocationconfig": {
       "build": true,
       "providerPlugin": "awscloudformation",
       "service": "LambdaLayer"
@@ -442,6 +475,22 @@
         {
           "category": "function",
           "resourceName": "weblocationawssdk"
+        }
+      ]
+    },
+    "AMPLIFY_function_weblocationconfig_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "weblocationconfig"
+        }
+      ]
+    },
+    "AMPLIFY_function_weblocationconfig_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "weblocationconfig"
         }
       ]
     }

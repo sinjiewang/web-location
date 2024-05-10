@@ -86,6 +86,9 @@ export type AmplifyDependentResourcesAttributes = {
     },
     "weblocationawssdk": {
       "Arn": "string"
+    },
+    "weblocationconfig": {
+      "Arn": "string"
     }
   },
   "hosting": {

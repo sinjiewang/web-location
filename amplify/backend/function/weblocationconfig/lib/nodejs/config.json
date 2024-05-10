@@ -1,0 +1,18 @@
+{
+  "dev": {
+    "CLIENT_WEBSOCKET_API_URL": "https://vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com/dev/",
+    "SITE_WEBSOCKET_API_URL": "https://k64wydzchi.execute-api.ap-northeast-1.amazonaws.com/dev/",
+    "TURN_SECRET_KEY": "SJW",
+    "TURN_SERVER_LIST": [
+      "turn:35.79.18.12:3478"
+    ]
+  },
+  "prod": {
+    "CLIENT_WEBSOCKET_API_URL": "https://vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com/dev/",
+    "SITE_WEBSOCKET_API_URL": "https://k64wydzchi.execute-api.ap-northeast-1.amazonaws.com/dev/",
+    "TURN_SECRET_KEY": "SJW",
+    "TURN_SERVER_LIST": [
+      "turn:35.79.18.12:3478"
+    ]
+  }
+}
