@@ -31,6 +31,14 @@ export default {
     connectLabel() {
       return this.$t('Connect');
     },
+    queryLat() {
+      return this.$route.query?.lat !== undefined
+        ? Number(this.$route.query.lat) : null;
+    },
+    queryLng() {
+      return this.$route.query?.lng !== undefined
+        ? Number(this.$route.query.lng) : null;
+    },
   },
   methods: {
     ...mapActions('Account', ['getAccount']),
@@ -84,7 +92,12 @@ export default {
   async mounted() {
     await this.getAccount();
 
-    if (this.position) {
+    if (this.queryLat !== null && this.queryLng !== null) {
+      this.center = {
+        lat: this.queryLat,
+        lng: this.queryLng,
+      };
+    } else if (this.position) {
       this.center = this.position;
     } else {
       this.center = await this.getUserPosition();
