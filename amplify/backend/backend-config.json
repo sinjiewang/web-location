@@ -72,6 +72,13 @@
           ],
           "category": "function",
           "resourceName": "weblocationawssdk"
+        },
+        {
+          "attributes": [
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "weblocationconfig"
         }
       ],
       "providerPlugin": "awscloudformation",

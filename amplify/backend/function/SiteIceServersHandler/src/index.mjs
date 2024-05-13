@@ -8,7 +8,7 @@ import crypto from 'crypto';
 import createCredentials from './utils/createCredentials.mjs';
 import config from '/opt/nodejs/config.json' assert { type: 'json' };
 
-const env = process.env.NODE_ENV || 'dev';
+const env = process.env.ENV || 'dev';
 const apiGateway = new AWS.ApiGatewayManagementApi({
   endpoint: config[env]['SITE_WEBSOCKET_API_URL'],
 });

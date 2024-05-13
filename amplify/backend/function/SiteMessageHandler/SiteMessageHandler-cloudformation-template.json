@@ -403,7 +403,8 @@
                 "execute-api:ManageConnections"
               ],
               "Resource": [
-                "arn:aws:execute-api:ap-northeast-1:301856136276:vv3z4ral1k/*/POST/@connections/*"
+                "arn:aws:execute-api:ap-northeast-1:301856136276:vv3z4ral1k/*/POST/@connections/*",
+                "arn:aws:execute-api:ap-northeast-1:301856136276:jabscdfa2j/*/POST/@connections/*"
               ]
             }
           ]

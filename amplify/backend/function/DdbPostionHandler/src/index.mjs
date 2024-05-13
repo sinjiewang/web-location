@@ -11,7 +11,7 @@ Amplify Params - DO NOT EDIT */
 import AWS from 'aws-sdk';
 import config from '/opt/nodejs/config.json' assert { type: 'json' };
 
-const env = process.env.NODE_ENV || 'dev';
+const env = process.env.ENV || 'dev';
 const apiGateway = new AWS.ApiGatewayManagementApi({
     endpoint: config[env]['CLIENT_WEBSOCKET_API_URL'],
 });

@@ -193,7 +193,8 @@
                 "execute-api:ManageConnections"
               ],
               "Resource": [
-                "arn:aws:execute-api:ap-northeast-1:301856136276:k64wydzchi/*/POST/@connections/*"
+                "arn:aws:execute-api:ap-northeast-1:301856136276:k64wydzchi/*/POST/@connections/*",
+                "arn:aws:execute-api:ap-northeast-1:301856136276:t462iga5g7/*/POST/@connections/*"
               ]
             }
           ]

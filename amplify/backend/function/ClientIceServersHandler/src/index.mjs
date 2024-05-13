@@ -6,12 +6,14 @@ Amplify Params - DO NOT EDIT */
 import AWS from 'aws-sdk';
 import crypto from 'crypto';
 import createCredentials from './utils/createCredentials.mjs';
+import config from '/opt/nodejs/config.json' assert { type: 'json' };
 
-const ClientConnectionWebSocketAPI_URL = 'https://vv3z4ral1k.execute-api.ap-northeast-1.amazonaws.com/dev/';
+const env = process.env.ENV || 'dev';
 const apiGateway = new AWS.ApiGatewayManagementApi({
-  endpoint: ClientConnectionWebSocketAPI_URL
+  endpoint: config[env]['CLIENT_WEBSOCKET_API_URL'],
 });
-const key = 'SJW'; // secret
+const secretKey = config[env]['TURN_SECRET_KEY'];
+const turnServerList = config[env]['TURN_SERVER_LIST'];
 
 /**
  * @type {import('@types/aws-lambda').APIGatewayProxyHandler}
@@ -23,9 +25,9 @@ export async function handler(event) {
   const user = crypto.randomBytes(8).toString('hex');
   const expiry = 60 * 15; // 15 min
   const expireTime = Date.now() + expiry * 1000;
-  const { username, credential } = createCredentials(user, key, expiry);
+  const { username, credential } = createCredentials(user, secretKey, expiry);
   const turnServer = {
-    urls: ['turn:35.79.18.12:3478'],
+    urls: turnServerList,
     username,
     credential,
   };
