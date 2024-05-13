@@ -4,16 +4,16 @@
     {
       "type": "ProjectLayer",
       "resourceName": "weblocationawssdk",
-      "env": "prod",
       "version": "Always choose latest version",
-      "isLatestVersionSelected": true
+      "isLatestVersionSelected": true,
+      "env": "dev"
     },
     {
       "type": "ProjectLayer",
       "resourceName": "weblocationconfig",
-      "env": "prod",
       "version": "Always choose latest version",
-      "isLatestVersionSelected": true
+      "isLatestVersionSelected": true,
+      "env": "dev"
     }
   ]
 }

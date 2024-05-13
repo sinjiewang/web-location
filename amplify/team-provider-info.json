@@ -30,7 +30,7 @@
         },
         "ClientMessageHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
-          "s3Key": "amplify-builds/ClientMessageHandler-456c482b7a4157633143-build.zip"
+          "s3Key": "amplify-builds/ClientMessageHandler-7831353368676c704549-build.zip"
         },
         "ClientPositionHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
@@ -46,11 +46,11 @@
         },
         "SiteMessageHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
-          "s3Key": "amplify-builds/SiteMessageHandler-393067674d5564573778-build.zip"
+          "s3Key": "amplify-builds/SiteMessageHandler-4d737731307572396632-build.zip"
         },
         "DdbPostionHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
-          "s3Key": "amplify-builds/DdbPostionHandler-6b474a51623576314236-build.zip"
+          "s3Key": "amplify-builds/DdbPostionHandler-78774d4259544263576a-build.zip"
         },
         "SiteUpdateHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
@@ -58,15 +58,15 @@
         },
         "ClientIceServersHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
-          "s3Key": "amplify-builds/ClientIceServersHandler-433930786b556372382f-build.zip"
+          "s3Key": "amplify-builds/ClientIceServersHandler-41385565692b786d2b37-build.zip"
         },
         "SiteIceServersHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
-          "s3Key": "amplify-builds/SiteIceServersHandler-4b433767384f2b6c4648-build.zip"
+          "s3Key": "amplify-builds/SiteIceServersHandler-56425774546558513870-build.zip"
         },
         "weblocationconfig": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
-          "s3Key": "amplify-builds/weblocationconfig-LambdaLayerVersion8b8f9a0a-build.zip"
+          "s3Key": "amplify-builds/weblocationconfig-LambdaLayerVersionf07afb1e-build.zip"
         },
         "weblocation": {}
       },
