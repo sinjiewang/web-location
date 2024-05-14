@@ -41,7 +41,7 @@ export default {
         {
           text: this.$t('Information'),
           icon: 'mdi-information-variant-circle-outline',
-          route: '',
+          route: '/info',
         }
       ];
     },

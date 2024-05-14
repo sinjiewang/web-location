@@ -9,6 +9,7 @@ import File from '@/pages/File/index.vue';
 import HistoryChat from '@/pages/History/Chat.vue';
 import HistoryBlog from '@/pages/History/Blog.vue';
 import HistoryAccess from '@/pages/History/Access.vue';
+import Info from '@/pages/Info/index.vue';
 
 const routes = [
   {
@@ -78,6 +79,11 @@ const routes = [
     path: '/file',
     name: 'file',
     component: File,
+  },
+  {
+    path: '/info',
+    name: 'info',
+    component: Info,
   },
   {
     path: '/:pathMatch(.*)*',
