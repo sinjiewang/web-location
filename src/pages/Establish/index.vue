@@ -3,14 +3,13 @@ import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
 import { mapState, mapGetters, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiMapMarkerRightOutline, mdiQrcode, mdiContentCopy, mdiCheckBold } from '@mdi/js';
-import coordinate from '@/utils/coordinate.js'
+import coordinate from '@/utils/coordinate.js';
 
 import StoreHistory from '@/utils/IndexedDB/StoreHistory';
 import SITE from '@/constants/site.js';
 import Chat from '@/pages/Chat/site/index.vue';
 import Blog from '@/pages/Blog/site/index.vue';
 import Access from '@/pages/Access/site/index.vue';
-// import AccessConfig from './AccessConfig.vue';
 
 import short from 'short-uuid';
 import QRCode from 'qrcode';
@@ -97,6 +96,14 @@ export default {
     },
     establishLabel() {
       return this.id ? this.$t('Establish') : this.$t('Create');
+    },
+    queryLat() {
+      return this.$route.query?.lat !== undefined
+        ? Number(this.$route.query.lat) : null;
+    },
+    queryLng() {
+      return this.$route.query?.lng !== undefined
+        ? Number(this.$route.query.lng) : null;
     },
   },
   methods: {
@@ -210,6 +217,11 @@ export default {
       this.title = history.title;
       this.position = history.position;
       this.disableTypeSelect = true;
+    } else if (this.queryLat !== null && this.queryLng !== null) {
+      this.position = coordinate.transform({
+        lat: this.queryLat,
+        lng: this.queryLng,
+      });
     } else if (this.accountPostion) {
       this.position = this.accountPostion;
     } else {

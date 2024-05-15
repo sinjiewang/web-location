@@ -4,6 +4,7 @@ import { mapState, mapGetters, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiHelp, mdiKeyAlert } from '@mdi/js';
 import SITE from '@/constants/site.js';
+import coordinate from '@/utils/coordinate.js';
 
 export default {
   components: {
@@ -93,10 +94,10 @@ export default {
     await this.getAccount();
 
     if (this.queryLat !== null && this.queryLng !== null) {
-      this.center = {
+      this.center = coordinate.transform({
         lat: this.queryLat,
         lng: this.queryLng,
-      };
+      });
     } else if (this.position) {
       this.center = this.position;
     } else {
