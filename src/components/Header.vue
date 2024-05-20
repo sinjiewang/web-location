@@ -1,7 +1,7 @@
 <script>
 import LANG_LIST from '@/locales/list';
 import SvgIcon from '@jamescoyle/vue-icon'
-import { mdiTranslate, mdiMap, mdiMapPlus } from '@mdi/js'
+import { mdiTranslate, mdiMap } from '@mdi/js'
 import { mapActions } from 'vuex';
 
 export default {
@@ -13,15 +13,11 @@ export default {
       items: LANG_LIST,
       mdiTranslate,
       mdiMap,
-      mdiMapPlus,
     };
   },
   computed: {
     locale() {
       return this.$i18n.locale;
-    },
-    establishPath() {
-      return this.$router.resolve({ name: 'establish' }).href;
     },
   },
   methods: {
@@ -31,9 +27,6 @@ export default {
         i18n: this.$i18n,
         locale,
       });
-    },
-    onMapPlusClick() {
-      window.open(this.establishPath, '_blank');
     },
   },
 }
@@ -47,12 +40,6 @@ export default {
           <svg-icon type="mdi" :path="mdiMap"></svg-icon>
         </v-col>
         <v-col cols="auto">
-          <v-btn icon
-            :title="$t('Establish a site')"
-            @click="onMapPlusClick"
-          >
-            <svg-icon type="mdi" :path="mdiMapPlus"></svg-icon>
-          </v-btn>
           <v-menu offset-y>
             <template v-slot:activator="{ props }">
               <v-btn icon
