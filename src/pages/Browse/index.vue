@@ -2,7 +2,7 @@
 import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
 import { mapState, mapGetters, mapActions } from 'vuex';
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiHelp, mdiKeyAlert } from '@mdi/js';
+import { mdiHelp, mdiKeyAlert, mdiMapPlus } from '@mdi/js';
 import SITE from '@/constants/site.js';
 import coordinate from '@/utils/coordinate.js';
 
@@ -13,22 +13,19 @@ export default {
   },
   data() {
     return {
-      center: null,
+      lat: null,
+      lng: null,
       mapComponent: null,
       selectedLabel: null,
       selectedLabelSites: [],
       selectedLabelSitesNextToken: null,
       mdiKeyAlert,
+      mdiMapPlus,
     };
   },
   computed: {
     ...mapState('Account', ['nickName', 'position']),
     ...mapGetters('Geopositioning', ['labels']),
-    labelName() {
-      const { lat, lng } = this.selectedLabel || {};
-
-      return `${lat}, ${lng}`;
-    },
     connectLabel() {
       return this.$t('Connect');
     },
@@ -40,6 +37,19 @@ export default {
       return this.$route.query?.lng !== undefined
         ? Number(this.$route.query.lng) : null;
     },
+    center() {
+      const { lat, lng } = this;
+
+      return { lat, lng };
+    },
+    establishPath() {
+      const { lat, lng } = this;
+
+      return this.$router.resolve({
+        name: 'establish',
+        query: { lat, lng },
+      }).href;
+    },
   },
   methods: {
     ...mapActions('Account', ['getAccount']),
@@ -47,7 +57,10 @@ export default {
     ...mapActions('Geopositioning', ['getLabels', 'getUserPosition', 'getPositionSites']),
     ...mapActions('CloudTunnel', ['clientConnect', 'updateClientPosition']),
     onMapCenterMoved(position) {
-      this.center = position;
+      const { lat, lng } = coordinate.transform(position);
+
+      this.lat = lat;
+      this.lng = lng;
       this.getLabels(this.center);
       this.updateClientPosition(position);
       this.updateAccountPosition(position);
@@ -82,6 +95,9 @@ export default {
 
       window.open(url, '_blank');
     },
+    onMapPlusClick() {
+      window.open(this.establishPath, '_blank');
+    },
   },
   watch: {
     labels(value) {
@@ -93,16 +109,23 @@ export default {
   async mounted() {
     await this.getAccount();
 
+    let position;
+
     if (this.queryLat !== null && this.queryLng !== null) {
-      this.center = coordinate.transform({
+      position = {
         lat: this.queryLat,
         lng: this.queryLng,
-      });
+      };
     } else if (this.position) {
-      this.center = this.position;
+      position = this.position;
     } else {
-      this.center = await this.getUserPosition();
+      position = await this.getUserPosition();
     }
+
+    const { lat, lng } = coordinate.transform(position);
+
+    this.lat = lat;
+    this.lng = lng;
 
     await this.clientConnect(this.center);
 
@@ -128,11 +151,25 @@ export default {
           />
         </v-sheet>
       </v-col>
-      <v-col cols="12" md="4"
-        v-if="selectedLabel"
-      >
-        <div class="d-flex align-center flex-column">
-          <div class="text-subtitle-1">{{ labelName }}</div>
+      <v-col cols="12" md="4">
+        <v-row class="pa-2">
+          <v-col cols="12">
+            <v-btn
+              class="establish-btn"
+              color="success"
+              :title="$t('Establish a site')"
+              @click="onMapPlusClick"
+              block
+            >
+            <svg-icon type="mdi" :path="mdiMapPlus" class="h-40 w-40 mr-2"></svg-icon>
+            {{ $t('Establish a site') }}
+            </v-btn>
+          </v-col>
+        </v-row>
+        <v-divider class="ma-2"></v-divider>
+        <div class="d-flex align-center flex-column"
+          v-if="selectedLabel"
+        >
           <template
             v-for="site in selectedLabelSites"
             :key="site.siteId"
@@ -169,5 +206,14 @@ export default {
 }
 .opacity-70 {
   opacity: 0.7;
+}
+.v-btn.establish-btn {
+  height: 56px;
+}
+.h-40 {
+  height: 40px;
+}
+.w-40 {
+  width: 40px;
 }
 </style>
