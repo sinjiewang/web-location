@@ -111,6 +111,25 @@ export default {
         googleMap.setMarkerUndraggable(positionMarker);
       });
     },
+    setCloudTunnel(tunnel) {
+      if (tunnel) {
+        this.service.updateTunnel(tunnel);
+
+        const reconnect = () => {
+          tunnel.off('close', reconnect);
+
+          this.$emit('reconnect');
+        }
+        tunnel.on('close', reconnect);
+      }
+    },
+  },
+  watch: {
+    tunnel(value) {
+      if (value) {
+        this.setCloudTunnel(value);
+      }
+    },
   },
   async mounted() {
     const db = await this.idbConnect();
@@ -127,7 +146,7 @@ export default {
     });
 
     service.register({ name: nickname, avatar });
-    await service.init(tunnel);
+    await service.init();
 
     this.service = service;
     this.getPosts();
@@ -135,6 +154,7 @@ export default {
     const { lat, lng } = profile.position;
 
     this.showPosition({ lat, lng });
+    this.setCloudTunnel(tunnel);
   },
   beforeUnmount() {
     this.service.close();

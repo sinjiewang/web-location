@@ -8,18 +8,33 @@ export default class RTCPeerSite extends EventEmitter {
   constructor({ signaling }) {
     super();
     this.peerConnectionMap = {};
-    this.signaling = signaling;
     this.$iceBufferMap = {};
+    this.iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+
+    if (signaling) {
+      this.setSignaling(signaling);
+    }
+  }
+
+  setSignaling(signaling) {
+    if (this.signaling) {
+      this.signaling.off('iceServers', this.$updateIceServers);
+      this.signaling.off('offer', this.$createPeerConnection);
+      this.signaling.off('icecand', this.$addIceCandidate);
+    }
+
     this.$createPeerConnection = this.createPeerConnection.bind(this);
     this.$addIceCandidate = this.addIceCandidate.bind(this);
     this.$updateIceServers = this.updateIceServers.bind(this);
-    this.iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+    this.signaling = signaling;
 
     signaling.on('iceServers', this.$updateIceServers);
     signaling.on('offer', this.$createPeerConnection);
     signaling.on('icecand', this.$addIceCandidate);
-    signaling.sendIceServers();
+
+    setTimeout(() => signaling.sendIceServers(), 1000);
   }
+
   async createPeerConnection({
     // iceServers = [{ urls: 'stun:stun.l.google.com:19302' }],
     clientId, desc,

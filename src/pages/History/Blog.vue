@@ -112,7 +112,7 @@ export default {
     });
 
     // service.register({ name: nickname, avatar });
-    // await service.init(tunnel);
+    // await service.init();
 
     this.service = service;
     this.getPosts();

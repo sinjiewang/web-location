@@ -66,11 +66,13 @@ export default class APIGatewayConnect extends EventEmitter {
   }
 
   async send(message) {
-    await this.connect();
-
     if (this.connected) {
       this.ws.send(JSON.stringify(message));
       this.keepAlive();
+    } else {
+      console.error('WebSocket disconnect', this.url)
+
+      throw new Error('WebSocket disconnect');
     }
   }
 

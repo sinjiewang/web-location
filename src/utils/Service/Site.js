@@ -8,16 +8,18 @@ export default class Service extends EventEmitter {
   constructor({ id=short.generate(), tunnel }={}) {
     super();
 
+    let signaling;
+
     if (tunnel) {
-      const signaling = new Signaling({ tunnel });
-      const rtcSite = new RTCPeerSite({ signaling });
-
-      rtcSite.on('connect', (event) => this.onconnect(event));
-      rtcSite.on('disconnect', (event) => this.ondisconnect(event));
-
-      this.rtcSite = rtcSite;
+      signaling = new Signaling({ tunnel });
     }
 
+    const rtcSite = new RTCPeerSite({ signaling });
+
+    rtcSite.on('connect', (event) => this.onconnect(event));
+    rtcSite.on('disconnect', (event) => this.ondisconnect(event));
+
+    this.rtcSite = rtcSite;
     this.siteId = id;
     this.dataChannels = {};
   }
@@ -52,5 +54,11 @@ export default class Service extends EventEmitter {
 
   close() {
     this.rtcSite?.close();
+  }
+
+  updateTunnel(tunnel) { // wsConnection // APIGatewayConnect
+    const signaling = new Signaling({ tunnel });
+
+    this.rtcSite?.setSignaling(signaling);
   }
 }

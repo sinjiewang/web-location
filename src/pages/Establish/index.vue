@@ -47,6 +47,7 @@ export default {
       appComponent: null,
       step: 1,
       showPassword: false,
+      turnOn: false,
       // svg-icon
       copyIcon: mdiContentCopy,
       mdiMapMarkerRightOutline,
@@ -114,11 +115,30 @@ export default {
     onPositionChanged({ lat, lng }) {
       this.position = coordinate.transform({ lat, lng });
     },
-    async onClickEstablish() {
-      const { id, type, title, position, pwdRequired, password } = this;
+    connectSiteToCloud() {
+      const { id, type, title, position, pwdRequired, password, ownerName, turnOn } = this;
       const { lat, lng } = position;
+      const params = {
+        lat, lng, type, title,
+        siteId: id,
+        name: ownerName,
+      };
+
+      if (!turnOn) return;
+
+      if (pwdRequired) {
+        params.password = password;
+      }
+
+      return this.siteConnect(params).catch((err) => {
+        console.error('connectSiteToCloud failed', err);
+
+        setTimeout(() => this.connectSiteToCloud(), 3000);
+      });
+    },
+    async onClickEstablish() {
+      const { id, type } = this;
       const siteId = id || short.generate();
-      const name = this.ownerName;
 
       this.$refs.form.validate();
 
@@ -126,16 +146,9 @@ export default {
 
       this.setUndraggable();
       this.loading = true;
-
-      const params = { siteId, lat, lng, type, title, name };
-
-      if (pwdRequired) {
-        params.password = password;
-      }
-
-      await this.siteConnect(params);
-
+      this.turnOn = true;
       this.id = siteId;
+      await this.connectSiteToCloud();
       this.$router.push({ params: { id: siteId }});
       this.nextStep();
       this.appComponent = APP_MAPPING[type];
@@ -154,6 +167,7 @@ export default {
         this.appComponent = null;
       }, 1000)
       this.loading = true;
+      this.turnOn = false;
       this.disconnect();
     },
     onClickQRCode() {
@@ -460,6 +474,7 @@ export default {
           :tunnel="wsConnection"
           :is="appComponent"
           :profile="appProfile"
+          @reconnect="connectSiteToCloud"
         ></component>
     </v-row>
     </v-container>

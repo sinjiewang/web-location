@@ -262,4 +262,8 @@ export default class BlogSiteService extends EventEmitter {
   close() {
     this.service?.close();
   }
+
+  updateTunnel(tunnel) {
+    this.service.updateTunnel(tunnel);
+  }
 }
