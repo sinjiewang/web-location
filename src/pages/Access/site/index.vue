@@ -122,6 +122,25 @@ export default {
         }
       });
     },
+    setCloudTunnel(tunnel) {
+      if (tunnel) {
+        this.service.updateTunnel(tunnel);
+
+        const reconnect = () => {
+          tunnel.off('close', reconnect);
+
+          this.$emit('reconnect');
+        }
+        tunnel.on('close', reconnect);
+      }
+    },
+  },
+  watch: {
+    tunnel(value) {
+      if (value) {
+        this.setCloudTunnel(value);
+      }
+    },
   },
   async mounted() {
     const db = await this.idbConnect();
@@ -129,7 +148,7 @@ export default {
     const service = this.createService({
       id: siteId,
       profile,
-      tunnel,
+      // tunnel,
       db,
     });
     const { nickname, avatar } = await this.getAccount();
@@ -140,7 +159,10 @@ export default {
 
     this.service = service;
     this.allowUpload = service.allowUpload;
-    this.selected = service.files.map((file) => file.id);
+    this.selected = service.files.map((file) => file?.id)
+      .filter(value => !!value);
+
+    this.setCloudTunnel(tunnel);
   },
   beforeUnmount() {
     this.service.close();

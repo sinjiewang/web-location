@@ -20,6 +20,7 @@ export default {
       default: () => null,
     },
   },
+  emits: ['reconnect'],
   data() {
     return {
       avatar: null,
@@ -142,6 +143,25 @@ export default {
     updateDocumentTitle(title='MapUS') {
       document.title = title;
     },
+    setCloudTunnel(tunnel) {
+      if (tunnel) {
+        this.service.updateTunnel(tunnel);
+
+        const reconnect = () => {
+          tunnel.off('close', reconnect);
+
+          this.$emit('reconnect');
+        }
+        tunnel.on('close', reconnect);
+      }
+    },
+  },
+  watch: {
+    tunnel(value) {
+      if (value) {
+        this.setCloudTunnel(value);
+      }
+    },
   },
   async mounted() {
     const db = await this.idbConnect();
@@ -154,7 +174,7 @@ export default {
     const service = this.createService({
       id: siteId,
       profile,
-      tunnel,
+      // tunnel,
       db,
     });
 
@@ -166,6 +186,7 @@ export default {
       message: `(${title}) ${this.$t('Established')}`,
       time: Date.now(),
     });
+    this.setCloudTunnel(tunnel);
 
     document.addEventListener('visibilitychange', this.onvisibilitychange);
   },
