@@ -22,6 +22,7 @@ export default {
   },
   data() {
     return {
+      connectResponseCode: null,
       showDisconnectedDialog: false,
       siteId: this.$route.params.siteId,
       loading: false,
@@ -59,6 +60,13 @@ export default {
     allowUpload() {
       return this.profile?.allowUpload;
     },
+    disconnectedDialogConetnt() {
+      const mapping = {
+        '503': this.$t('Connection Limit Exceeded')
+      };
+
+      return mapping[this.connectResponseCode] || this.$t('Disconnected from the Host');
+    },
   },
   methods: {
     ...mapActions('Account', ['getAccount']),
@@ -72,6 +80,7 @@ export default {
       }
 
       this.loading = true;
+      this.connectResponseCode = null;
 
       try {
         await this.clientConnect();
@@ -83,12 +92,15 @@ export default {
 
         const { code } = err;
 
+        this.connectResponseCode = code;
+
         switch(code) {
           case 401:
             this.pwdRequired = true;
             this.password = null;
             this.$refs.passwordDialog.show();
             break;
+          case 503:
           default:
             this.showDisconnectedDialog = true;
         }
@@ -346,7 +358,7 @@ export default {
     >
       <v-card>
         <v-card-text>
-          {{ $t('Disconnected from the Host') }}
+          {{ disconnectedDialogConetnt }}
         </v-card-text>
         <v-card-actions class="d-flex align-stretch">
           <v-spacer></v-spacer>

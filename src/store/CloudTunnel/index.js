@@ -42,7 +42,7 @@ export default {
       return connection;
     },
     async siteConnect({ state, dispatch }, config={}) {
-      const { siteId='', lat=0, lng=0, type='', title, password, name } = config;
+      const { siteId='', lat=0, lng=0, type='', title, password, owner, connectionLimit } = config;
 
       if (state.wsConnection) {
         return Promise.resolve(state.wsConnection);
@@ -51,8 +51,14 @@ export default {
       let  url = `${import.meta.env.VITE_AWS_API_GATEWAY_SITE_URL}?siteId=${siteId}&lat=${lat}&lng=${lng}&type=${type}`;
 
       const wsConnection = await dispatch('connect', url);
+      const options = {
+        title,
+        owner,
+        password: password ? sha256(password) : null,
+        connectionLimit,
+      };
 
-      await dispatch('updateSiteOptions', { title, password, name });
+      await dispatch('updateSiteOptions', options);
 
       return wsConnection;
     },
@@ -67,13 +73,8 @@ export default {
 
       wsSite.send(options);
     },
-    async updateSiteOptions({ dispatch }, { title='', name='', password }={}) {
-      const data = {
-        title,
-        name,
-        password: password ? sha256(password) : null,
-      }
-      await dispatch('sendBySite', {
+    updateSiteOptions({ dispatch }, data={}) {
+      return dispatch('sendBySite', {
         action: 'update',
         data,
       });

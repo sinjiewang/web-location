@@ -80,7 +80,9 @@ export default class BlogSiteService extends EventEmitter {
         avatar: host.avatar,
         time,
       },
-    })
+    });
+
+    this.emit('connect', { clientId, dataChannel });
   }
 
   ondisconnect({ clientId }) {
@@ -89,6 +91,8 @@ export default class BlogSiteService extends EventEmitter {
     if (connection) {
       delete this.connections[clientId];
     }
+
+    this.emit('disconnect', { clientId });
   }
 
   onmessage({ message, clientId }) {
@@ -265,5 +269,9 @@ export default class BlogSiteService extends EventEmitter {
 
   updateTunnel(tunnel) {
     this.service.updateTunnel(tunnel);
+  }
+
+  get connectionCount() {
+    return Object.keys(this.connections).length;
   }
 }

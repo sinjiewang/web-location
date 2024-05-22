@@ -63,6 +63,20 @@ export async function handler(event) {
       return { statusCode };
     }
 
+    if (site.connectionLimit !== null && site.connectionCount >= site.connectionLimit) {
+      await clientApiGateway.postToConnection({
+        ConnectionId: clientId,
+        Data: JSON.stringify({
+          error: {
+            message: 'Service Unavailable',
+            code: 503,
+          }
+        }),
+      }).promise();
+
+      return { statusCode };
+    }
+
     await siteApiGateway.postToConnection({
       ConnectionId: site.connectionId,
       Data: JSON.stringify({
