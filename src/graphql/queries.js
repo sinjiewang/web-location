@@ -18,6 +18,8 @@ export const getPosition = /* GraphQL */ `
           passwordRequired
           type
           updatedAt
+          connectionCount
+          connectionLimit
         }
       }
       createdAt
@@ -61,6 +63,7 @@ export const getSiteConnection = /* GraphQL */ `
       title
       passwordRequired
       type
+      owner
       connectionId
       siteId
       positionId
@@ -72,6 +75,8 @@ export const getSiteConnection = /* GraphQL */ `
         updatedAt
         __typename
       }
+      connectionCount
+      connectionLimit
       createdAt
       updatedAt
       __typename
@@ -90,9 +95,12 @@ export const listSiteConnections = /* GraphQL */ `
         title
         passwordRequired
         type
+        owner
         connectionId
         siteId
         positionId
+        connectionCount
+        connectionLimit
         createdAt
         updatedAt
         __typename
@@ -218,9 +226,12 @@ export const siteConnectionsByConnectionId = /* GraphQL */ `
         title
         passwordRequired
         type
+        owner
         connectionId
         siteId
         positionId
+        connectionCount
+        connectionLimit
         createdAt
         updatedAt
         __typename
@@ -250,9 +261,12 @@ export const siteConnectionsBySiteId = /* GraphQL */ `
         title
         passwordRequired
         type
+        owner
         connectionId
         siteId
         positionId
+        connectionCount
+        connectionLimit
         createdAt
         updatedAt
         __typename
@@ -282,9 +296,12 @@ export const siteConnectionsByPositionId = /* GraphQL */ `
         title
         passwordRequired
         type
+        owner
         connectionId
         siteId
         positionId
+        connectionCount
+        connectionLimit
         createdAt
         updatedAt
         __typename

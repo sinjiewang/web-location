@@ -84,6 +84,7 @@ export default class ChatSiteService extends EventEmitter {
     connection.on('submit', (event) => this.onsubmit(event));
 
     this.connections[clientId] = connection;
+    this.emit('connect', { clientId, dataChannel });
   }
 
   ondisconnect({ clientId }) {
@@ -92,6 +93,8 @@ export default class ChatSiteService extends EventEmitter {
     if (connection) {
       delete this.connections[clientId];
     }
+
+    this.emit('disconnect', { clientId });
   }
 
   onregister(event) {
@@ -265,5 +268,9 @@ export default class ChatSiteService extends EventEmitter {
 
   updateTunnel(tunnel) {
     this.service.updateTunnel(tunnel);
+  }
+
+  get connectionCount() {
+    return Object.keys(this.connections).length;
   }
 }

@@ -1,25 +1,18 @@
 <script>
 import { mapActions } from 'vuex';
 import { /*isProxy,*/ toRaw } from 'vue';
+import BaseSite from '@/components/BaseSite.vue';
 import Service from '@/utils/Service/Blog/SiteService.js';
 import Blog from '../index.vue';
 import InteractionGoogleMap from '@/components/InteractionGoogleMap.vue';
 
 export default {
+  extends: BaseSite,
   components: {
     Blog,
     InteractionGoogleMap,
   },
-  props: {
-    tunnel: {
-      type: Object,
-      default: () => null,
-    },
-    profile: {
-      type: Object,
-      default: () => null,
-    },
-  },
+  // props: ['tunnel', 'profile'],
   data() {
     return {
       name: null,
@@ -33,14 +26,6 @@ export default {
       mapComponent: null,
     };
   },
-  computed: {
-    siteId() {
-      return this.profile.id;
-    },
-    title() {
-      return this.profile.title;
-    },
-  },
   methods: {
     ...mapActions('Account', ['getAccount']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
@@ -52,10 +37,9 @@ export default {
         profile: toRaw(profile),
       });
 
-      // service.on('register', (event) => this.onregister(event))
-      // service.on('deregister', (event) => this.onderegister(event))
-      // service.on('message', (event) => this.onmessage(event));
       service.on('comment', (comment) => this.oncomment(comment));
+      service.on('connect', (event) => this.onconnect(event));
+      service.on('disconnect', (event) => this.ondisconnect(event));
 
       return service;
     },
@@ -63,6 +47,12 @@ export default {
       if ( this.postId === comment.postId) {
         this.comments.push(comment);
       }
+    },
+    onconnect() {
+      this.updateSiteConnectionCount();
+    },
+    ondisconnect() {
+      this.updateSiteConnectionCount();
     },
     async onGetComments(postId) {
       this.getComments(postId);
@@ -121,13 +111,6 @@ export default {
           this.$emit('reconnect');
         }
         tunnel.on('close', reconnect);
-      }
-    },
-  },
-  watch: {
-    tunnel(value) {
-      if (value) {
-        this.setCloudTunnel(value);
       }
     },
   },

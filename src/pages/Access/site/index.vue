@@ -2,22 +2,15 @@
 import { mapActions } from 'vuex';
 import { /*isProxy,*/ toRaw } from 'vue';
 import FileList from '@/components/FileList.vue';
+import BaseSite from '@/components/BaseSite.vue';
 import Service from '@/utils/Service/Access/SiteService.js';
 
 export default {
+  extends: BaseSite,
   components: {
     FileList,
   },
-  props: {
-    tunnel: {
-      type: Object,
-      default: () => null,
-    },
-    profile: {
-      type: Object,
-      default: () => null,
-    },
-  },
+  // props: ['tunnel', 'profile'],
   data() {
     return {
       signaling: null,
@@ -30,9 +23,6 @@ export default {
     };
   },
   computed: {
-    siteId() {
-      return this.profile.id;
-    },
     selectedLabel() {
       const { length } = this.selected.filter((selected) => !!selected);
 
@@ -51,6 +41,7 @@ export default {
   methods: {
     ...mapActions('Account', ['getAccount']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
+    ...mapActions('CloudTunnel', ['updateSiteOptions']),
     createService({ id, profile, tunnel, db }) {
       const { allowUpload } = this;
       const service = new Service({
@@ -64,6 +55,8 @@ export default {
       });
 
       service.on('file', (event) => this.onfile(event));
+      service.on('connect', (event) => this.onconnect(event));
+      service.on('disconnect', (event) => this.ondisconnect(event));
 
       return service;
     },
@@ -75,6 +68,12 @@ export default {
       }
 
       this.updateServiceFiles();
+    },
+    onconnect() {
+      this.updateSiteConnectionCount();
+    },
+    ondisconnect() {
+      this.updateSiteConnectionCount();
     },
     onClickCheckbox({ id }) {
       if (this.isSelected(id)) {
@@ -121,25 +120,6 @@ export default {
           this.updateServiceFiles();
         }
       });
-    },
-    setCloudTunnel(tunnel) {
-      if (tunnel) {
-        this.service.updateTunnel(tunnel);
-
-        const reconnect = () => {
-          tunnel.off('close', reconnect);
-
-          this.$emit('reconnect');
-        }
-        tunnel.on('close', reconnect);
-      }
-    },
-  },
-  watch: {
-    tunnel(value) {
-      if (value) {
-        this.setCloudTunnel(value);
-      }
     },
   },
   async mounted() {

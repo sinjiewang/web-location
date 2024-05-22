@@ -19,6 +19,8 @@ type SiteConnection @model {
   siteId: String! @index
   positionId: String! @index(name: "siteConnectionsByPositionId")
   position: Position @belongsTo(fields: ["positionId"])
+  connectionCount: Int
+  connectionLimit: Int
 }
 
 type ClientConnection @model {

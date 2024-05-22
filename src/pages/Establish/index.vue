@@ -39,6 +39,10 @@ export default {
       type: 'access',
       pwdRequired: false,
       password: null,
+      connectionLimitDisabled: false,
+      connectionLimitRequired: false,
+      connectionLimit: 1,
+      connectionLimitOptions: [1,2,3,4,6,8,12],
       disableTypeSelect: false,
       qrcodeUrl: null,
       showQRcodeDialog: false,
@@ -73,13 +77,14 @@ export default {
       return this.position?.lng || '';
     },
     appProfile() {
-      const { id, title, position, type } = this;
+      const { id, title, position, type, connectionLimit, connectionLimitRequired } = this;
 
       return {
         id,
         title,
         position,
         type,
+        connectionLimit: connectionLimitRequired ? connectionLimit : null,
       };
     },
     appUrl() {
@@ -117,17 +122,22 @@ export default {
     },
     connectSiteToCloud() {
       const { id, type, title, position, pwdRequired, password, ownerName, turnOn } = this;
+      const { connectionLimitRequired, connectionLimit } = this;
       const { lat, lng } = position;
       const params = {
         lat, lng, type, title,
         siteId: id,
-        name: ownerName,
+        owner: ownerName,
       };
 
       if (!turnOn) return;
 
       if (pwdRequired) {
         params.password = password;
+      }
+
+      if (connectionLimitRequired) {
+        params.connectionLimit = connectionLimit;
       }
 
       return this.siteConnect(params).catch((err) => {
@@ -299,7 +309,25 @@ export default {
                 >
                 </v-select>
               </v-col>
-              <v-col cols="2" class="hidden-md-and-down"></v-col>
+              <v-col cols="7" md="8">
+                <v-text-field
+                  v-model="title"
+                  :label="$t('Title')"
+                  :rules="[v => !!v || $t('Required')]"
+                  hide-details
+                  required
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="12" class="text-start">
+              <span class="text-h6">{{ $t('Options') }}</span>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4" md="3" class="text-start line-h-56">
+                {{ $t('Password Required') }}
+              </v-col>
               <v-col cols="1">
                 <v-tooltip bottom>
                   <template #activator="{ props }">
@@ -329,19 +357,36 @@ export default {
               </v-col>
             </v-row>
             <v-row>
-              <v-col
-                cols="12"
-              >
-                <v-text-field
-                  v-model="title"
-                  :label="$t('Title')"
-                  :rules="[v => !!v || $t('Required')]"
+              <v-col cols="4" md="3" class="text-start line-h-56">
+                {{ $t('Limit Number of Connections') }}
+              </v-col>
+              <v-col cols="1">
+                <v-tooltip bottom>
+                  <template #activator="{ props }">
+                    <v-checkbox
+                      class="password-checbox"
+                      v-model="connectionLimitRequired"
+                      v-bind="props"
+                      :disabled="connectionLimitDisabled"
+                      hide-details
+                    ></v-checkbox>
+                  </template>
+                  <span>{{ $t('Limit Number of Connections') }}</span>
+                </v-tooltip>
+              </v-col>
+              <v-col cols="6" md="5">
+                <v-select
+                  v-model="connectionLimit"
+                  :label="$t('Number of Connections')"
+                  :items="connectionLimitOptions"
+                  :rules="[v => (!connectionLimitRequired || !!v) || $t('Required')]"
                   hide-details
-                  required
-                ></v-text-field>
+                  :required="connectionLimitRequired"
+                  :disabled="connectionLimitDisabled || !connectionLimitRequired"
+                ></v-select>
               </v-col>
             </v-row>
-            <div class="d-flex flex-column">
+            <div class="d-flex flex-column mt-2">
               <v-btn
                 :disabled="!formValid"
                 :loading="loading"
@@ -511,6 +556,10 @@ export default {
 
 .content-max-h {
   height: calc(640px);
+}
+
+.line-h-56 {
+  line-height: 56px;
 }
 
 @keyframes spin {

@@ -30,7 +30,7 @@
         },
         "ClientMessageHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
-          "s3Key": "amplify-builds/ClientMessageHandler-7831353368676c704549-build.zip"
+          "s3Key": "amplify-builds/ClientMessageHandler-77574f6d5a72522f6758-build.zip"
         },
         "ClientPositionHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
@@ -54,7 +54,7 @@
         },
         "SiteUpdateHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
-          "s3Key": "amplify-builds/SiteUpdateHandler-62532f444c68377a5278-build.zip"
+          "s3Key": "amplify-builds/SiteUpdateHandler-746e7063726b76786a4c-build.zip"
         },
         "ClientIceServersHandler": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",

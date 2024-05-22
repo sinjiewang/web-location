@@ -58,6 +58,7 @@ export const onCreateSiteConnection = /* GraphQL */ `
       title
       passwordRequired
       type
+      owner
       connectionId
       siteId
       positionId
@@ -69,6 +70,8 @@ export const onCreateSiteConnection = /* GraphQL */ `
         updatedAt
         __typename
       }
+      connectionCount
+      connectionLimit
       createdAt
       updatedAt
       __typename
@@ -84,6 +87,7 @@ export const onUpdateSiteConnection = /* GraphQL */ `
       title
       passwordRequired
       type
+      owner
       connectionId
       siteId
       positionId
@@ -95,6 +99,8 @@ export const onUpdateSiteConnection = /* GraphQL */ `
         updatedAt
         __typename
       }
+      connectionCount
+      connectionLimit
       createdAt
       updatedAt
       __typename
@@ -110,6 +116,7 @@ export const onDeleteSiteConnection = /* GraphQL */ `
       title
       passwordRequired
       type
+      owner
       connectionId
       siteId
       positionId
@@ -121,6 +128,8 @@ export const onDeleteSiteConnection = /* GraphQL */ `
         updatedAt
         __typename
       }
+      connectionCount
+      connectionLimit
       createdAt
       updatedAt
       __typename

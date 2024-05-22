@@ -1,25 +1,18 @@
 <script>
 import Service from '@/utils/Service/Chat/SiteService.js';
 import ChatWindow from '../ChatWindow.vue';
+import BaseSite from '@/components/BaseSite.vue';
 import ImageDialog from '@/components/ImageDialog.vue';
 import { mapActions } from 'vuex';
 import { /*isProxy,*/ toRaw } from 'vue';
 
 export default {
+  extends: BaseSite,
   components: {
     ChatWindow,
     ImageDialog,
   },
-  props: {
-    tunnel: {
-      type: Object,
-      default: () => null,
-    },
-    profile: {
-      type: Object,
-      default: () => null,
-    },
-  },
+  // props: ['tunnel', 'profile'],
   emits: ['reconnect'],
   data() {
     return {
@@ -34,9 +27,6 @@ export default {
     };
   },
   computed: {
-    siteId() {
-      return this.profile.id;
-    },
     title() {
       return this.profile.title;
     },
@@ -52,11 +42,19 @@ export default {
         profile: toRaw(profile),
       });
 
-      service.on('register', (event) => this.onregister(event))
-      service.on('deregister', (event) => this.onderegister(event))
-      service.on('message', (event) => this.onmessage(event))
+      service.on('register', (event) => this.onregister(event));
+      service.on('deregister', (event) => this.onderegister(event));
+      service.on('message', (event) => this.onmessage(event));
+      service.on('connect', (event) => this.onconnect(event));
+      service.on('disconnect', (event) => this.ondisconnect(event));
 
       return service;
+    },
+    onconnect() {
+      this.updateSiteConnectionCount();
+    },
+    ondisconnect() {
+      this.updateSiteConnectionCount();
     },
     onregister({ name }) {
       this.appendMessage({
@@ -153,13 +151,6 @@ export default {
           this.$emit('reconnect');
         }
         tunnel.on('close', reconnect);
-      }
-    },
-  },
-  watch: {
-    tunnel(value) {
-      if (value) {
-        this.setCloudTunnel(value);
       }
     },
   },

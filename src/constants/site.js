@@ -35,19 +35,7 @@ const TYPE_ACTION_ICON = Object.freeze({
     create: mdiFileArrowUpDown,
     join: mdiFileEye,
   },
-  // chat: {
-  //   create: 'mdi-chat-plus',
-  //   join: 'mdi-chat-processing-outline',
-  // },
-  // blog: {
-  //   create: 'mdi-comment-edit',
-  //   join: 'mdi-comment-eye-outline',
-  // },
-  // access: {
-  //   create: 'mdi-file-arrow-up-down',
-  //   join: 'mdi-file-eye',
-  // },
-})
+});
 
 export default {
   TYPE,

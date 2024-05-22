@@ -181,7 +181,12 @@ export default {
               <v-card-title class="custom-title">
                 <v-icon :icon="getSiteTypeIcon(site.type)"></v-icon>
                 <v-icon icon="mdi-key-alert" v-if="site.passwordRequired" class="ml-2"></v-icon>
-                <span class="ml-2 text-subtitle-2 opacity-70" v-if="site.owner">{{ $t('Created by', { name: site.owner }) }}</span>
+                <span class="ml-2 text-subtitle-2 opacity-70"
+                  v-if="site.owner"
+                >{{ $t('Created by', { name: site.owner }) }}</span>
+                <span class="ml-2"
+                  v-if="site.connectionLimit"
+                >({{ site.connectionCount || '0' }}/{{ site.connectionLimit }})</span>
               </v-card-title>
               <v-card-text>{{ site.title }}</v-card-text>
               <v-card-actions class="d-flex justify-end align-stretch">
