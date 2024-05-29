@@ -36,9 +36,9 @@ export default {
     updateSiteConnectionCount() {
       const connectionCount = this.service?.connectionCount;
 
-      if (this.siteConnectionLimit !== null && this.siteConnectionLimit !== undefined) {
+      // if (this.siteConnectionLimit !== null && this.siteConnectionLimit !== undefined) {
         this.updateSiteOptions({ connectionCount });
-      }
+      // }
     },
     setCloudTunnel(tunnel) {
       if (tunnel) {

@@ -5,6 +5,8 @@ import {
   mdiCommentEyeOutline,
   mdiFileEye,
   mdiFileArrowUpDown,
+  // mdiCardsPlayingClubMultiple,
+  // mdiCardsPlayingSpadeMultipleOutline,
 } from '@mdi/js';
 
 const TYPE = Object.freeze({
@@ -19,6 +21,10 @@ const TYPE = Object.freeze({
   access: {
     name: ($t) => $t('Access'),
     icon: 'mdi-file-eye',
+  },
+  memoryCard: {
+    name: ($t) => $t('Memory Card'),
+    icon: 'mdi-cards-playing-club-multiple',
   },
 });
 
@@ -35,6 +41,10 @@ const TYPE_ACTION_ICON = Object.freeze({
     create: mdiFileArrowUpDown,
     join: mdiFileEye,
   },
+  // memoryCard: {
+  //   create: mdiCardsPlayingClubMultiple,
+  //   join: mdiCardsPlayingSpadeMultipleOutline,
+  // },
 });
 
 export default {

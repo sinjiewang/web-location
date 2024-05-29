@@ -74,6 +74,8 @@ export default class Protocol extends EventEmitter {
       if (res.body.length >= contentLength) {
         res.resolve(res.body);
       }
+    } else if (!response.contentLength) {
+      res.resolve();
     }
   }
 
@@ -93,6 +95,13 @@ export default class Protocol extends EventEmitter {
   sendMessage(data) {
     this.send({
       type: 'message',
+      data,
+    });
+  }
+
+  sendCommand(data) {
+    this.send({
+      type: 'command',
       data,
     });
   }
@@ -132,10 +141,10 @@ export default class Protocol extends EventEmitter {
     return this.sendRespondCommand(data, 'request', 30);
   }
 
-  sendResponse(messageId, data) {
+  sendResponse(messageId, data='') {
     const length = data.length;
 
-    for(let start=0; start<length; start+=MAX_CHUNK_LENGTH) {
+    for(let start=0; start<=length; start+=MAX_CHUNK_LENGTH) {
       const end = (start + MAX_CHUNK_LENGTH) <= length ? (start + MAX_CHUNK_LENGTH) : length;
       const chunk = data.substring(start, end);
 

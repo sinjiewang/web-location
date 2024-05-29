@@ -145,7 +145,7 @@ export default class ChatSiteService extends EventEmitter {
     if (this.files.includes(fileId)) {
       return connection.sendReject(messageId, {
         error: 'Forbidden',
-        code: 405,
+        code: 403,
       });
     }
 
@@ -177,7 +177,7 @@ export default class ChatSiteService extends EventEmitter {
     if (!this.profile.allowUpload) {
       return connection.sendReject(messageId, {
         error: 'Forbidden',
-        code: 405,
+        code: 403,
       });
     }
 
