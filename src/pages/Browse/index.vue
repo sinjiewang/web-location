@@ -83,6 +83,9 @@ export default {
     getSiteTypeIcon(type) {
       return SITE.TYPE[type]?.icon || 'mdi-help';
     },
+    getSiteTypeName(type) {
+      return SITE.TYPE[type]?.name(this.$t) || '';
+    },
     getTypeName(type) {
       return this.$router.getRoutes().find(route => route.meta?.type === type).name;
     },
@@ -181,12 +184,13 @@ export default {
               <v-card-title class="custom-title">
                 <v-icon :icon="getSiteTypeIcon(site.type)"></v-icon>
                 <v-icon icon="mdi-key-alert" v-if="site.passwordRequired" class="ml-2"></v-icon>
+                <span class="ml-2">{{ getSiteTypeName(site.type) }}</span>
+                <span class="ml-1"
+                  :title="$t('Current Number of Connections')"
+                >({{ site.connectionCount || '0' }}{{ site.connectionLimit ? `/${site.connectionLimit}` : '' }})</span>
                 <span class="ml-2 text-subtitle-2 opacity-70"
                   v-if="site.owner"
                 >{{ $t('Created by', { name: site.owner }) }}</span>
-                <span class="ml-2"
-                  v-if="site.connectionLimit"
-                >({{ site.connectionCount || '0' }}/{{ site.connectionLimit }})</span>
               </v-card-title>
               <v-card-text>{{ site.title }}</v-card-text>
               <v-card-actions class="d-flex justify-end align-stretch">

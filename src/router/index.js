@@ -5,6 +5,7 @@ import Establish from '@/pages/Establish/index.vue';
 import Chat from '@/pages/Chat/client/index.vue';
 import Blog from '@/pages/Blog/client/index.vue';
 import Access from '@/pages/Access/client/index.vue';
+import MemoryCard from '@/pages/MemoryCard/client/index.vue';
 import File from '@/pages/File/index.vue';
 import HistoryChat from '@/pages/History/Chat.vue';
 import HistoryBlog from '@/pages/History/Blog.vue';
@@ -73,6 +74,16 @@ const routes = [
       // requiresAuth: true,
       layout: false,
       type: 'access',
+    },
+  },
+  {
+    path: '/memoryCard/:siteId',
+    name: 'memoryCard',
+    component: MemoryCard,
+    meta: {
+      // requiresAuth: true,
+      layout: false,
+      type: 'memoryCard',
     },
   },
   {

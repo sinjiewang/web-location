@@ -10,6 +10,7 @@ import SITE from '@/constants/site.js';
 import Chat from '@/pages/Chat/site/index.vue';
 import Blog from '@/pages/Blog/site/index.vue';
 import Access from '@/pages/Access/site/index.vue';
+import MemoryCard from '@/pages/MemoryCard/site/index.vue';
 
 import short from 'short-uuid';
 import QRCode from 'qrcode';
@@ -18,6 +19,7 @@ const APP_MAPPING = {
   chat: 'Chat',
   blog: 'Blog',
   access: 'Access',
+  memoryCard: 'MemoryCard',
 };
 
 export default {
@@ -27,6 +29,7 @@ export default {
     Blog,
     Chat,
     Access,
+    MemoryCard,
   },
   data() {
     return {
@@ -36,7 +39,7 @@ export default {
       position: null,
       id: this.$route.params.id,
       title: null,
-      type: 'access',
+      type: null,
       pwdRequired: false,
       password: null,
       connectionLimitDisabled: false,
@@ -542,6 +545,7 @@ export default {
 
 .app-content {
   height: calc(100vh - 110px);
+  overflow: auto;
 }
 
 .max-h-80 {
