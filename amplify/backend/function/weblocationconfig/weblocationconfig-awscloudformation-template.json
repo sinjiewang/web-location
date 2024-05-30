@@ -20,6 +20,86 @@
     }
   },
   "Resources": {
+    "LambdaLayerVersiond83cf5a3": {
+      "Type": "AWS::Lambda::LayerVersion",
+      "Properties": {
+        "CompatibleRuntimes": {
+          "Ref": "runtimes"
+        },
+        "Content": {
+          "S3Bucket": {
+            "Ref": "deploymentBucketName"
+          },
+          "S3Key": {
+            "Ref": "s3Key"
+          }
+        },
+        "Description": {
+          "Ref": "description"
+        },
+        "LayerName": {
+          "Fn::Sub": [
+            "weblocationconfig-${env}",
+            {
+              "env": {
+                "Ref": "env"
+              }
+            }
+          ]
+        }
+      },
+      "DeletionPolicy": "Delete",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "LambdaLayerPermissionPrivated83cf5a3": {
+      "Type": "AWS::Lambda::LayerVersionPermission",
+      "Properties": {
+        "Action": "lambda:GetLayerVersion",
+        "LayerVersionArn": {
+          "Ref": "LambdaLayerVersiond83cf5a3"
+        },
+        "Principal": {
+          "Ref": "AWS::AccountId"
+        }
+      }
+    },
+    "LambdaLayerVersion3fd7ff33": {
+      "Type": "AWS::Lambda::LayerVersion",
+      "Properties": {
+        "CompatibleRuntimes": [
+          "nodejs18.x"
+        ],
+        "Content": {
+          "S3Bucket": {
+            "Ref": "deploymentBucketName"
+          },
+          "S3Key": "amplify-builds/weblocationconfig-LambdaLayerVersion3fd7ff33-build.zip"
+        },
+        "Description": "Updated layer version 2024-05-30T06:05:49.310Z",
+        "LayerName": {
+          "Fn::Sub": [
+            "weblocationconfig-${env}",
+            {
+              "env": {
+                "Ref": "env"
+              }
+            }
+          ]
+        }
+      },
+      "DeletionPolicy": "Delete",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "LambdaLayerPermissionPrivate3fd7ff33": {
+      "Type": "AWS::Lambda::LayerVersionPermission",
+      "Properties": {
+        "Action": "lambda:GetLayerVersion",
+        "LayerVersionArn": "arn:aws:lambda:ap-northeast-1:301856136276:layer:weblocationconfig-dev:3",
+        "Principal": {
+          "Ref": "AWS::AccountId"
+        }
+      }
+    },
     "LambdaLayerVersionf07afb1e": {
       "Type": "AWS::Lambda::LayerVersion",
       "Properties": {
@@ -61,7 +141,7 @@
   "Outputs": {
     "Arn": {
       "Value": {
-        "Ref": "LambdaLayerVersionf07afb1e"
+        "Ref": "LambdaLayerVersiond83cf5a3"
       }
     }
   }
