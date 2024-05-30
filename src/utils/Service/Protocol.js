@@ -137,8 +137,8 @@ export default class Protocol extends EventEmitter {
     });
   }
 
-  sendRequest(data={}) {
-    return this.sendRespondCommand(data, 'request', 30);
+  sendRequest(data={}, timeout=30) {
+    return this.sendRespondCommand(data, 'request', timeout);
   }
 
   sendResponse(messageId, data='') {

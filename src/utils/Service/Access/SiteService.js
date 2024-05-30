@@ -220,7 +220,7 @@ export default class ChatSiteService extends EventEmitter {
     const src = await connection.sendRequest({
       id: fileId,
       type: 'image',
-    });
+    }, -1);
 
     return src;
   }
