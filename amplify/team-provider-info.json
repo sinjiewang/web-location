@@ -66,7 +66,7 @@
         },
         "weblocationconfig": {
           "deploymentBucketName": "amplify-weblocation-dev-150159-deployment",
-          "s3Key": "amplify-builds/weblocationconfig-LambdaLayerVersiond83cf5a3-build.zip"
+          "s3Key": "amplify-builds/weblocationconfig-LambdaLayerVersion6925522d-build.zip"
         },
         "weblocation": {}
       },
