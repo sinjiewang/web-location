@@ -4,7 +4,7 @@
     "SITE_WEBSOCKET_API_URL": "https://k64wydzchi.execute-api.ap-northeast-1.amazonaws.com/dev/",
     "TURN_SECRET_KEY": "SJW",
     "TURN_SERVER_LIST": [
-      "turn:35.77.63.25:3478"
+      "turn:54.65.250.74:3478"
     ]
   },
   "prod": {
@@ -12,7 +12,7 @@
     "SITE_WEBSOCKET_API_URL": "https://t462iga5g7.execute-api.ap-northeast-1.amazonaws.com/prod/",
     "TURN_SECRET_KEY": "SJW",
     "TURN_SERVER_LIST": [
-      "turn:35.77.63.25:3478"
+      "turn:54.65.250.74:3478"
     ]
   }
 }
