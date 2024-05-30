@@ -226,9 +226,11 @@ export default class ChatSiteService extends EventEmitter {
   }
 
   setFiles(files=[]) {
+    const allowIds = files.map((file) => file.id);
+
     this.files = files;
-    this.allowIds = files.map((file) => file.id);
-    this.storeHistory.update(this.id, { allowIds: this.allowIds });
+    this.storeHistory.update(this.id, { allowIds });
+    this.allowIds = allowIds;
   }
 
   setProfile(props={}) {
