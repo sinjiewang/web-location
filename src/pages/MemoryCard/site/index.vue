@@ -302,11 +302,11 @@ export default {
 }
 
 .message-text {
-  max-width: calc( 100% - 88px);
+  max-width: calc( 100% - 93px);
 }
 
 .message-time {
-  max-width: 83px;
+  max-width: 88px;
   opacity: 0.6;
 }
 </style>

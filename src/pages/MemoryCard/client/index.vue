@@ -459,4 +459,13 @@ export default {
 .yellow {
   color: yellow;
 }
+
+.message-text {
+  max-width: calc( 100% - 93px);
+}
+
+.message-time {
+  max-width: 88px;
+  opacity: 0.6;
+}
 </style>
