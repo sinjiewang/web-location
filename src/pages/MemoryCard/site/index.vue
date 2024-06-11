@@ -112,18 +112,6 @@ export default {
         }
       });
     },
-    setCloudTunnel(tunnel) {
-      if (tunnel) {
-        this.service.updateTunnel(tunnel);
-
-        const reconnect = () => {
-          tunnel.off('close', reconnect);
-
-          this.$emit('reconnect');
-        }
-        tunnel.on('close', reconnect);
-      }
-    },
     onClickStart() {
       const { quantity } = this;
 
@@ -198,6 +186,7 @@ export default {
               </v-btn>
             </v-col>
           </v-row>
+          <v-divider class="mt-2 mb-2"></v-divider>
           <v-row>
             <v-col cols="3" md="2" v-for="(card, i) in cards">
               <v-img

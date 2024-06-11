@@ -26,6 +26,16 @@ const TYPE = Object.freeze({
     name: ($t) => $t('Memory Card'),
     icon: 'mdi-cards-playing-club-multiple',
   },
+  bigTwo: {
+    name: ($t) => $t('Big Two'),
+    icon: 'mdi-cards-playing',
+  },
+});
+
+const TYPE_LIMITATION = Object.freeze({
+  bigTwo: {
+    connectionLimit: 3,
+  },
 });
 
 const TYPE_ACTION_ICON = Object.freeze({
@@ -50,4 +60,5 @@ const TYPE_ACTION_ICON = Object.freeze({
 export default {
   TYPE,
   TYPE_ACTION_ICON,
+  TYPE_LIMITATION
 }

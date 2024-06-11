@@ -40,7 +40,7 @@ export default {
       <Navigation  v-if="displayLayout" />
 
       <v-main>
-        <router-view></router-view>
+        <router-view style="overflow-y: auto;"></router-view>
       </v-main>
     </v-layout>
   </v-app>
