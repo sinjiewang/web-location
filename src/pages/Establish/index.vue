@@ -11,6 +11,7 @@ import Chat from '@/pages/Chat/site/index.vue';
 import Blog from '@/pages/Blog/site/index.vue';
 import Access from '@/pages/Access/site/index.vue';
 import MemoryCard from '@/pages/MemoryCard/site/index.vue';
+import BigTwo from '@/pages/BigTwo/site/index.vue';
 
 import short from 'short-uuid';
 import QRCode from 'qrcode';
@@ -20,6 +21,7 @@ const APP_MAPPING = {
   blog: 'Blog',
   access: 'Access',
   memoryCard: 'MemoryCard',
+  bigTwo: 'BigTwo',
 };
 
 export default {
@@ -30,6 +32,7 @@ export default {
     Chat,
     Access,
     MemoryCard,
+    BigTwo,
   },
   data() {
     return {
@@ -38,7 +41,7 @@ export default {
       positionMarker: null,
       position: null,
       id: this.$route.params.id,
-      title: null,
+      title: 'bigTwo Test',
       type: null,
       pwdRequired: false,
       password: null,
@@ -46,6 +49,7 @@ export default {
       connectionLimitRequired: false,
       connectionLimit: 1,
       connectionLimitOptions: [1,2,3,4,6,8,12],
+      tempOptions: null,
       disableTypeSelect: false,
       qrcodeUrl: null,
       showQRcodeDialog: false,
@@ -113,6 +117,9 @@ export default {
     queryLng() {
       return this.$route.query?.lng !== undefined
         ? Number(this.$route.query.lng) : null;
+    },
+    limitation() {
+      return this.type ? SITE.TYPE_LIMITATION[this.type] : null;
     },
   },
   methods: {
@@ -227,6 +234,28 @@ export default {
       this.step = Math.max(this.step - 1, 1);
     },
   },
+  watch: {
+    type() {
+      const { limitation, tempOptions } = this;
+
+      if (limitation) {
+        if (this.limitation?.connectionLimit) {
+          this.tempOptions = {
+            connectionLimit: this.connectionLimit,
+            connectionLimitRequired: this.connectionLimitRequired,
+            connectionLimitDisabled: this.connectionLimitDisabled,
+          }
+          this.connectionLimit = this.limitation.connectionLimit;
+          this.connectionLimitRequired = true;
+          this.connectionLimitDisabled = true;
+        }
+      } else if (tempOptions) {
+        Object.keys(tempOptions).forEach((attr) => this[attr] = tempOptions[attr]);
+
+        this.tempOptions = null;
+      }
+    }
+  },
   async mounted() {
     await this.getAccount();
 
@@ -261,6 +290,7 @@ export default {
     this.$nextTick(() => {
       this.positionMarker = this.$refs.googleMap.addPositionMarker(this.position);
     });
+    this.type = 'bigTwo';
   },
 }
 </script>
@@ -545,7 +575,7 @@ export default {
 
 .app-content {
   height: calc(100vh - 110px);
-  overflow: auto;
+  /* overflow: auto; */
 }
 
 .max-h-80 {

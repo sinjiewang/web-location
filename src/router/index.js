@@ -6,6 +6,7 @@ import Chat from '@/pages/Chat/client/index.vue';
 import Blog from '@/pages/Blog/client/index.vue';
 import Access from '@/pages/Access/client/index.vue';
 import MemoryCard from '@/pages/MemoryCard/client/index.vue';
+import BigTwo from '@/pages/BigTwo/client/index.vue';
 import File from '@/pages/File/index.vue';
 import HistoryChat from '@/pages/History/Chat.vue';
 import HistoryBlog from '@/pages/History/Blog.vue';
@@ -84,6 +85,16 @@ const routes = [
       // requiresAuth: true,
       layout: false,
       type: 'memoryCard',
+    },
+  },
+  {
+    path: '/bigTwo/:siteId',
+    name: 'bigTwo',
+    component: BigTwo,
+    meta: {
+      // requiresAuth: true,
+      layout: false,
+      type: 'bigTwo',
     },
   },
   {
