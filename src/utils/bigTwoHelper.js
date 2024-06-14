@@ -182,12 +182,25 @@ function compare(compared=[], comparator=[]) {
   return comparedTypeIndex < comparatorTypeIndex;
 }
 
+function score(cards=[]) {
+  if (!cards || !cards.length) return 0;
+
+  let score = cards.length;
+
+  cards
+    .filter(card => card[0] === RANKS[12])
+    .forEach(() => score *= 2);
+
+  return score * -1;
+}
+
 export {
   sortByRank,
   sortBySuit,
   shuffle,
   compare,
   analyze,
+  score,
   SUITS,
   RANKS,
 };

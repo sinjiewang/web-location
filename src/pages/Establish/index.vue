@@ -41,7 +41,7 @@ export default {
       positionMarker: null,
       position: null,
       id: this.$route.params.id,
-      title: 'bigTwo Test',
+      title: null,
       type: null,
       pwdRequired: false,
       password: null,

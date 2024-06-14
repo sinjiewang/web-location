@@ -5,20 +5,23 @@ import Service from '@/utils/Service/BigTwo/ClientService.js';
 import calculateCardCoords from '@/utils/calculateCardCoords.js';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdiHandOkay, mdiTrophy } from '@mdi/js';
-import { sortByRank, sortBySuit, compare } from '@/utils/bigTwoHelper.js';
+import { sortByRank, sortBySuit, compare, score } from '@/utils/bigTwoHelper.js';
 import AccountDialog from '@/components/AccountDialog.vue';
 import AccountAvatar from '@/components/AccountAvatar.vue';
 import ConnectionPasswordDialog from '@/components/ConnectionPasswordDialog.vue';
 import ImageDialog from '@/components/ImageDialog.vue';
-import { fa } from 'vuetify/locale';
+import AvatarTimer from '@/components/AvatarTimer.vue';
+import ChatWindow from '../ChatWindow.vue';
 
 export default {
   components: {
     AccountDialog,
     AccountAvatar,
+    AvatarTimer,
     ConnectionPasswordDialog,
     ImageDialog,
     SvgIcon,
+    ChatWindow,
   },
   data() {
     return {
@@ -59,6 +62,10 @@ export default {
       participantIndex: null,
       isReady: false,
       newMessage: null,
+      expandedPanels: [0],
+      scoreTables: [],
+      scoreIndex: -1,
+      scoreRenew: true,
       mdiHandOkay,
       mdiTrophy,
     };
@@ -111,7 +118,7 @@ export default {
       return this.players[index];
     },
     firstPlayerCards() {
-      return this.firstPlayer?.cards || 0;
+      return this.firstPlayer?.cards || [];
     },
     showLeftMenu() {
       return !!this.firstPlayer?.message;
@@ -122,7 +129,7 @@ export default {
       return this.players[index];
     },
     secondPlayerCards() {
-      return this.secondPlayer?.cards || 0;
+      return this.secondPlayer?.cards || [];
     },
     showTopMenu() {
       return !!this.secondPlayer?.message;
@@ -133,7 +140,7 @@ export default {
       return this.players[index];
     },
     thirdPlayerCards() {
-      return this.thirdPlayer?.cards || 0;
+      return this.thirdPlayer?.cards || [];
     },
     activePlayer() {
       return this.players.filter((player) => player);
@@ -280,13 +287,15 @@ export default {
         case 'start':
           this.gameStarted = true;
           this.played = [];
+          this.selected = [];
           this.cards = this.orderBySuitsts
             ? sortBySuit(command.cards)
             : sortByRank(command.cards);
           this.activePlayer.forEach((player) => {
-            player.cards = 13;
+            player.cards = Array.from({ length: 13 }).map(() => this.cardBack);
             player.trophy = false;
           });
+          this.createScoreTable();
           break;
         case 'turn':
           this.activePlayer.forEach((player) => player.turn = player.id === command.clientId);
@@ -310,7 +319,7 @@ export default {
           this.played = command.cards;
 
           if (playedPlayer) {
-            playedPlayer.cards -= command.cards.length;
+            playedPlayer.cards.length -= command.cards.length;
           }
           break;
         case 'end':
@@ -321,11 +330,16 @@ export default {
           this.activePlayer.forEach((player) => {
             player.turn = false;
             player.trophy = player.id === trophyId;
+
+            if (command.cards[player.id]) player.cards = sortByRank(command.cards[player.id]);
           });
-          debugger
           this.activePlayer
             .filter(({ id }) => id !== 'host')
             .forEach((player) => player.ready = false);
+
+          const scores = this.players.map((player) => player ? score(player.cards) : '--');
+
+          this.updateScoreTable(scores);
           break;
         default:
       }
@@ -348,7 +362,8 @@ export default {
       const player = this.activePlayer.find(({ id }) => id === clientId);
 
       if (player) {
-        this.showPlayerMessage(player, content, 3000);
+        this.appendMessageToWindow(content, player);
+        this.showPlayerMessage(player, content, 5000);
       }
     },
     onClickReady() {
@@ -436,6 +451,42 @@ export default {
     onClickPass() {
       this.service.pass();
     },
+    appendMessageToWindow(message, client) {
+      const data = {
+        sender: client.name,
+        time: Date.now(),
+        message,
+      };
+
+      if (client.id === this.profile?.clientId) {
+        data.align = 'right';
+        data.sender = this.$t('You');
+      }
+
+      this.$refs.messageWindow.appendMessage(data);
+    },
+    createScoreTable() {
+      if (this.scoreRenew) {
+        this.scoreRenew = false;
+        this.scoreIndex += 1;
+        this.scoreTables[this.scoreIndex] = {
+          players: this.players.map((player) => player.avatar),
+          totals: this.players.map(() => 0),
+          scores: [],
+        };
+      }
+    },
+    updateScoreTable(scores=[]) {
+      const { scoreIndex } = this;
+      const scoreTable = this.scoreTables[scoreIndex];
+      const index = scores.findIndex(value => value === 0);
+      const total = scores.filter(value => value !== '--')
+        .reduce((acc, curr) => acc + curr) * -1;
+
+      scores[index] = total;
+      scoreTable.scores.unshift(scores);
+      scoreTable.totals = scoreTable.totals.map((value, i) => value += (scores[i] !== '--' ? scores[i] : 0 ));
+    },
   },
   watch: {
     orderBySuits(value) {
@@ -468,20 +519,6 @@ export default {
     <v-container>
       <v-row>
         <v-col cols="12" md="9">
-          <!-- <v-row>
-            <v-col cols="3" md="2">
-              <v-btn
-                class="h-56"
-                color="blue"
-                variant="elevated"
-                block
-                @click="onClickReady"
-              >
-                {{ readyLabel }}
-              </v-btn>
-            </v-col>
-          </v-row>
-          <v-divider class="mt-2 mb-2"></v-divider> -->
           <!-- first layer -->
           <v-row>
             <v-col cols="12" class="pb-0 d-flex justify-center h-80">
@@ -523,7 +560,9 @@ export default {
                   style="background-color: bisque; color: black;"
                 >
                   <v-list-item>
-                    <v-list-item-title>{{ secondPlayer.message }}</v-list-item-title>
+                    <v-list-item-title>
+                      <span class="d-md-none">{{ secondPlayer.name }}: </span>{{ secondPlayer.message }}
+                    </v-list-item-title>
                   </v-list-item>
                 </v-list>
               </v-menu>
@@ -531,11 +570,11 @@ export default {
             <v-col cols="12" class="d-flex justify-center">
               <div class="p-relative"
                 :style="{
-                  width: `${ (MAX_CARD_WIDTH + (secondPlayerCards - 1) * SPACING * MAX_CARD_WIDTH) * HAND_ZOOM }px`,
+                  width: `${ (MAX_CARD_WIDTH + (secondPlayerCards.length - 1) * SPACING * MAX_CARD_WIDTH) * HAND_ZOOM }px`,
                   height: `${ MAX_CARD_HEIGHT * HAND_ZOOM }px`,
                 }"
               >
-                <img v-for="(_, index) in Array.from({ length: secondPlayerCards })"
+                <img v-for="(card, index) in secondPlayerCards"
                   class="playing-cards p-absolute"
                   :style="{
                     left: `${ index * (MAX_CARD_WIDTH) * SPACING * HAND_ZOOM }px`,
@@ -543,7 +582,7 @@ export default {
                     width: `${ MAX_CARD_WIDTH * HAND_ZOOM }px`,
                     height: `${ MAX_CARD_HEIGHT * HAND_ZOOM }px`,
                   }"
-                  :src="`/cards/${cardBack}.svg`"
+                  :src="`/cards/${card}.svg`"
                 ></img>
               </div>
             </v-col>
@@ -599,7 +638,9 @@ export default {
                       style="background-color: bisque; color: black;"
                     >
                       <v-list-item>
-                        <v-list-item-title>{{ firstPlayer.message }}</v-list-item-title>
+                        <v-list-item-title>
+                          <span class="d-md-none">{{ firstPlayer.name }}: </span>{{ firstPlayer.message }}
+                        </v-list-item-title>
                       </v-list-item>
                     </v-list>
                   </v-menu>
@@ -608,10 +649,10 @@ export default {
                   <div class="p-relative"
                     :style="{
                       width: `${ MAX_CARD_WIDTH * HAND_ZOOM }px`,
-                      height: `${ (MAX_CARD_HEIGHT + (firstPlayerCards - 1) * SPACING * MAX_CARD_HEIGHT) * HAND_ZOOM }px`,
+                      height: `${ (MAX_CARD_HEIGHT + (firstPlayerCards.length - 1) * SPACING * MAX_CARD_HEIGHT) * HAND_ZOOM }px`,
                     }"
                   >
-                    <img v-for="(_, index) in Array.from({ length: firstPlayerCards })"
+                    <img v-for="(card, index) in firstPlayerCards"
                       class="playing-cards p-absolute"
                       :style="{
                         top: `${ index * (MAX_CARD_HEIGHT) * HAND_ZOOM * SPACING }px`,
@@ -619,7 +660,7 @@ export default {
                         width: `${ MAX_CARD_WIDTH * HAND_ZOOM }px`,
                         height: `${ MAX_CARD_HEIGHT * HAND_ZOOM }px`,
                       }"
-                      :src="`/cards/${cardBack}.svg`"
+                      :src="`/cards/${card}.svg`"
                     ></img>
                   </div>
                 </v-col>
@@ -659,7 +700,7 @@ export default {
                   >
                     <template v-slot:activator="{ props }">
                       <div v-bind="props" v-if="selfPlayer"
-                        class="pa-2 d-flex align-center"
+                        class="pa-2 d-flex align-center p-relative"
                         :class="{
                           'active-player': selfPlayer.turn,
                         }"
@@ -687,6 +728,11 @@ export default {
                         </span>
                         <span v-if="selfPlayer.ready && !gameStarted"
                           class="ml-2 mdi mdi-hand-okay"></span>
+                        <AvatarTimer v-if="selfPlayer.turn"
+                          class="avatar-timer"
+                          @timeout="onClickPass"
+                        >
+                        </AvatarTimer>
                       </div>
                     </template>
                     <v-list
@@ -694,7 +740,9 @@ export default {
                       style="background-color: bisque; color: black;"
                     >
                       <v-list-item>
-                        <v-list-item-title>{{ selfPlayer.message }}</v-list-item-title>
+                        <v-list-item-title>
+                          <span class="d-md-none">{{ selfPlayer.name }}: </span>{{ selfPlayer.message }}
+                        </v-list-item-title>
                       </v-list-item>
                     </v-list>
                   </v-menu>
@@ -708,10 +756,10 @@ export default {
                   <div class="p-relative"
                     :style="{
                       width: `${ MAX_CARD_WIDTH * HAND_ZOOM }px`,
-                      height: `${ (MAX_CARD_HEIGHT + (thirdPlayerCards - 1) * SPACING * MAX_CARD_HEIGHT) * HAND_ZOOM }px`,
+                      height: `${ (MAX_CARD_HEIGHT + (thirdPlayerCards.length - 1) * SPACING * MAX_CARD_HEIGHT) * HAND_ZOOM }px`,
                     }"
                   >
-                    <img v-for="(_, index) in Array.from({ length: thirdPlayerCards })"
+                    <img v-for="(card, index) in thirdPlayerCards"
                       class="playing-cards p-absolute"
                       :style="{
                         top: `${ index * (MAX_CARD_HEIGHT) * HAND_ZOOM * SPACING }px`,
@@ -719,7 +767,7 @@ export default {
                         width: `${ MAX_CARD_WIDTH * HAND_ZOOM }px`,
                         height: `${ MAX_CARD_HEIGHT * HAND_ZOOM }px`,
                       }"
-                      :src="`/cards/${cardBack}.svg`"
+                      :src="`/cards/${card}.svg`"
                     ></img>
                   </div>
                 </v-col>
@@ -766,7 +814,9 @@ export default {
                       style="background-color: bisque; color: black;"
                     >
                       <v-list-item>
-                        <v-list-item-title>{{ thirdPlayer.message }}</v-list-item-title>
+                        <v-list-item-title>
+                          <span class="d-md-none">{{ thirdPlayer.name }}: </span>{{ thirdPlayer.message }}
+                        </v-list-item-title>
                       </v-list-item>
                     </v-list>
                   </v-menu>
@@ -877,13 +927,63 @@ export default {
           </v-row>
         </v-col>
         <v-col cols="12" md="3">
-          <v-card
+          <!-- <v-card
             width="100%"
           >
             <v-card-text class="text-start">
 
             </v-card-text>
-          </v-card>
+          </v-card> -->
+          <v-expansion-panels
+            v-model="expandedPanels"
+          >
+            <v-expansion-panel
+              :title="$t('Score')"
+            >
+              <v-expansion-panel-text class="expansion-panel">
+                <v-table v-for="scoreTable in scoreTables">
+                  <thead>
+                    <tr>
+                      <th v-for="player in scoreTable.players"
+                        class="text-center"
+                      >
+                        <AccountAvatar
+                          class="account-avatar"
+                          :avatar="player"
+                        />
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="font-weight-black total-score" v-for="total in scoreTable.totals">{{ total }}</td>
+                    </tr>
+                    <tr v-for="scores in scoreTable.scores">
+                      <td v-for="score in scores"
+                        :class="{
+                          yellow: score >= 0,
+                        }"
+                      >{{ score }}</td>
+                    </tr>
+                  </tbody>
+                </v-table>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+            <v-expansion-panel
+              :title="$t('Chat History')"
+            >
+              <v-expansion-panel-text
+                class="expansion-panel"
+                eager
+              >
+                <ChatWindow
+                  ref="messageWindow"
+                  class="pa-0"
+                  :displayInput="false"
+                ></ChatWindow>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
         </v-col>
       </v-row>
     </v-container>
@@ -1091,6 +1191,27 @@ export default {
 
 .self.playing-cards:hover {
   border: 5px solid red;
+}
+
+.avatar-timer{
+  position: absolute;
+  top:-16px;
+  right: -16px;
+  width: 30px;
+  height: 30px;
+}
+
+.v-table > .v-table__wrapper > table > tbody > tr > th, .v-table > .v-table__wrapper > table > thead > tr > th, .v-table > .v-table__wrapper > table > tfoot > tr > th,
+.v-table > .v-table__wrapper > table > tbody > tr > td, .v-table > .v-table__wrapper > table > thead > tr > td, .v-table > .v-table__wrapper > table > tfoot > tr > td {
+  height: 36px;
+}
+
+:deep(.v-expansion-panel-text__wrapper) {
+  padding: 8px;
+}
+
+td.total-score {
+  background-color: #333;
 }
 
 </style>
