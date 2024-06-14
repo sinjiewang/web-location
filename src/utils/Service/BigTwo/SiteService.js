@@ -387,6 +387,12 @@ export default class ChatSiteService extends EventEmitter {
     this.broadcastPlayers({
       name: 'end',
       clientId,
+      cards: this.players
+        .filter((player) => player)
+        .reduce((acc, curr) => ({
+          ...acc,
+          [curr.id]: curr.cards,
+        }), {}),
     });
     this.participants
       .filter((participant) => participant)

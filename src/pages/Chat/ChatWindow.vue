@@ -202,7 +202,7 @@ export default {
               <v-col class="text-end">
                 <v-list-item-title>
                   {{ msg.sender }}
-                  <span class="text-primary">{{ toLocaleTimeString(msg.time) }}</span>
+                  <span class="text-primary" :title="toLocaleTimeString(msg.time)">{{ toLocaleTimeString(msg.time) }}</span>
                 </v-list-item-title>
                 <v-list-item-subtitle v-if="Array.isArray(msg.message)">
                   <v-container
@@ -275,7 +275,7 @@ export default {
               <v-col class="text-start">
                 <v-list-item-title>
                     {{ msg.sender }}
-                    <span class="text-primary">{{ toLocaleTimeString(msg.time) }}</span>
+                    <span class="text-primary" :title="toLocaleTimeString(msg.time)">{{ toLocaleTimeString(msg.time) }}</span>
                 </v-list-item-title>
                 <v-list-item-subtitle v-if="Array.isArray(msg.message)">
                   <v-container
@@ -311,7 +311,7 @@ export default {
             <template v-else>
               <v-col>
                 <v-list-item-title>
-                {{ msg.message }}<span class="ml-2 text-primary">{{ toLocaleTimeString(msg.time) }}</span>
+                {{ msg.message }}<span class="ml-2 text-primary" :title="toLocaleTimeString(msg.time)">{{ toLocaleTimeString(msg.time) }}</span>
                 </v-list-item-title>
               </v-col>
             </template>
