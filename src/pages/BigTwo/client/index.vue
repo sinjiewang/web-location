@@ -4,7 +4,7 @@ import { mapState, mapActions } from 'vuex';
 import Service from '@/utils/Service/BigTwo/ClientService.js';
 import calculateCardCoords from '@/utils/calculateCardCoords.js';
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiHandOkay, mdiTrophy } from '@mdi/js';
+import { mdiHandOkay, mdiTrophy, mdiInformation } from '@mdi/js';
 import { sortByRank, sortBySuit, compare, score } from '@/utils/bigTwoHelper.js';
 import AccountDialog from '@/components/AccountDialog.vue';
 import AccountAvatar from '@/components/AccountAvatar.vue';
@@ -68,6 +68,7 @@ export default {
       scoreRenew: true,
       mdiHandOkay,
       mdiTrophy,
+      mdiInformation,
     };
   },
   computed: {
@@ -937,9 +938,22 @@ export default {
           <v-expansion-panels
             v-model="expandedPanels"
           >
-            <v-expansion-panel
-              :title="$t('Score')"
-            >
+            <v-expansion-panel>
+              <v-expansion-panel-title>
+                {{ $t('Score') }}
+                <v-btn class="ml-1 bg-transparent" icon="mdi-information" size="x-small">
+                  <svg-icon type="mdi" :path="mdiInformation"></svg-icon>
+                  <v-tooltip
+                    activator="parent"
+                    location="bottom"
+                  >
+                    <ul class="pl-3">
+                      <li>{{ $t('One card counts as one point') }}</li>
+                      <li>{{ $t('One deuce (2) counts double') }}</li>
+                    </ul>
+                  </v-tooltip>
+                </v-btn>
+              </v-expansion-panel-title>
               <v-expansion-panel-text class="expansion-panel">
                 <v-table v-for="scoreTable in scoreTables">
                   <thead>
