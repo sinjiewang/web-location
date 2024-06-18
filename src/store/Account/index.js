@@ -10,12 +10,14 @@ export default {
     nickname: '',
     avatar: null,
     position: null,
+    records: {},
     locale,
   }),
   getters: {
     getNickname(state) {
       return state.nickname || 'Guest';
     },
+    getRecord: (state) => (type) => state.records[type],
   },
   actions: {
     async getStoreConnect({ dispatch }) {
@@ -29,11 +31,12 @@ export default {
       let account = await storeAccount.queryById(state.sub);
 
       if (account) {
-        const { nickname, avatar, position } = account;
+        const { nickname, avatar, position, records } = account;
 
         commit('updateNickname', nickname);
         commit('updateAvatar', avatar);
         commit('updatePosition', position);
+        commit('updateRecords', records);
       } else {
         try {
           account = await storeAccount.create({
@@ -72,6 +75,30 @@ export default {
 
       commit('updatePosition', { lat, lng });
     },
+    async updateRecords({ state, dispatch, commit }, { type, win=true }) {
+      if (!type) return Promise.reject(new Error('Parameter error'));
+
+      const storeAccount = await dispatch('getStoreConnect');
+      const winAdd = win ? 1 : 0;
+      let records = JSON.parse(JSON.stringify(state.records));
+
+      if (!records[type]) {
+        records = {
+          ...records,
+          [type]: {
+            wins: winAdd,
+            games: 1,
+          }
+        };
+      } else {
+        records[type].games += 1;
+        records[type].wins += winAdd;
+      }
+
+      await storeAccount.update(state.sub, { records });
+
+      commit('updateRecords', records);
+    },
   },
   mutations: {
     updateSub(state, sub) {
@@ -88,6 +115,9 @@ export default {
     },
     updatePosition(state, position) {
       state.position = position;
+    },
+    updateRecords(state, records={}) {
+      state.records = records;
     },
   },
 }

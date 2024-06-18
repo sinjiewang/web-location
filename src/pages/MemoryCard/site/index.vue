@@ -21,7 +21,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions('Account', ['getAccount']),
+    ...mapActions('Account', ['getAccount', 'updateRecords']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     createService({ id, profile, tunnel, db }) {
       const service = new Service({
@@ -88,12 +88,20 @@ export default {
         case 'end':
           const { points } = command;
           const max = Math.max(...points.map(({ point }) => point));
-
+          const isMultiple = this.participants.length > 1;
           this.participants.forEach((participant) => {
+            const isTrophy = participant.point === max;
             const item = points.find(({id}) => id === participant.id);
 
             participant.point = item?.point || 0;
-            participant.trophy = participant.point === max;
+            participant.trophy = isTrophy;
+
+            if (participant.id === 'host' && isMultiple) {
+              this.updateRecords({
+                type: this.profile.type,
+                win: isTrophy,
+              });
+            }
           });
           break;
         default:
