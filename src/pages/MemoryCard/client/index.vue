@@ -64,7 +64,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions('Account', ['getAccount']),
+    ...mapActions('Account', ['getAccount', 'updateAccount', 'updateRecords']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     ...mapActions('CloudTunnel', ['clientConnect', 'disconnect']),
     async init() {
@@ -192,10 +192,18 @@ export default {
           const max = Math.max(...points.map(({ point }) => point));
 
           this.participants.forEach((participant) => {
+            const isTrophy = participant.point === max;
             const item = points.find(({id}) => id === participant.id);
 
             participant.point = item?.point || 0;
-            participant.trophy = participant.point === max;
+            participant.trophy = isTrophy;
+
+            if (participant.id === this.profile.clientId) {
+              this.updateRecords({
+                type: this.profile.type,
+                win: isTrophy,
+              });
+            }
           });
           break;
         default:
@@ -247,6 +255,10 @@ export default {
     onAccount({ name, avatar }) {
       this.nickname = name;
       this.avatar = avatar;
+      this.updateAccount({
+        nickname: name,
+        avatar,
+      });
       this.init();
     },
     onPassword(password) {

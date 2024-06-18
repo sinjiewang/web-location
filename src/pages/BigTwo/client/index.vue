@@ -174,7 +174,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions('Account', ['getAccount']),
+    ...mapActions('Account', ['getAccount', 'updateAccount', 'updateRecords']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     ...mapActions('CloudTunnel', ['clientConnect', 'disconnect']),
     async init() {
@@ -341,6 +341,10 @@ export default {
           const scores = this.players.map((player) => player ? score(player.cards) : '--');
 
           this.updateScoreTable(scores);
+          this.updateRecords({
+            type: this.profile.type,
+            win: trophyId === this.profile.clientId,
+          });
           break;
         default:
       }
@@ -384,6 +388,10 @@ export default {
     onAccount({ name, avatar }) {
       this.nickname = name;
       this.avatar = avatar;
+      this.updateAccount({
+        nickname: name,
+        avatar,
+      });
       this.init();
     },
     onPassword(password) {
@@ -949,7 +957,9 @@ export default {
                   >
                     <ul class="pl-3">
                       <li>{{ $t('One card counts as one point') }}</li>
-                      <li>{{ $t('One deuce (2) counts double') }}</li>
+                      <li>{{ $t('Eight or more cards count double') }}</li>
+                      <li>{{ $t('Eleven or more cards count quadruple') }}</li>
+                      <li>{{ $t('Each deuce (2) counts double') }}</li>
                     </ul>
                   </v-tooltip>
                 </v-btn>

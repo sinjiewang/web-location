@@ -48,7 +48,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions('Account', ['getAccount']),
+    ...mapActions('Account', ['getAccount', 'updateAccount']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     ...mapActions('CloudTunnel', ['clientConnect', 'disconnect']),
     async init() {
@@ -194,6 +194,10 @@ export default {
     onAccount({ name, avatar }) {
       this.nickname = name;
       this.avatar = avatar;
+      this.updateAccount({
+        nickname: name,
+        avatar,
+      });
       this.init();
     },
     onPassword(password) {

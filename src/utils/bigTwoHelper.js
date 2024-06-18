@@ -185,7 +185,14 @@ function compare(compared=[], comparator=[]) {
 function score(cards=[]) {
   if (!cards || !cards.length) return 0;
 
-  let score = cards.length;
+  const { length } = cards;
+  let score = length;
+
+  if (length >= 11) {
+    score *= 4;
+  } else if (length >= 8) {
+    score *= 2;
+  }
 
   cards
     .filter(card => card[0] === RANKS[12])

@@ -125,7 +125,9 @@ export default {
       }));
     },
     startLabel() {
-      return `( ${this.activePlayer.length} / ${this.PLAYERS_THRESHOLD} )`;
+      const count = this.activePlayer.reduce((acc, curr) => acc + (curr.ready ? 1 : 0), 0)
+
+      return `( ${count} / ${this.PLAYERS_THRESHOLD} )`;
     },
     playedCardClass() {
       const mapping = ['moving-from-bottom', 'moving-from-left', 'moving-from-top', 'moving-from-right'];
@@ -134,7 +136,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions('Account', ['getAccount']),
+    ...mapActions('Account', ['getAccount', 'updateRecords']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
     createService({ id, profile, tunnel, db }) {
       const service = new Service({
@@ -234,6 +236,10 @@ export default {
           const scores = this.players.map((player) => player ? score(player.cards) : '--');
 
           this.updateScoreTable(scores);
+          this.updateRecords({
+            type: this.profile.type,
+            win: trophyId === 'host',
+          });
           break;
         default:
       }
@@ -826,7 +832,9 @@ export default {
                   >
                     <ul class="pl-3">
                       <li>{{ $t('One card counts as one point') }}</li>
-                      <li>{{ $t('One deuce (2) counts double') }}</li>
+                      <li>{{ $t('Eight or more cards count double') }}</li>
+                      <li>{{ $t('Eleven or more cards count quadruple') }}</li>
+                      <li>{{ $t('Each deuce (2) counts double') }}</li>
                     </ul>
                   </v-tooltip>
                 </v-btn>
