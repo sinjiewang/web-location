@@ -104,9 +104,8 @@ export default {
       return this.players.filter((player) => player);
     },
     allPlayersReady() {
-      // return this.activePlayer.length >= this.PLAYERS_THRESHOLD
-      //   && this.activePlayer.every((player) => player.ready);
-      return true;
+      return this.activePlayer.length >= this.PLAYERS_THRESHOLD
+        && this.activePlayer.every((player) => player.ready);
     },
     cardsCoord() {
       const cardCoords = calculateCardCoords(this.cards.length);
