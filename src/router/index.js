@@ -7,11 +7,13 @@ import Blog from '@/pages/Blog/client/index.vue';
 import Access from '@/pages/Access/client/index.vue';
 import MemoryCard from '@/pages/MemoryCard/client/index.vue';
 import BigTwo from '@/pages/BigTwo/client/index.vue';
+import Uno from '@/pages/Uno/client/index.vue';
 import File from '@/pages/File/index.vue';
 import HistoryChat from '@/pages/History/Chat.vue';
 import HistoryBlog from '@/pages/History/Blog.vue';
 import HistoryAccess from '@/pages/History/Access.vue';
 import Info from '@/pages/Info/index.vue';
+// import Cards from '@/pages/Uno/site/cards.vue';
 
 const routes = [
   {
@@ -98,6 +100,16 @@ const routes = [
     },
   },
   {
+    path: '/uno/:siteId',
+    name: 'uno',
+    component: Uno,
+    meta: {
+      // requiresAuth: true,
+      layout: false,
+      type: 'uno',
+    },
+  },
+  {
     path: '/file',
     name: 'file',
     component: File,
@@ -107,6 +119,11 @@ const routes = [
     name: 'info',
     component: Info,
   },
+  // {
+  //   path: '/dev',
+  //   name: 'dev',
+  //   component: Cards,
+  // },
   {
     path: '/:pathMatch(.*)*',
     redirect: '/browse',

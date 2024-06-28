@@ -34,6 +34,7 @@
     "@vitejs/plugin-vue": "^4.5.2",
     "postcss": "^8.4.35",
     "postcss-pxtorem": "^6.1.0",
+    "sass": "^1.77.6",
     "vite": "^5.0.8"
   }
 }
