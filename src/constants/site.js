@@ -30,10 +30,17 @@ const TYPE = Object.freeze({
     name: ($t) => $t('Big Two'),
     icon: 'mdi-cards-playing',
   },
+  uno: {
+    name: () => 'Uno',
+    icon: 'mdi-cards',
+  },
 });
 
 const TYPE_LIMITATION = Object.freeze({
   bigTwo: {
+    connectionLimit: 3,
+  },
+  uno: {
     connectionLimit: 3,
   },
 });

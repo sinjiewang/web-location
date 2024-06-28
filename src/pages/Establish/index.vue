@@ -12,6 +12,7 @@ import Blog from '@/pages/Blog/site/index.vue';
 import Access from '@/pages/Access/site/index.vue';
 import MemoryCard from '@/pages/MemoryCard/site/index.vue';
 import BigTwo from '@/pages/BigTwo/site/index.vue';
+import Uno from '@/pages/Uno/site/index.vue';
 
 import short from 'short-uuid';
 import QRCode from 'qrcode';
@@ -22,6 +23,7 @@ const APP_MAPPING = {
   access: 'Access',
   memoryCard: 'MemoryCard',
   bigTwo: 'BigTwo',
+  uno: 'Uno',
 };
 
 export default {
@@ -33,6 +35,7 @@ export default {
     Access,
     MemoryCard,
     BigTwo,
+    Uno,
   },
   data() {
     return {
@@ -290,7 +293,7 @@ export default {
     this.$nextTick(() => {
       this.positionMarker = this.$refs.googleMap.addPositionMarker(this.position);
     });
-    this.type = 'bigTwo';
+    this.type = 'uno';
   },
 }
 </script>

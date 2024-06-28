@@ -1,65 +1,48 @@
 <script>
-import short from 'short-uuid';
-import { mapState, mapActions } from 'vuex';
-import Service from '@/utils/Service/BigTwo/ClientService.js';
+import { /*mapState, mapGetters,*/ mapActions } from 'vuex';
+import { /*isProxy,*/ toRaw } from 'vue';
+import Service from '@/utils/Service/Uno/SiteService.js';
+import BaseSite from '@/components/BaseSite.vue';
+import AccountAvatar from '@/components/AccountAvatar.vue';
 import calculateCardCoords from '@/utils/calculateCardCoords.js';
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiHandOkay, mdiTrophy, mdiInformation } from '@mdi/js';
-import { sortByRank, sortBySuit, compare, score } from '@/utils/bigTwoHelper.js';
-import AccountDialog from '@/components/AccountDialog.vue';
-import AccountAvatar from '@/components/AccountAvatar.vue';
-import ConnectionPasswordDialog from '@/components/ConnectionPasswordDialog.vue';
-import ImageDialog from '@/components/ImageDialog.vue';
+import { mdiHandOkay, mdiTrophy, mdiInformation, mdiRotateRight, mdiRotateLeft } from '@mdi/js';
+import { SUITS, sortBySuit, isCompliant, score } from '@/utils/unoHelper.js';
 import AvatarTimer from '@/components/AvatarTimer.vue';
 import ChatWindow from '../ChatWindow.vue';
 
 export default {
+  extends: BaseSite,
   components: {
-    AccountDialog,
     AccountAvatar,
     AvatarTimer,
-    ConnectionPasswordDialog,
-    ImageDialog,
     SvgIcon,
     ChatWindow,
   },
   data() {
     return {
-      MAX_CARD_LENGTH: 13,
+      PLAYERS_THRESHOLD: 2,
       MAX_CARD_WIDTH: 120,
-      MAX_CARD_HEIGHT: 167,
+      MAX_CARD_HEIGHT: 180,
       HAND_ZOOM: 0.45,
-      DISPLAY_ZOOM: 0.85,
+      DISPLAY_ZOOM: 0.8,
       MD_DOWN_ZOOM: 0.6,
-      SPACING: 0.2,
-      nickname: null,
-      avatar: null,
-      showDisconnectedDialog: false,
-      connectResponseCode: null,
-      siteId: this.$route.params.siteId,
-      loading: false,
-      service: null,
-      db: null,
-      id: short.generate(),
-      password: null,
-      pwdRequired: false,
-      profile: null,
-      // cardNumbers: [0, 0, 0],
-      nickname: null,
-      avatar: null,
+      SPACING: 0.4,
+      COLOR_CARDS: ['R', 'Y', 'G', 'B'],
       gameStarted: false,
       cards: [],
-      selected: [],
+      selectedIndex: null,
       hover: null,
-      played: [],
+      played: null,
+      color: null,
       playedPlayerIndex: null,
-      only3c: false,
-      cardBack: 'Blue_Back',
-      orderBySuits: false,
+      directionRotate: false,
+      direction: 1,
+      drawCount: 0,
+      showColorButton: false,
       players: [],
-      participantIndex: null,
-      isReady: false,
       newMessage: null,
+      timeout: null,
       expandedPanels: [0],
       scoreTables: [],
       scoreIndex: -1,
@@ -67,93 +50,64 @@ export default {
       mdiHandOkay,
       mdiTrophy,
       mdiInformation,
+      mdiRotateRight,
     };
   },
   computed: {
-    ...mapState('CloudTunnel', ['wsConnection']),
-    disconnectedDialogConetnt() {
-      const mapping = {
-        '503': this.$t('Connection Limit Exceeded')
-      };
+    selectedCard() {
+      return this.cards[this.selectedIndex] || null;
+    },
+    enablePlayCard() {
+      const { showColorButton, selectedCard, selfPlayer } = this;
+      const isSelfTurn = selfPlayer.turn;
+      const isCompliantCard = this.isCompliantCard(selectedCard);
 
-      return mapping[this.connectResponseCode] || this.$t('Disconnected from the Host');
+      return isSelfTurn && !showColorButton && isCompliantCard;
     },
-    readyLabel() {
-      return this.isReady ? this.$t('Cancel') : this.$t('Ready');
-    },
-    maxCardsWidth() {
-      if (this.cards.length <= 1) {
-        return this.MAX_CARD_WIDTH
-      }
-
-      const cards = calculateCardCoords(this.cards.length);
-      const first = cards.shift();
-      const { x } = cards.pop();
-
-      return x + this.MAX_CARD_WIDTH + first.x;
-    },
-    maxCardsHeight() {
-      const { y } = calculateCardCoords(this.MAX_CARD_LENGTH).pop();
-
-      return y + this.MAX_CARD_HEIGHT;
-    },
-    disablePlayCard() {
-      return this.selected.length <= 0
-        || !compare(this.played, this.selected)
-        || (this.only3c && !this.selected.includes('3C'));
-    },
-    disablePass() {
+    disableDraw() {
       return !this.gameStarted;
     },
     selfPlayer() {
-      return this.players[this.participantIndex];
+      return this.players[0];
     },
     showBottomMenu() {
       return !!this.selfPlayer?.message;
     },
     firstPlayer() {
-      const index = (this.participantIndex + 1) % 4;
-
-      return this.players[index];
+      return this.players[1];
     },
     firstPlayerCards() {
-      return this.firstPlayer?.cards || [];
+      return this.firstPlayer?.cards || 0;
     },
     showLeftMenu() {
       return !!this.firstPlayer?.message;
     },
     secondPlayer() {
-      const index = (this.participantIndex + 2) % 4;
-
-      return this.players[index];
+      return this.players[2];
     },
     secondPlayerCards() {
-      return this.secondPlayer?.cards || [];
+      return this.secondPlayer?.cards || 0;
     },
     showTopMenu() {
       return !!this.secondPlayer?.message;
     },
     thirdPlayer() {
-      const index = (this.participantIndex - 1) % 4;
-
-      return this.players[index];
+      return this.players[3];
     },
     thirdPlayerCards() {
-      return this.thirdPlayer?.cards || [];
-    },
-    activePlayer() {
-      return this.players.filter((player) => player);
+      return this.thirdPlayer?.cards || 0;
     },
     showRightMenu() {
       return !!this.thirdPlayer?.message;
     },
-    // allPlayersReady() {
-    //   // const players = this.players.filter((player) => player);
-
-    //   // return players.length >= this.PLAYERS_THRESHOLD
-    //   //   && players.every((player) => player.ready);
-    //   return true;
-    // },
+    activePlayer() {
+      return this.players.filter((player) => player);
+    },
+    allPlayersReady() {
+      // return this.activePlayer.length >= this.PLAYERS_THRESHOLD
+      //   && this.activePlayer.every((player) => player.ready);
+      return true;
+    },
     cardsCoord() {
       const cardCoords = calculateCardCoords(this.cards.length);
 
@@ -162,175 +116,209 @@ export default {
         ...cardCoords[index],
       }));
     },
+    startLabel() {
+      const count = this.activePlayer.reduce((acc, curr) => acc + (curr.ready ? 1 : 0), 0)
+      const total = Math.max(this.activePlayer.length, this.PLAYERS_THRESHOLD);
+
+      return `( ${count} / ${total} )`;
+    },
     playedCardClass() {
       const mapping = ['moving-from-bottom', 'moving-from-left', 'moving-from-top', 'moving-from-right'];
-      let index = this.playedPlayerIndex - this.participantIndex;
 
-      index = index < 0 ? index + 4 : index;
+      return mapping[this.playedPlayerIndex] || '';
+    },
+    cardInterval() {
+      const { cards } = this;
 
-      return mapping[index] || '';
+      if (this.isSmallWidth) {
+        return 0.19;
+      }
+      const interval = cards.length === 2 ? 1.1
+        : cards.length === 3 ? 0.85
+        : cards.length === 4 ? 0.6
+        : cards.length === 5 ? 0.4
+        : 0.3;
+
+      return Math.max(0.3, interval);
+    },
+    handCardsWidth() {
+      const { MAX_CARD_WIDTH, cards, cardInterval } = this;
+      const length = cards.length > 1 ? cards.length : 1;
+
+      return MAX_CARD_WIDTH + (length - 1) * cardInterval * MAX_CARD_WIDTH;
+    },
+    directionIcon() {
+      return this.direction > 0 ? mdiRotateRight : mdiRotateLeft;
+    },
+    directionIconDegree() {
+      return this.direction > 0 ? 'deg90' : 'deg270';
+    },
+    directionIconAnimation() {
+      const degree = this.direction > 0 ? 'clockwise' : 'counterclockwise';
+      const animation = `rotate-${degree}`;
+
+      return this.directionRotate ? animation : '';
+    },
+    drawCountLabel() {
+      return this.drawCount > 0 ? `+${this.drawCount}` : '';
+    },
+    isSmallWidth() {
+      return window.innerWidth < 960;
+    },
+    cardsLayerForMD() {
+      return Math.max(Math.floor((this.cards.length - 1) / 12) + 1, 1);
+    },
+    cardsArraysForMD() {
+      const length = this.cardsLayerForMD;
+
+      return Array.from({ length })
+        .map((_, index) => index);
     },
   },
   methods: {
-    ...mapActions('Account', ['getAccount', 'updateAccount', 'updateRecords']),
+    ...mapActions('Account', ['getAccount', 'updateRecords']),
     ...mapActions('IndexedDB', { idbConnect: 'connect' }),
-    ...mapActions('CloudTunnel', ['clientConnect', 'disconnect']),
-    async init() {
-      const { pwdRequired, password } = this;
-
-      if (pwdRequired && password === null) {
-        return this.$nextTick(() => this.$refs.passwordDialog.show())
-      }
-
-      this.loading = true;
-      this.connectResponseCode = null;
-
-      try {
-        await this.clientConnect();
-
-        this.service = await this.createService();
-      } catch (err) {
-        console.error('init failed', err);
-
-        const { code } = err;
-
-        this.connectResponseCode = code;
-
-        switch(code) {
-          case 401:
-            this.pwdRequired = true;
-            this.password = null;
-            this.$refs.passwordDialog.show();
-            break;
-          case 503:
-          default:
-            this.showDisconnectedDialog = true;
-        }
-      }
-
-      this.loading = false;
-      this.disconnect();
-
-      this.gameStarted = false;
-      this.cards = [];
-      this.selected = [];
-      this.hover = null;
-      this.played = [];
-      this.only3c = false;
-      this.players = [];
-      this.participantIndex = null;
-      this.isReady = false;
-    },
-    async createService() {
-      const { id, nickname, avatar, wsConnection, siteId, db, password } = this;
-
+    createService({ id, profile, tunnel, db }) {
       const service = new Service({
         id,
-        name: nickname,
-        avatar,
+        tunnel,
         db,
+        profile: toRaw(profile),
       });
 
-      return new Promise(async (resolve, reject) => {
-        service.on('error', (error) => {
-          service.close();
+      service.on('register', (event) => this.onregister(event));
+      service.on('deregister', (event) => this.onderegister(event));
+      service.on('message', (event) => this.onmessage(event));
+      service.on('command', (event) => this.oncommand(event));
 
-          reject(error);
-        });
-        service.on('profile', (profile) => this.onprofile(profile));
-        service.on('register', (data) => this.onregister(data));
-        service.on('deregister', (data) => this.onderegister(data));
-        service.on('message', (data) => this.onmessage(data));
-        service.on('command', (data) => this.oncommand(data));
-        service.on('close', () => this.onclose());
-
-        await service.connect({
-          tunnel: wsConnection,
-          siteId,
-          password,
-        });
-
-        resolve(service);
-      })
-    },
-    async onprofile(profile) {
-      const { id, position, title, type, clientId, index } = profile;
-
-      this.profile = { id, position, title, type, clientId };
-      this.participantIndex = index;
+      return service;
     },
     onregister(register) {
-      const { name, avatar, clientId, index, ready=false } = register;
+      const { name, avatar, clientId, index } = register;
 
       this.players[index] = {
         name,
         avatar,
         id: clientId,
-        ready,
+        ready: false,
         turn: false,
         cards: 0,
       };
     },
     onderegister({ index }) {
       this.players[index] = undefined;
+
+      if (!this.scoreRenew) {
+        this.scoreRenew = true;
+      };
     },
     oncommand(command) {
       switch (command.name) {
         case 'ready':
-          const player = this.activePlayer.find(({ id }) => id === command.clientId);
+          const player = this.getActivePlayer(command.clientId);
 
           if (player) {
             player.ready = command.status;
           }
           break;
         case 'start':
+          this.drawCount = 0;
           this.gameStarted = true;
-          this.played = [];
-          this.selected = [];
-          this.cards = this.orderBySuitsts
-            ? sortBySuit(command.cards)
-            : sortByRank(command.cards);
+          this.played = command.init;
+          this.color = command.init[0];
+          this.selectedIndex = null;
+          this.cards = sortBySuit(command.cards);
+          this.cards = sortBySuit(command.cards);
           this.activePlayer.forEach((player) => {
-            player.cards = Array.from({ length: 13 }).map(() => this.cardBack);
+            player.cards = 7;
             player.trophy = false;
           });
           this.createScoreTable();
           break;
         case 'turn':
           this.activePlayer.forEach((player) => player.turn = player.id === command.clientId);
-          this.only3c = command.init;
-          break;
-        case 'pass':
-          const passedPlayer = this.activePlayer.find(({ id }) => id === command.clientId);
 
-          if (passedPlayer) {
-            this.showPlayerMessage(passedPlayer, 'PASS');
+          if (command.selectColor && command.clientId === 'host') {
+            this.showColorButton = true;
+          }
+
+          if (!command.selectColor) {
+            this.rotateDirection();
+          }
+
+          break;
+        case 'draw':
+          const drawedPlayer = this.getActivePlayer(command.clientId);
+
+          this.showPlayerMessage(drawedPlayer, this.$t('Draw card(s)'));
+
+          if (command.clientId === this.selfPlayer.id) {
+            this.cards = sortBySuit([
+              ...this.cards,
+              ...command.cards,
+            ]);
+            this.selfPlayer.cards = this.cards.length;
+          } else {
+            drawedPlayer.cards += command.cards;
           }
           break;
         case 'clear':
-          this.played = [];
+          // this.played = null;
+          this.drawCount = command.count;
           break;
         case 'play':
           const playedPlayerIndex = this.activePlayer.findIndex(({ id }) => id === command.clientId);
           const playedPlayer = this.activePlayer[playedPlayerIndex];
 
           this.playedPlayerIndex = playedPlayerIndex;
-          this.played = command.cards;
+          this.played = command.card;
+
+          setTimeout(() => this.playedPlayerIndex = null, 2000);
+
+          const color = command.card[0];
+
+          if (SUITS.includes(color)) {
+            this.color = color;
+          }
 
           if (playedPlayer) {
-            playedPlayer.cards.length -= command.cards.length;
+            playedPlayer.cards -= 1;
+
+            if (playedPlayer.cards === 1) {
+              this.showPlayerMessage(playedPlayer, 'UNO');
+            }
+          }
+
+          if (command.count) {
+            this.drawCount = command.count;
+          }
+
+          if (command.direction) {
+            this.direction = command.direction;
           }
           break;
+        case 'color':
+          this.color = command.color;
+          this.showColorButton = false;
+
+          const coloredPlayer = this.getActivePlayer(command.clientId);
+          const COLOR_MAPPING = {
+            'R': this.$t('Red'),
+            'Y': this.$t('Yellow'),
+            'G': this.$t('Green'),
+            'B': this.$t('Blue'),
+          };
+
+          this.showPlayerMessage(coloredPlayer, COLOR_MAPPING[command.color]);
+          break;
         case 'end':
+          this.showColorButton = false;
           const trophyId = command.clientId;
 
-          this.isReady = false;
           this.gameStarted = false;
           this.activePlayer.forEach((player) => {
             player.turn = false;
             player.trophy = player.id === trophyId;
-
-            if (command.cards[player.id]) player.cards = sortByRank(command.cards[player.id]);
           });
           this.activePlayer
             .filter(({ id }) => id !== 'host')
@@ -341,17 +329,13 @@ export default {
           this.updateScoreTable(scores);
           this.updateRecords({
             type: this.profile.type,
-            win: trophyId === this.profile.clientId,
+            win: trophyId === 'host',
           });
           break;
         default:
       }
     },
-    onclose() {
-      this.showDisconnectedDialog = true;
-      this.service = null;
-    },
-    showPlayerMessage(player, message='PASS', timeout=2000) {
+    showPlayerMessage(player, message='', timeout=2000) {
       player.message = message;
 
       if (player.$timeout) clearTimeout(player.$timeout);
@@ -362,39 +346,15 @@ export default {
       }, timeout);
     },
     onmessage({ clientId, content }) {
-      const player = this.activePlayer.find(({ id }) => id === clientId);
+      const player = this.getActivePlayer(clientId);
 
       if (player) {
         this.appendMessageToWindow(content, player);
         this.showPlayerMessage(player, content, 5000);
       }
     },
-    onClickReady() {
-      this.isReady = !this.isReady;
-      this.service.sendReady(this.isReady);
-    },
-    async onClickReconnect() {
-      this.showDisconnectedDialog = false;
-
-      await this.init();
-
-      this.loading = false;
-    },
-    onClickCloseWindow() {
-      window.close();
-    },
-    onAccount({ name, avatar }) {
-      this.nickname = name;
-      this.avatar = avatar;
-      this.updateAccount({
-        nickname: name,
-        avatar,
-      });
-      this.init();
-    },
-    onPassword(password) {
-      this.password = password;
-      this.init();
+    onClickStart() {
+      this.service.reset();
     },
     sendMessage() {
       const { newMessage } = this;
@@ -406,28 +366,24 @@ export default {
         });
       }
     },
-    fanCardStyle(card, name) {
-      const { MAX_CARD_WIDTH, MAX_CARD_HEIGHT, selected, hover } = this;
-      const isActive = selected.includes(name) || hover === name;
+    handCardStyle(layerIndex, cardIndex) {
+      const { MAX_CARD_WIDTH, selectedIndex, cardInterval } = this;
+      const isActive = selectedIndex === cardIndex;
+      const left = layerIndex * (MAX_CARD_WIDTH * cardInterval);
 
       return {
-        width: `${MAX_CARD_WIDTH}px`,
-        height: `${MAX_CARD_HEIGHT}px`,
-        top: `${ isActive ? (card.y - 30) : card.y }px`,
-        left: `${card.x}px`,
-        transform: `rotate(${card.angle}deg) translateZ(0px)`,
+        top: `${ isActive ? -40 : 0 }px`,
+        left: `${left}px`,
       };
     },
-    handCardStyle(name, index) {
-      const { MAX_CARD_WIDTH, MAX_CARD_HEIGHT, MD_DOWN_ZOOM, selected, hover } = this;
-      const isActive = selected.includes(name) || hover === name;
-      const left = index * (MAX_CARD_WIDTH * MD_DOWN_ZOOM * 0.3);
+    handCardClass(name, index) {
+      const { selfPlayer, selectedIndex, selectedCard } = this;
+      const isCompliantCard = this.isCompliantCard(name);
 
       return {
-        width: `${MAX_CARD_WIDTH * MD_DOWN_ZOOM}px`,
-        height: `${MAX_CARD_HEIGHT * MD_DOWN_ZOOM}px`,
-        top: `${ isActive ? -30 : 0 }px`,
-        left: `${left}px`,
+        [`uno-card-${name}`]: true,
+        'selected': selectedIndex === index,
+        'remind': selfPlayer.turn && !selectedCard && isCompliantCard,
       };
     },
     onMouseover(card) {
@@ -436,27 +392,43 @@ export default {
     onMouseout() {
       this.hover = null;
     },
-    onClickCard(card) {
-      if (this.selected.includes(card)) {
-        this.selected = this.selected.filter((selectedCard) => selectedCard !== card);
-      } else {
-        this.selected.push(card);
-      }
+    onClickCard(index) {
+      this.selectedIndex = (this.selectedIndex === index ) ? null : index;
+    },
+    selectColor(color) {
+      this.service.selectColor(color);
+    },
+    async playCard(card) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          try {
+            this.service.playCard(card);
+            resolve();
+          } catch (err) {
+            reject(err);
+          };
+        }, 0);
+      });
     },
     async onClickPlayCard() {
-      if (this.selected.length) {
+      if (this.selectedIndex !== null) {
         try {
-          await this.service.playCard(this.selected);
+          this.selfPlayer.turn = false;
 
-          this.cards = this.cards.filter((card) => !this.selected.includes(card));
-          this.selected = [];
+          await this.playCard(this.selectedCard);
+
+          this.cards.splice(this.selectedIndex, 1);
+          this.selectedIndex = null;
         } catch (err) {
           console.warn('service.playCard failed', err);
         }
       }
     },
-    onClickPass() {
-      this.service.pass();
+    onClickDraw() {
+      this.selfPlayer.turn = false;
+      this.selectedIndex = null;
+
+      setTimeout(() => this.service.draw(), 0);
     },
     appendMessageToWindow(message, client) {
       const data = {
@@ -465,7 +437,7 @@ export default {
         message,
       };
 
-      if (client.id === this.profile?.clientId) {
+      if (client.id === 'host') {
         data.align = 'right';
         data.sender = this.$t('You');
       }
@@ -477,8 +449,8 @@ export default {
         this.scoreRenew = false;
         this.scoreIndex += 1;
         this.scoreTables[this.scoreIndex] = {
-          players: this.players.map((player) => player.avatar),
-          totals: this.players.map(() => 0),
+          players: this.activePlayer.map((player) => player.avatar),
+          totals: this.activePlayer.map(() => 0),
           scores: [],
         };
       }
@@ -494,27 +466,46 @@ export default {
       scoreTable.scores.unshift(scores);
       scoreTable.totals = scoreTable.totals.map((value, i) => value += (scores[i] !== '--' ? scores[i] : 0 ));
     },
-  },
-  watch: {
-    orderBySuits(value) {
-      const { cards } = this;
+    getActivePlayer(clientId) {
+      return this.activePlayer.find(({ id }) => id === clientId);
+    },
+    isCompliantCard(card) {
+      const { color, played, drawCount } = this;
+      const onlyAllowDraw = drawCount > 0;
 
-      this.cards = value ? sortBySuit(cards) : sortByRank(cards);
+      return isCompliant(played, card, {
+        onlyAllowDraw,
+        currentColor: color,
+      });
+    },
+    rotateDirection() {
+      this.directionRotate = true;
+
+      setTimeout(() => this.directionRotate = false, 1500);
     },
   },
   async mounted() {
-    this.db = await this.idbConnect();
-
+    const db = await this.idbConnect();
     const { nickname, avatar } = await this.getAccount();
+    const { siteId, profile, tunnel } = this;
+    const service = this.createService({
+      id: siteId,
+      profile,
+      db,
+    });
 
-    this.nickname = nickname;
-    this.avatar = avatar;
+    service.register({ id: 'host', avatar, name: nickname });
+    await service.init();
 
-    if (nickname) {
-      this.init();
-    } else {
-      this.$refs.accountDialog.show();
-    }
+    this.service = service;
+    this.setCloudTunnel(tunnel);
+    this.players[0] = {
+      name: nickname,
+      avatar,
+      id: 'host',
+      turn: false,
+      ready: true,
+    };
 
     // document.addEventListener('visibilitychange', this.onvisibilitychange);
   },
@@ -522,7 +513,7 @@ export default {
 </script>
 
 <template>
-  <v-app>
+  <!-- <v-app> -->
     <v-container>
       <v-row>
         <v-col cols="12" md="9">
@@ -535,7 +526,7 @@ export default {
               >
                 <template v-slot:activator="{ props }">
                   <div v-bind="props" v-if="secondPlayer"
-                    class="pa-2  d-flex align-center"
+                    class="pa-2 d-flex align-center"
                     :class="{
                       'lh-52': !secondPlayer.turn,
                       'active-player': secondPlayer.turn,
@@ -577,20 +568,16 @@ export default {
             <v-col cols="12" class="d-flex justify-center">
               <div class="p-relative"
                 :style="{
-                  width: `${ (MAX_CARD_WIDTH + (secondPlayerCards.length - 1) * SPACING * MAX_CARD_WIDTH) * HAND_ZOOM }px`,
+                  width: `${ (MAX_CARD_WIDTH + (secondPlayerCards - 1) * SPACING * MAX_CARD_WIDTH) * HAND_ZOOM }px`,
                   height: `${ MAX_CARD_HEIGHT * HAND_ZOOM }px`,
                 }"
               >
-                <img v-for="(card, index) in secondPlayerCards"
-                  class="playing-cards p-absolute"
+                <div v-for="(_, index) in Array.from({ length: secondPlayerCards })"
+                  class="p-absolute uno-card-back"
                   :style="{
-                    left: `${ index * (MAX_CARD_WIDTH) * SPACING * HAND_ZOOM }px`,
-                    top: '0px',
-                    width: `${ MAX_CARD_WIDTH * HAND_ZOOM }px`,
-                    height: `${ MAX_CARD_HEIGHT * HAND_ZOOM }px`,
+                    left: `${ index * (MAX_CARD_WIDTH) * Math.max(0.3, 1/(secondPlayerCards - 1)) * HAND_ZOOM }px`,
                   }"
-                  :src="`/cards/${card}.svg`"
-                ></img>
+                ></div>
               </div>
             </v-col>
           </v-row>
@@ -656,19 +643,15 @@ export default {
                   <div class="p-relative"
                     :style="{
                       width: `${ MAX_CARD_WIDTH * HAND_ZOOM }px`,
-                      height: `${ (MAX_CARD_HEIGHT + (firstPlayerCards.length - 1) * SPACING * MAX_CARD_HEIGHT) * HAND_ZOOM }px`,
+                      height: `${ (MAX_CARD_HEIGHT + (firstPlayerCards - 1) * 0.2 * MAX_CARD_HEIGHT) * HAND_ZOOM }px`,
                     }"
                   >
-                    <img v-for="(card, index) in firstPlayerCards"
-                      class="playing-cards p-absolute"
+                    <div v-for="(_, index) in Array.from({ length: firstPlayerCards })"
+                      class="p-absolute uno-card-back"
                       :style="{
-                        top: `${ index * (MAX_CARD_HEIGHT) * HAND_ZOOM * SPACING }px`,
-                        left: '0px',
-                        width: `${ MAX_CARD_WIDTH * HAND_ZOOM }px`,
-                        height: `${ MAX_CARD_HEIGHT * HAND_ZOOM }px`,
+                        top: `${ index * (MAX_CARD_HEIGHT) * 0.2 * HAND_ZOOM }px`,
                       }"
-                      :src="`/cards/${card}.svg`"
-                    ></img>
+                    ></div>
                   </div>
                 </v-col>
               </v-row>
@@ -677,27 +660,39 @@ export default {
             <v-col cols="8" md="4">
               <v-row class="card-table"
                 :style="{
-                  height: `${ (MAX_CARD_HEIGHT + 12 * SPACING * MAX_CARD_HEIGHT) * HAND_ZOOM }px`,
+                  height: '255px',
                 }"
               >
-                <v-col cols="12" class="d-flex justify-center">
+                <v-col cols="12" class="d-flex justify-space-between">
+                  <svg-icon v-if="played"
+                    :class="{
+                      [directionIconDegree]: true,
+                      [`background-${color}`]: !!color,
+                      [directionIconAnimation]: true,
+                    }"
+                    class="direction"
+                    type="mdi"
+                    width="40"
+                    height="40"
+                    :path="directionIcon"
+                  ></svg-icon>
                   <div class="p-relative"
                     :class="playedCardClass"
                     :style="{
-                      width: `${ MAX_CARD_WIDTH + (played.length - 1) * SPACING * MAX_CARD_WIDTH * DISPLAY_ZOOM}px`,
+                      width: `${ MAX_CARD_WIDTH * DISPLAY_ZOOM }px`,
                       height: `${ MAX_CARD_HEIGHT * DISPLAY_ZOOM }px`,
                     }"
                   >
-                    <img v-for="(card, index ) in played"
-                      class="playing-cards p-absolute"
-                      :style="{
-                        'max-with': `${ MAX_CARD_WIDTH * DISPLAY_ZOOM}px`,
-                        'max-height': `${ MAX_CARD_HEIGHT * DISPLAY_ZOOM}px`,
-                        left: `${ index * (MAX_CARD_WIDTH) * SPACING }px`,
-                      }"
-                      :src="`/cards/${ card }.svg`"
-                    ></img>
+                    <div v-if="played && COLOR_CARDS.includes(played)"
+                      class="p-absolut"
+                      :class="`uno-card-${played}`"
+                    ></div>
+                    <div v-else-if="played"
+                      class="p-absolut scale-04"
+                      :class="`uno-card-${played}`"
+                    ></div>
                   </div>
+                  <div style="width: 40px;height: 40px;font-size: 24px; line-height: 40px;">{{ drawCountLabel }}</div>
                 </v-col>
                 <v-col cols="12" class="pt-0 d-flex justify-center">
                   <v-menu
@@ -733,11 +728,9 @@ export default {
                         >
                           {{ selfPlayer.name }}
                         </span>
-                        <span v-if="selfPlayer.ready && !gameStarted"
-                          class="ml-2 mdi mdi-hand-okay"></span>
                         <AvatarTimer v-if="selfPlayer.turn"
                           class="avatar-timer"
-                          @timeout="onClickPass"
+                          @timeout="onClickDraw"
                         >
                         </AvatarTimer>
                       </div>
@@ -763,19 +756,15 @@ export default {
                   <div class="p-relative"
                     :style="{
                       width: `${ MAX_CARD_WIDTH * HAND_ZOOM }px`,
-                      height: `${ (MAX_CARD_HEIGHT + (thirdPlayerCards.length - 1) * SPACING * MAX_CARD_HEIGHT) * HAND_ZOOM }px`,
+                      height: `${ (MAX_CARD_HEIGHT + (thirdPlayerCards - 1) * 0.2 * MAX_CARD_HEIGHT) * HAND_ZOOM }px`,
                     }"
                   >
-                    <img v-for="(card, index) in thirdPlayerCards"
-                      class="playing-cards p-absolute"
+                    <div v-for="(_, index) in Array.from({ length: thirdPlayerCards })"
+                      class="p-absolute uno-card-back"
                       :style="{
-                        top: `${ index * (MAX_CARD_HEIGHT) * HAND_ZOOM * SPACING }px`,
-                        left: '0px',
-                        width: `${ MAX_CARD_WIDTH * HAND_ZOOM }px`,
-                        height: `${ MAX_CARD_HEIGHT * HAND_ZOOM }px`,
+                        top: `${ index * (MAX_CARD_HEIGHT) * 0.2 * HAND_ZOOM }px`,
                       }"
-                      :src="`/cards/${card}.svg`"
-                    ></img>
+                    ></div>
                   </div>
                 </v-col>
                 <v-col cols="8" class="sides-account right d-flex justify-start"
@@ -840,67 +829,98 @@ export default {
               <div
                 class="p-relative d-none d-md-block"
                 :style="{
-                  width: `${maxCardsWidth}px`,
-                  height: `${maxCardsHeight}px`,
+                  width: `${ handCardsWidth }px`,
+                  height: `${ MAX_CARD_HEIGHT }px`,
                 }"
               >
-                <img v-for="card in cardsCoord"
-                  class="self playing-cards p-absolute"
-                  :style="fanCardStyle(card, card.name)"
-                  :src="`/cards/${card.name}.svg`"
-                  @click="onClickCard(card.name)"
-                ></img>
+                <div v-for="(card, index) in cards"
+                  class="p-absolute uno-card scale-05"
+                  :class="handCardClass(card, index)"
+                  :style="handCardStyle(index, index)"
+                  @click="onClickCard(index)"
+                ></div>
               </div>
               <div
-                class="p-relative d-md-none"
+                class="w-100 d-md-none"
                 :style="{
-                  width: '100%',
-                  height: `${MAX_CARD_HEIGHT * MD_DOWN_ZOOM}px`,
+                  height: `${MAX_CARD_HEIGHT * MD_DOWN_ZOOM + (cardsLayerForMD - 1) * 40}px`,
                 }"
               >
-                <img v-for="(card, index) in cards"
-                  class="playing-cards p-absolute"
-                  :style="handCardStyle(card, index)"
-                  :src="`/cards/${card}.svg`"
-                  @touchend="onClickCard(card)"
-                ></img>
+                <div v-for="(i) in cardsArraysForMD"
+                  class="p-relative w-100"
+                  :style="{
+                    'margin-top': `${40 * i}px`,
+                  }"
+                >
+                  <div v-for="(card, index) in cards.slice(i * 12, (i + 1) * 12)"
+                    class="p-absolute uno-card scale-03"
+                    :class="handCardClass(card, index)"
+                    :style="handCardStyle(index, index + i * 12)"
+                    @touchend="onClickCard(index + i * 12)"
+                  ></div>
+                </div>
               </div>
             </v-col>
             <v-col cols="12"class="d-flex flex-column full-height" >
               <v-row>
                 <v-col cols="0" md="2" class="d-none d-md-block"></v-col>
-                <v-col cols="5" md="3">
-                  <v-switch
-                    v-model="orderBySuits"
-                    :color="orderBySuits ? 'primary' : ''"
-                    :label="$t('Sort by Suit')"
-                    hide-details
-                  ></v-switch>
+                <v-col cols="5" md="4">
+                  <v-row v-if="showColorButton">
+                    <v-col cols="3">
+                      <v-btn
+                        class="h-56 background-R"
+                        block
+                        @click="selectColor('R')"
+                      ></v-btn>
+                    </v-col>
+                    <v-col cols="3">
+                      <v-btn
+                        class="h-56 background-Y"
+                        block
+                        @click="selectColor('Y')"
+                      ></v-btn>
+                    </v-col>
+                    <v-col cols="3">
+                      <v-btn
+                        class="h-56 background-G"
+                        block
+                        @click="selectColor('G')"
+                      ></v-btn>
+                    </v-col>
+                    <v-col cols="3">
+                      <v-btn
+                        class="h-56 background-B"
+                        block
+                        @click="selectColor('B')"
+                      ></v-btn>
+                    </v-col>
+                  </v-row>
                 </v-col>
                 <v-col cols="3" md="2">
                   <v-btn
-                    class="h-56"
+                    class="h-56 red-button"
                     block
-                    :disabled="disablePass"
-                    @click="onClickPass"
-                  >{{ $t('Pass') }}</v-btn>
+                    :disabled="disableDraw"
+                    @click="onClickDraw"
+                  >{{ $t('Draw card(s)') }}</v-btn>
                 </v-col>
-                <v-col cols="4" md="3">
+                <v-col cols="4" md="2">
                   <v-btn
                     v-if="!gameStarted"
                     class="h-56"
                     color="blue"
                     variant="elevated"
                     block
-                    @click="onClickReady"
+                    :disabled="!allPlayersReady"
+                    @click="onClickStart"
                   >
-                    {{ readyLabel }}
+                    {{ $t('Start')  }} {{ startLabel }}
                   </v-btn>
                   <v-btn
                     v-if="gameStarted"
                     class="h-56"
                     color="success"
-                    :disabled="disablePlayCard"
+                    :disabled="!enablePlayCard"
                     @click="onClickPlayCard"
                     block
                   >{{ $t('Play Card') }}</v-btn>
@@ -909,7 +929,7 @@ export default {
               </v-row>
               <v-row>
                 <v-col cols="0" md="2" class="d-none d-md-block"></v-col>
-                <v-col cols="8" md="5">
+                <v-col cols="8" md="6">
                   <v-text-field
                     ref="messageInput"
                     v-model="newMessage"
@@ -919,7 +939,7 @@ export default {
                     @keyup.enter="sendMessage"
                   ></v-text-field>
                 </v-col>
-                <v-col cols="4" md="3">
+                <v-col cols="4" md="2">
                   <v-btn
                     class="h-56"
                     variant="elevated"
@@ -934,33 +954,12 @@ export default {
           </v-row>
         </v-col>
         <v-col cols="12" md="3">
-          <!-- <v-card
-            width="100%"
-          >
-            <v-card-text class="text-start">
-
-            </v-card-text>
-          </v-card> -->
           <v-expansion-panels
             v-model="expandedPanels"
           >
             <v-expansion-panel>
               <v-expansion-panel-title>
                 {{ $t('Score') }}
-                <v-btn class="ml-1 bg-transparent" icon="mdi-information" size="x-small">
-                  <svg-icon type="mdi" :path="mdiInformation"></svg-icon>
-                  <v-tooltip
-                    activator="parent"
-                    location="bottom"
-                  >
-                    <ul class="pl-3">
-                      <li>{{ $t('One card counts as one point') }}</li>
-                      <li>{{ $t('Eight or more cards count double') }}</li>
-                      <li>{{ $t('Eleven or more cards count quadruple') }}</li>
-                      <li>{{ $t('Each deuce (2) counts double') }}</li>
-                    </ul>
-                  </v-tooltip>
-                </v-btn>
               </v-expansion-panel-title>
               <v-expansion-panel-text class="expansion-panel">
                 <v-table v-for="scoreTable in scoreTables">
@@ -1009,59 +1008,16 @@ export default {
         </v-col>
       </v-row>
     </v-container>
-
-    <v-overlay
-      v-model="loading"
-      class="d-flex align-center justify-center"
-      persistent
-    >
-      <v-progress-circular indeterminate size="64"></v-progress-circular>
-    </v-overlay>
-
-    <v-dialog
-      v-model="showDisconnectedDialog"
-      persistent
-      max-width="400px"
-    >
-      <v-card>
-        <v-card-text>
-          {{ disconnectedDialogConetnt }}
-        </v-card-text>
-        <v-card-actions class="d-flex align-stretch">
-          <v-spacer></v-spacer>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            @click="onClickReconnect"
-          >
-            {{ $t('Reconnect') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="elevated"
-            @click="onClickCloseWindow"
-          >
-            {{ $t('Close Window') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <AccountDialog
-      ref="accountDialog"
-      :showCloseButton="false"
-      @account="onAccount"
-    />
-    <ConnectionPasswordDialog
-      ref="passwordDialog"
-      @password="onPassword"
-    />
-  </v-app>
+  <!-- </v-app> -->
 </template>
 
 <style scoped>
 .yellow {
   color: yellow;
+}
+
+.lh-56 {
+  line-height: 56px;
 }
 
 .card-table {
@@ -1103,7 +1059,7 @@ export default {
 
 .moving-from-left {
   z-index: 1;
-  animation: move-from-left 1s forwards;
+  animation: move-from-left 0.5s ease forwards;
 }
 
 @keyframes move-from-left {
@@ -1119,7 +1075,7 @@ export default {
 
 .moving-from-right {
   z-index: 1;
-  animation: move-from-right 1s forwards;
+  animation: move-from-right 0.5s ease forwards;
 }
 
 @keyframes move-from-right {
@@ -1135,7 +1091,7 @@ export default {
 
 .moving-from-top {
   z-index: 1;
-  animation: move-from-top 1s forwards;
+  animation: move-from-top 0.5s ease forwards;
 }
 
 @keyframes move-from-top {
@@ -1151,7 +1107,7 @@ export default {
 
 .moving-from-bottom {
   z-index: 1;
-  animation: move-from-bottom 1s forwards;
+  animation: move-from-bottom 0.5s ease forwards;
 }
 
 @keyframes move-from-bottom {
@@ -1197,6 +1153,7 @@ export default {
 .active-player {
   border: 5px solid #FFF;
   border-radius: 10px;
+  background-color: var(--v-theme-background);
 }
 
 .h-fit-content {
@@ -1223,6 +1180,11 @@ export default {
   height: 30px;
 }
 
+.expansion-panel {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
 .v-table > .v-table__wrapper > table > tbody > tr > th, .v-table > .v-table__wrapper > table > thead > tr > th, .v-table > .v-table__wrapper > table > tfoot > tr > th,
 .v-table > .v-table__wrapper > table > tbody > tr > td, .v-table > .v-table__wrapper > table > thead > tr > td, .v-table > .v-table__wrapper > table > tfoot > tr > td {
   height: 36px;
@@ -1236,4 +1198,223 @@ td.total-score {
   background-color: #333;
 }
 
+.bg-transparent {
+  background-color: transparent;
+}
+
+svg.deg90 {
+  --r: 90deg !important;
+}
+
+svg.deg270 {
+  --r: 270deg !important;
+}
+
+svg.direction {
+  border-radius: 10px;
+}
+
+.rotate-clockwise {
+  animation: rotate-clockwise 1.5s ease forwards;
+}
+
+@keyframes rotate-clockwise {
+  from {
+    transform: rotate(90deg);
+  }
+  to {
+    transform: rotate(450deg);
+  }
+}
+
+.rotate-counterclockwise {
+  animation: rotate-counterclockwise 1.5s ease forwards;
+}
+
+@keyframes rotate-counterclockwise {
+  from {
+    transform: rotate(270deg);
+  }
+  to {
+    transform: rotate(-90deg);
+  }
+}
+</style>
+
+<style lang="scss" scoped>
+$cardWidth: 120;
+$cardHeigth: 180;
+$borderWidth: 10;
+$borderRadius: 20;
+$zoom45: 0.45;
+
+.uno-card-back {
+  background-image: url('/cards/UNO_Logo.svg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-color: #000;
+  width: #{ $cardWidth * $zoom45 }px;
+  height: #{ $cardHeigth * $zoom45 }px;
+  border: #{ $borderWidth * $zoom45 }px solid #fff;
+  border-radius: #{ $borderRadius * $zoom45 }px;
+}
+
+$zoom85: 0.8;
+
+@mixin uno-card-css {
+  width: #{ $cardWidth * $zoom85 }px;
+  height: #{ $cardHeigth * $zoom85 }px;
+  border: #{ $borderWidth * $zoom85 }px solid #fff;
+  border-radius: #{ $borderRadius * $zoom85 }px;
+}
+
+$unoColorR: #f55;
+$unoColorY: #fa0;
+$unoColorG: #5a5;
+$unoColorB: #55f;
+
+.uno-card-R {
+  @include uno-card-css;
+  background-color: #{$unoColorR};
+}
+
+.uno-card-Y {
+  @include uno-card-css;
+  background-color: #{$unoColorY};
+}
+
+.uno-card-G {
+  @include uno-card-css;
+  background-color: #{$unoColorG};
+}
+
+.uno-card-B {
+  @include uno-card-css;
+  background-color: #{$unoColorB};
+}
+
+.background-R {
+  background-color: #{$unoColorR};
+}
+
+.background-Y {
+  background-color: #{$unoColorY};
+}
+
+.background-G {
+  background-color: #{$unoColorG};
+}
+
+.background-B {
+  background-color: #{$unoColorB};
+}
+
+$svgCardWidth: 240;
+$svgCardHeigth: 360;
+$totalWidth: 3362;
+$totalHeigth: 2882;
+$colors: R, Y, G, B;
+$ranks: 0, 1, 2 ,3, 4, 5 ,6, 7, 8 ,9, S, R, D;
+
+@mixin uno-card {
+  background-image: url('/cards/UNO_cards_deck.svg');
+  background-repeat: no-repeat;
+  width: #{$svgCardWidth + 2}px;
+  height: #{$svgCardHeigth + 2}px;
+  background-size: #{$totalWidth}px #{$totalHeigth}px;
+}
+
+$cardBorderWidth: 10;
+$cardBorderRadius: 38;
+
+@mixin uno-card-hover {
+  border: #b00 solid #{$cardBorderWidth}px;
+  border-radius: #{$cardBorderRadius}px;
+}
+
+@mixin uno-card-remind {
+  border: #f88 solid #{$cardBorderWidth}px;
+  border-radius: #{$cardBorderRadius}px;
+}
+
+$remindTop: -15;
+
+@for $i from 1 through length($colors) {
+  $color: nth($colors, $i);
+
+  @for $j from 1 through length($ranks) {
+    $rank: nth($ranks, $j);
+    $card: #{$color}#{$rank};
+    $position-x: ($j - 1) * $svgCardWidth * -1;
+    $position-y: ($i - 1) * $svgCardHeigth * -1;
+    $position-x-with-border: #{$position-x - 8};
+    $position-y-with-border: #{$position-y - 8};
+
+    .uno-card-#{$card} {
+      @include uno-card;
+      background-position-x: #{$position-x}px;
+      background-position-y: #{$position-y}px;
+
+      &.remind:not(.selected) {
+        top: #{$remindTop}px !important;
+      }
+
+      &:hover, &.remind:hover {
+        @include uno-card-hover;
+        background-position-x: #{$position-x-with-border}px;
+        background-position-y: #{$position-y-with-border}px;
+      }
+    }
+  }
+}
+
+.uno-card-W {
+  @mixin b-position {
+    background-position-x: #{$svgCardWidth * -13 - 8}px;
+    background-position-y: -8px;
+  }
+
+  @include uno-card;
+  background-position-x: #{$svgCardWidth * -13}px;
+  background-position-y: 0px;
+
+  &.remind:not(.selected) {
+    top: #{$remindTop}px !important;
+  }
+
+  &:hover, &.remind:hover {
+    @include uno-card-hover;
+    @include b-position;
+  }
+}
+
+.uno-card-WD {
+  @mixin b-position {
+    background-position-x: #{$svgCardWidth * -13 - 8}px;
+    background-position-y: #{$svgCardHeigth * -5 - 8}px;
+  }
+
+  @include uno-card;
+  background-position-x: #{$svgCardWidth * -13}px;
+  background-position-y: #{$svgCardHeigth * -5}px;
+
+  &.remind:not(.selected) {
+    top: #{$remindTop}px !important;
+  }
+
+  &:hover, &.remind:hover {
+    @include uno-card-hover;
+    @include b-position;
+  }
+}
+
+$scale: 9;
+
+@for $i from 1 through $scale {
+  .scale-0#{$i} {
+    transform: scale(#{$i * 0.1});
+    transform-origin: top left;
+  }
+}
 </style>

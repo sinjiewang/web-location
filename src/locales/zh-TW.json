@@ -7,6 +7,7 @@
   "Are you sure you want to remove?": "您確定要移除嗎？",
   "Big Two": "大老二",
   "Blog": "部落格",
+  "Blue": "藍色",
   "Browse": "瀏覽",
   "Cancel": "取消",
   "Chat": "聊天",
@@ -24,6 +25,7 @@
   "Disconnected from the Host": "與主機斷線",
   "Download": "下載",
   "Drag to set your position": "拖動以設定您的位置",
+  "Draw card(s)": "抽牌",
   "Each deuce (2) counts double": "每張2計為雙倍",
   "Eight or more cards count double": "八張或更多牌計為雙倍",
   "Eleven or more cards count quadruple": "十一張或更多牌計為四倍",
@@ -31,6 +33,7 @@
   "Establish a site": "建立一個網站",
   "Established": "已建立",
   "File": "檔案",
+  "Green": "綠色",
   "Hello": "您好",
   "History": "歷史",
   "has joined": "{name} 已加入",
@@ -58,6 +61,7 @@
   "Quantity": "數量",
   "Ready": "準備好了",
   "Reconnect": "重新連線",
+  "Red": "红色",
   "Refresh": "重新整理",
   "Required": "必填",
   "Save": "儲存",
@@ -78,5 +82,6 @@
   "Updated time": "更新時間",
   "Upload": "上傳",
   "Wait for HOST acceptance": "等待主機接受",
+  "Yellow": "黄色",
   "You": "您"
 }

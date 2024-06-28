@@ -7,6 +7,7 @@
   "Are you sure you want to remove?": "削除してもよろしいですか？",
   "Big Two": "ビッグツー",
   "Blog": "ブログ",
+  "Blue": "青",
   "Browse": "閲覧",
   "Cancel": "キャンセル",
   "Chat": "チャット",
@@ -24,6 +25,7 @@
   "Disconnected from the Host": "ホストから切断されました",
   "Download": "ダウンロード",
   "Drag to set your position": "位置を設定するためにドラッグしてください",
+  "Draw card(s)": "カードを引く",
   "Each deuce (2) counts double": "2のカードはそれぞれ2倍として数えられます",
   "Eight or more cards count double": "8枚以上のカードは2倍として数えられます",
   "Eleven or more cards count quadruple": "1枚以上のカードは4倍として数えられます",
@@ -31,6 +33,7 @@
   "Establish a site": "ウェブサイトを設立する",
   "Established": "設立された",
   "File": "ファイル",
+  "Green": "緑",
   "Hello": "こんにちは",
   "History": "歴史",
   "has joined": "{name} 参加しました",
@@ -58,6 +61,7 @@
   "Quantity": "数量",
   "Ready": "準備完了",
   "Reconnect": "再接続",
+  "Red": "赤",
   "Refresh": "リフレッシュ",
   "Required": "必須",
   "Save": "保存",
@@ -78,5 +82,6 @@
   "Updated time": "更新時間",
   "Upload": "アップロード",
   "Wait for HOST acceptance": "ホストの承認を待つ",
+  "Yellow": "黄色",
   "You": "あなた"
 }

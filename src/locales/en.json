@@ -7,6 +7,7 @@
   "Are you sure you want to remove?": "Are you sure you want to remove?",
   "Big Two": "Big Two",
   "Blog": "Blog",
+  "Blue": "Blue",
   "Browse": "Browse",
   "Cancel": "Cancel",
   "Chat": "Chat",
@@ -24,6 +25,7 @@
   "Disconnected from the Host": "Disconnected from the Host",
   "Download": "Download",
   "Drag to set your position": "Drag to set your position",
+  "Draw card(s)": "Draw card(s)",
   "Each deuce (2) counts double": "Each deuce (2) counts double",
   "Eight or more cards count double": "Eight or more cards count double",
   "Eleven or more cards count quadruple": "Eleven or more cards count quadruple",
@@ -31,6 +33,7 @@
   "Establish a site": "Establish a site",
   "Established": "Established",
   "File": "File",
+  "Green": "Green",
   "Hello": "Hello",
   "History": "History",
   "has joined": "{name} has joined",
@@ -58,6 +61,7 @@
   "Quantity": "Quantity",
   "Ready": "Ready",
   "Reconnect": "Reconnect",
+  "Red": "Red",
   "Refresh": "Refresh",
   "Required": "Required",
   "Save": "Save",
@@ -78,5 +82,6 @@
   "Updated time": "Updated time",
   "Upload": "Upload",
   "Wait for HOST acceptance": "Wait for HOST acceptance",
+  "Yellow": "Yellow",
   "You": "You"
 }
