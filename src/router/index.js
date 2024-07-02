@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import Search from '@/pages/Search/index.vue';
 import Browse from '@/pages/Browse/index.vue';
 import History from '@/pages/History/index.vue';
 import Establish from '@/pages/Establish/index.vue';
@@ -16,6 +17,11 @@ import Info from '@/pages/Info/index.vue';
 // import Cards from '@/pages/Uno/site/cards.vue';
 
 const routes = [
+  {
+    path: '/search',
+    name: 'search',
+    component: Search,
+  },
   {
     path: '/browse',
     name: 'browse',
