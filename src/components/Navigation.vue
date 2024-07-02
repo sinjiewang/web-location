@@ -24,6 +24,11 @@ export default {
     navigation() {
       return [
         {
+          text: this.$t('Search'),
+          icon: 'mdi-home-search',
+          route: '/search',
+        },
+        {
           text: this.$t('Browse'),
           icon: 'mdi-map-search',
           route: '/browse',

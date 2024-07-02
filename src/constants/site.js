@@ -19,7 +19,7 @@ const TYPE = Object.freeze({
     icon: 'mdi-chat-processing-outline',
   },
   access: {
-    name: ($t) => $t('Access'),
+    name: ($t) => $t('File Access'),
     icon: 'mdi-file-eye',
   },
   memoryCard: {
