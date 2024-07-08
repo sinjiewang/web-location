@@ -41,7 +41,7 @@ const TYPE_LIMITATION = Object.freeze({
     connectionLimit: 3,
   },
   uno: {
-    connectionLimit: 3,
+    connectionLimit: 5,
   },
 });
 
