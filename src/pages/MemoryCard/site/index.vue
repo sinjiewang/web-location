@@ -35,6 +35,8 @@ export default {
       service.on('deregister', (event) => this.onderegister(event));
       service.on('message', (event) => this.onmessage(event));
       service.on('command', (event) => this.oncommand(event));
+      service.on('connect', () => this.updateSiteConnectionCount());
+      service.on('disconnect', () => this.updateSiteConnectionCount());
 
       return service;
     },

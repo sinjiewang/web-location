@@ -51,7 +51,7 @@ export default {
       connectionLimitDisabled: false,
       connectionLimitRequired: false,
       connectionLimit: 1,
-      connectionLimitOptions: [1,2,3,4,6,8,12],
+      connectionLimitOptions: [1,2,3,5,7],
       tempOptions: null,
       disableTypeSelect: false,
       qrcodeUrl: null,

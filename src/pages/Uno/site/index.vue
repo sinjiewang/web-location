@@ -91,21 +91,81 @@ export default {
     showTopMenu() {
       return !!this.secondPlayer?.message;
     },
-    thirdPlayer() {
+    // thirdPlayer() {
+    //   return this.players[3];
+    // },
+    // thirdPlayerCards() {
+    //   return this.thirdPlayer?.cards || 0;
+    // },
+    playersCount() {
+      return this.players.length;
+    },
+    middlePlayer1() {
+      return this.players[2];
+    },
+    middlePlayer1Cards() {
+      return this.middlePlayer1.cards || 0;
+    },
+    showMiddlePlayer1Menu() {
+      return !!this.middlePlayer1?.message;
+    },
+    middlePlayer2() {
       return this.players[3];
     },
-    thirdPlayerCards() {
-      return this.thirdPlayer?.cards || 0;
+    middlePlayer2Cards() {
+      return this.middlePlayer2.cards || 0;
+    },
+    showMiddlePlayer2Menu() {
+      return !!this.middlePlayer2?.message;
+    },
+    middlePlayer3() {
+      return this.players[4];
+    },
+    middlePlayer3Cards() {
+      return this.middlePlayer3.cards || 0;
+    },
+    showMiddlePlayer3Menu() {
+      return !!this.middlePlayer3?.message;
+    },
+    middlePlayersFor5() {
+      return [
+        {
+          player: this.middlePlayer1,
+          show: this.showMiddlePlayer1Menu,
+        },
+        {
+          player: this.middlePlayer2,
+          show: this.showMiddlePlayer2Menu,
+        },
+      ];
+    },
+    middlePlayersFor6() {
+      return [
+        ...this.middlePlayersFor5,
+        {
+          player: this.middlePlayer3,
+          show: this.showMiddlePlayer3Menu,
+        },
+      ];
+    },
+    lastPlayer() {
+      const { length } = this.players;
+      const index = length > 4 ? (length - 1) : 3;
+
+      return this.players[index];
+    },
+    lastPlayerCards() {
+      return this.lastPlayer?.cards || 0;
     },
     showRightMenu() {
-      return !!this.thirdPlayer?.message;
+      return !!this.lastPlayer?.message;
     },
-    activePlayer() {
+    activePlayers() {
       return this.players.filter((player) => player);
     },
     allPlayersReady() {
-      return this.activePlayer.length >= this.PLAYERS_THRESHOLD
-        && this.activePlayer.every((player) => player.ready);
+      return this.activePlayers.length >= this.PLAYERS_THRESHOLD
+        && this.activePlayers.every((player) => player.ready);
     },
     cardsCoord() {
       const cardCoords = calculateCardCoords(this.cards.length);
@@ -116,13 +176,19 @@ export default {
       }));
     },
     startLabel() {
-      const count = this.activePlayer.reduce((acc, curr) => acc + (curr.ready ? 1 : 0), 0)
-      const total = Math.max(this.activePlayer.length, this.PLAYERS_THRESHOLD);
+      const count = this.activePlayers.reduce((acc, curr) => acc + (curr.ready ? 1 : 0), 0)
+      const total = Math.max(this.activePlayers.length, this.PLAYERS_THRESHOLD);
 
       return `( ${count} / ${total} )`;
     },
     playedCardClass() {
-      const mapping = ['moving-from-bottom', 'moving-from-left', 'moving-from-top', 'moving-from-right'];
+      const mappingFor4 = ['moving-from-bottom', 'moving-from-left', 'moving-from-top', 'moving-from-right'];
+      const mappingFor5 = ['moving-from-bottom', 'moving-from-left', 'moving-from-top-left', 'moving-from-top-right', 'moving-from-right'];
+      const mappingFor6 = ['moving-from-bottom', 'moving-from-left', 'moving-from-top-left', 'moving-from-top', 'moving-from-top-right', 'moving-from-right'];
+      const { length } = this.players;
+      const mapping = length <= 4 ? mappingFor4
+        : length === 5 ? mappingFor5
+        : mappingFor6;
 
       return mapping[this.playedPlayerIndex] || '';
     },
@@ -189,6 +255,8 @@ export default {
       service.on('deregister', (event) => this.onderegister(event));
       service.on('message', (event) => this.onmessage(event));
       service.on('command', (event) => this.oncommand(event));
+      service.on('connect', () => this.updateSiteConnectionCount());
+      service.on('disconnect', () => this.updateSiteConnectionCount());
 
       return service;
     },
@@ -228,14 +296,16 @@ export default {
           this.selectedIndex = null;
           this.cards = sortBySuit(command.cards);
           this.cards = sortBySuit(command.cards);
-          this.activePlayer.forEach((player) => {
+          this.activePlayers.forEach((player) => {
             player.cards = 7;
             player.trophy = false;
           });
           this.createScoreTable();
           break;
         case 'turn':
-          this.activePlayer.forEach((player) => player.turn = player.id === command.clientId);
+          if (!this.gameStarted) return;
+
+          this.activePlayers.forEach((player) => player.turn = player.id === command.clientId);
 
           if (command.selectColor && command.clientId === 'host') {
             this.showColorButton = true;
@@ -266,8 +336,8 @@ export default {
           this.drawCount = command.count;
           break;
         case 'play':
-          const playedPlayerIndex = this.activePlayer.findIndex(({ id }) => id === command.clientId);
-          const playedPlayer = this.activePlayer[playedPlayerIndex];
+          const playedPlayerIndex = this.activePlayers.findIndex(({ id }) => id === command.clientId);
+          const playedPlayer = this.activePlayers[playedPlayerIndex];
 
           this.playedPlayerIndex = playedPlayerIndex;
           this.played = command.card;
@@ -315,11 +385,11 @@ export default {
           const trophyId = command.clientId;
 
           this.gameStarted = false;
-          this.activePlayer.forEach((player) => {
+          this.activePlayers.forEach((player) => {
             player.turn = false;
             player.trophy = player.id === trophyId;
           });
-          this.activePlayer
+          this.activePlayers
             .filter(({ id }) => id !== 'host')
             .forEach((player) => player.ready = false);
 
@@ -448,8 +518,8 @@ export default {
         this.scoreRenew = false;
         this.scoreIndex += 1;
         this.scoreTables[this.scoreIndex] = {
-          players: this.activePlayer.map((player) => player.avatar),
-          totals: this.activePlayer.map(() => 0),
+          players: this.activePlayers.map((player) => player.avatar),
+          totals: this.activePlayers.map(() => 0),
           scores: [],
         };
       }
@@ -466,7 +536,7 @@ export default {
       scoreTable.totals = scoreTable.totals.map((value, i) => value += (scores[i] !== '--' ? scores[i] : 0 ));
     },
     getActivePlayer(clientId) {
-      return this.activePlayer.find(({ id }) => id === clientId);
+      return this.activePlayers.find(({ id }) => id === clientId);
     },
     isCompliantCard(card) {
       const { color, played, drawCount } = this;
@@ -518,6 +588,7 @@ export default {
         <v-col cols="12" md="9">
           <!-- first layer -->
           <v-row>
+            <template v-if="playersCount <= 4">
             <v-col cols="12" class="pb-0 d-flex justify-center h-80">
               <v-menu
                 v-model="showTopMenu"
@@ -579,6 +650,141 @@ export default {
                 ></div>
               </div>
             </v-col>
+            </template>
+            <template v-if="playersCount === 5">
+              <v-col cols="12" class="pb-0 d-flex justify-space-evenly">
+                <template v-for="middle in middlePlayersFor5">
+                  <v-menu v-if="middle.player"
+                    v-model="middle.show"
+                    :close-on-content-click="false"
+                  >
+                    <template v-slot:activator="{ props }">
+                      <div class="d-flex flex-column align-center">
+                        <div v-bind="props"
+                          class="pa-2 d-flex align-center h-68"
+                          :class="{
+                            'active-player': middle.player.turn,
+                          }"
+                        >
+                          <svg-icon v-if="middle.player.trophy"
+                            class="yellow mr-2"
+                            type="mdi"
+                            style="width: 32px; height: 32px;"
+                            :path="mdiTrophy"
+                          ></svg-icon>
+                          <AccountAvatar
+                            class="account-avatar"
+                            :class="{ active: middle.player.turn }"
+                            :avatar="middle.player.avatar"
+                          />
+                          <span
+                            class="ml-2 account-name d-none d-md-inline-block lh-52"
+                            :class="{ active: middle.player.turn }"
+                          >
+                            {{ middle.player.name }}
+                          </span>
+                          <span v-if="middle.player.ready && !gameStarted"
+                            class="ml-2 mdi mdi-hand-okay"></span>
+                        </div>
+                        <div class="p-relative"
+                          :style="{
+                            width: `${ MAX_CARD_WIDTH  * HAND_ZOOM }px`,
+                            height: `${ MAX_CARD_HEIGHT * HAND_ZOOM }px`,
+                          }"
+                        >
+                          <div v-if="middle.player && middle.player.cards"
+                            class="p-absolute uno-card-back">
+                          </div>
+                          <div v-if="middle.player && gameStarted"
+                            class="p-absolute uno-card-count"
+                          >
+                            ({{ middle.player.cards || 0 }})
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                    <v-list
+                      class="text-h5"
+                      style="background-color: bisque; color: black;"
+                    >
+                      <v-list-item>
+                        <v-list-item-title>
+                          <span class="d-md-none">{{ middle.player.name }}: </span>{{ middle.player.message }}
+                        </v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+                  <div v-else class="w-40 h-40"></div>
+                </template>
+              </v-col>
+            </template>
+            <template v-if="playersCount >= 6">
+              <v-col cols="12" class="pb-0 d-flex justify-center gap">
+                <template v-for="middle in middlePlayersFor6">
+                  <v-menu v-if="middle.player"
+                    v-model="middle.show"
+                    :close-on-content-click="false"
+                  >
+                    <template v-slot:activator="{ props }">
+                      <div class="d-flex flex-column align-center">
+                        <div v-bind="props"
+                          class="pa-2 d-flex align-center h-68"
+                          :class="{
+                            'active-player': middle.player.turn,
+                          }"
+                        >
+                          <svg-icon v-if="middle.player.trophy"
+                            class="yellow mr-2"
+                            type="mdi"
+                            style="width: 32px; height: 32px;"
+                            :path="mdiTrophy"
+                          ></svg-icon>
+                          <AccountAvatar
+                            class="account-avatar"
+                            :class="{ active: middle.player.turn }"
+                            :avatar="middle.player.avatar"
+                          />
+                          <span
+                            class="ml-2 account-name d-none d-md-inline-block lh-52"
+                            :class="{ active: middle.player.turn }"
+                          >
+                            {{ middle.player.name }}
+                          </span>
+                          <span v-if="middle.player.ready && !gameStarted"
+                            class="ml-2 mdi mdi-hand-okay"></span>
+                        </div>
+                        <div class="p-relative"
+                          :style="{
+                            width: `${ MAX_CARD_WIDTH  * HAND_ZOOM }px`,
+                            height: `${ MAX_CARD_HEIGHT * HAND_ZOOM }px`,
+                          }"
+                        >
+                          <div v-if="middle.player && middle.player.cards"
+                            class="p-absolute uno-card-back">
+                          </div>
+                          <div v-if="middle.player && gameStarted"
+                            class="p-absolute uno-card-count"
+                          >
+                            ({{ middle.player.cards || 0 }})
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                    <v-list
+                      class="text-h5"
+                      style="background-color: bisque; color: black;"
+                    >
+                      <v-list-item>
+                        <v-list-item-title>
+                          <span class="d-md-none">{{ middle.player.name }}: </span>{{ middle.player.message }}
+                        </v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+                  <div v-else class="w-40 h-40"></div>
+                </template>
+              </v-col>
+            </template>
           </v-row>
 
           <!-- second layer -->
@@ -755,10 +961,10 @@ export default {
                   <div class="p-relative"
                     :style="{
                       width: `${ MAX_CARD_WIDTH * HAND_ZOOM }px`,
-                      height: `${ (MAX_CARD_HEIGHT + (thirdPlayerCards - 1) * 0.2 * MAX_CARD_HEIGHT) * HAND_ZOOM }px`,
+                      height: `${ (MAX_CARD_HEIGHT + (lastPlayerCards - 1) * 0.2 * MAX_CARD_HEIGHT) * HAND_ZOOM }px`,
                     }"
                   >
-                    <div v-for="(_, index) in Array.from({ length: thirdPlayerCards })"
+                    <div v-for="(_, index) in Array.from({ length: lastPlayerCards })"
                       class="p-absolute uno-card-back"
                       :style="{
                         top: `${ index * (MAX_CARD_HEIGHT) * 0.2 * HAND_ZOOM }px`,
@@ -768,7 +974,7 @@ export default {
                 </v-col>
                 <v-col cols="8" class="sides-account right d-flex justify-start"
                   :class="{
-                    active: (thirdPlayer && thirdPlayer.turn),
+                    active: (lastPlayer && lastPlayer.turn),
                   }"
                 >
                   <v-menu
@@ -777,13 +983,13 @@ export default {
                     :close-on-content-click="false"
                   >
                     <template v-slot:activator="{ props }">
-                      <div v-bind="props" v-if="thirdPlayer"
+                      <div v-bind="props" v-if="lastPlayer"
                         class="pa-2 h-fit-content d-flex align-center"
                         :class="{
-                          'active-player': thirdPlayer.turn,
+                          'active-player': lastPlayer.turn,
                         }"
                       >
-                        <svg-icon v-if="thirdPlayer.trophy"
+                        <svg-icon v-if="lastPlayer.trophy"
                           class="yellow mr-2"
                           type="mdi"
                           style="width: 32px; height: 32px;"
@@ -791,16 +997,16 @@ export default {
                         ></svg-icon>
                         <AccountAvatar
                           class="account-avatar"
-                          :class="{ active: thirdPlayer.turn }"
-                          :avatar="thirdPlayer.avatar"
+                          :class="{ active: lastPlayer.turn }"
+                          :avatar="lastPlayer.avatar"
                         />
                         <span
                           class="ml-2 account-name d-none d-md-inline-block"
-                          :class="{ active: thirdPlayer.turn }"
+                          :class="{ active: lastPlayer.turn }"
                         >
-                          {{ thirdPlayer.name }}
+                          {{ lastPlayer.name }}
                         </span>
-                        <span v-if="thirdPlayer.ready && !gameStarted"
+                        <span v-if="lastPlayer.ready && !gameStarted"
                           class="ml-2 mdi mdi-hand-okay"></span>
                       </div>
                     </template>
@@ -810,7 +1016,7 @@ export default {
                     >
                       <v-list-item>
                         <v-list-item-title>
-                          <span class="d-md-none">{{ thirdPlayer.name }}: </span>{{ thirdPlayer.message }}
+                          <span class="d-md-none">{{ lastPlayer.name }}: </span>{{ lastPlayer.message }}
                         </v-list-item-title>
                       </v-list-item>
                     </v-list>
@@ -1015,9 +1221,9 @@ export default {
   color: yellow;
 }
 
-.lh-56 {
+/* .lh-56 {
   line-height: 56px;
-}
+} */
 
 .card-table {
   background-color: #222;
@@ -1120,6 +1326,42 @@ export default {
     }
 }
 
+.moving-from-top-left {
+  z-index: 1;
+  animation: move-from-top-left 0.5s ease forwards;
+}
+
+@keyframes move-from-top-left {
+    from {
+        top: -70px;
+        left: -100px;
+        transform: scale(1.2);
+    }
+    to {
+      top: 0;
+      left: 0;
+      transform: scale(1);
+    }
+}
+
+.moving-from-top-right {
+  z-index: 1;
+  animation: move-from-top-right 0.5s ease forwards;
+}
+
+@keyframes move-from-top-right {
+    from {
+        top: -70px;
+        left: 100px;
+        transform: scale(1.2);
+    }
+    to {
+      top: 0;
+      left: 0;
+      transform: scale(1);
+    }
+}
+
 @media (max-width: 959px) {
   .sides-account {
     position: absolute;
@@ -1152,7 +1394,7 @@ export default {
 .active-player {
   border: 5px solid #FFF;
   border-radius: 10px;
-  background-color: var(--v-theme-background);
+  background-color: #121212;
 }
 
 .h-fit-content {
@@ -1237,6 +1479,27 @@ svg.direction {
   to {
     transform: rotate(-90deg);
   }
+}
+
+.uno-card-count {
+  bottom: 0;
+  width: 54px;
+}
+
+.w-40 {
+  width: 40px;
+}
+
+.h-40 {
+  height: 40px;
+}
+
+.h-68 {
+  height: 68px;
+}
+
+.gap {
+  gap: 75px;
 }
 </style>
 
