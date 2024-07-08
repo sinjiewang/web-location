@@ -26,7 +26,7 @@ export default class ChatSiteService extends EventEmitter {
     this.profile = profile;
 
     this.connections = {};
-    this.participants = Array.from({ length: 4 });
+    this.participants = Array.from({ length: 6 });
     this.participants[0] = {
       id: 'host',
       name: 'HOST',
@@ -525,12 +525,6 @@ export default class ChatSiteService extends EventEmitter {
     this.broadcastPlayers({
       name: 'end',
       clientId,
-      // cards: this.players
-      //   .filter((player) => player)
-      //   .reduce((acc, curr) => ({
-      //     ...acc,
-      //     [curr.id]: curr.cards,
-      //   }), {}),
     });
     this.participants
       .filter((participant) => participant)
