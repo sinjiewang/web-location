@@ -2,11 +2,12 @@
 import { /*mapState, mapGetters,*/ mapActions } from 'vuex';
 import { /*isProxy,*/ toRaw } from 'vue';
 import Service from '@/utils/Service/BigTwo/SiteService.js';
+import { ROBOT_ID_PREFIX } from '@/utils/Service/BigTwo/SiteService.js';
 import BaseSite from '@/components/BaseSite.vue';
 import AccountAvatar from '@/components/AccountAvatar.vue';
 import calculateCardCoords from '@/utils/calculateCardCoords.js';
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdiHandOkay, mdiTrophy, mdiInformation } from '@mdi/js';
+import { mdiHandOkay, mdiTrophy, mdiInformation, mdiRobotOutline } from '@mdi/js';
 import { sortByRank, sortBySuit, compare, score } from '@/utils/bigTwoHelper.js';
 import AvatarTimer from '@/components/AvatarTimer.vue';
 import ChatWindow from '../ChatWindow.vue';
@@ -48,6 +49,7 @@ export default {
       mdiHandOkay,
       mdiTrophy,
       mdiInformation,
+      mdiRobotOutline,
     };
   },
   computed: {
@@ -133,6 +135,9 @@ export default {
       const mapping = ['moving-from-bottom', 'moving-from-left', 'moving-from-top', 'moving-from-right'];
 
       return mapping[this.playedPlayerIndex] || '';
+    },
+    disableAddRobot() {
+      return this.activePlayer.length >= this.PLAYERS_THRESHOLD;
     },
   },
   methods: {
@@ -365,6 +370,15 @@ export default {
       scoreTable.scores.unshift(scores);
       scoreTable.totals = scoreTable.totals.map((value, i) => value += (scores[i] !== '--' ? scores[i] : 0 ));
     },
+    onClickAddRobot() {
+      this.service.addRobot();
+    },
+    onClickRemoveRobot(id) {
+      this.service.removeRobot(id);
+    },
+    isRobotId(id) {
+      return id.includes(ROBOT_ID_PREFIX);
+    },
   },
   watch: {
     orderBySuits(value) {
@@ -438,6 +452,10 @@ export default {
                     >
                       {{ secondPlayer.name }}
                     </span>
+                    <span v-if="isRobotId(secondPlayer.id) && !gameStarted"
+                      class="red ml-1 mdi mdi-close-circle-outline"
+                      @click="onClickRemoveRobot(secondPlayer.id)"
+                    ></span>
                     <span v-if="secondPlayer.ready && !gameStarted"
                       class="ml-2 mdi mdi-hand-okay"></span>
                   </div>
@@ -516,6 +534,10 @@ export default {
                         >
                           {{ firstPlayer.name }}
                         </span>
+                        <span v-if="isRobotId(firstPlayer.id) && !gameStarted"
+                          class="red ml-1 mdi mdi-close-circle-outline"
+                          @click="onClickRemoveRobot(firstPlayer.id)"
+                        ></span>
                         <span v-if="firstPlayer.ready && !gameStarted"
                           class="mdi mdi-hand-okay ml-2"></span>
                       </div>
@@ -690,6 +712,10 @@ export default {
                         >
                           {{ thirdPlayer.name }}
                         </span>
+                        <span v-if="isRobotId(thirdPlayer.id) && !gameStarted"
+                          class="red ml-1 mdi mdi-close-circle-outline"
+                          @click="onClickRemoveRobot(thirdPlayer.id)"
+                        ></span>
                         <span v-if="thirdPlayer.ready && !gameStarted"
                           class="ml-2 mdi mdi-hand-okay"></span>
                       </div>
@@ -757,6 +783,19 @@ export default {
                 </v-col>
                 <v-col cols="3" md="2">
                   <v-btn
+                    v-if="!gameStarted"
+                    class="h-56"
+                    color="success"
+                    variant="elevated"
+                    block
+                    :disabled="disableAddRobot"
+                    @click="onClickAddRobot"
+                    :title="$t('Add AI Player')"
+                  >
+                    <svg-icon width="36" height="36" type="mdi" :path="mdiRobotOutline"></svg-icon>
+                  </v-btn>
+                  <v-btn
+                    v-if="gameStarted"
                     class="h-56"
                     block
                     :disabled="disablePass"
@@ -894,6 +933,10 @@ export default {
 <style scoped>
 .yellow {
   color: yellow;
+}
+
+.red {
+  color: #F44336;
 }
 
 .lh-56 {

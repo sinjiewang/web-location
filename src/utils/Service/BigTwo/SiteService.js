@@ -3,9 +3,12 @@ import short from 'short-uuid';
 import Site from '../Site.js';
 import Protocol from '../Protocol.js';
 import { shuffle, compare } from '@/utils/bigTwoHelper.js';
+import BigTwoAgent from './BigTwoAgent.js';
 
+const ROBOT_ID_PREFIX = 'robot-';
 
-export default class ChatSiteService extends EventEmitter {
+export { ROBOT_ID_PREFIX };
+export default class BigTwoSiteService extends EventEmitter {
   constructor({ id=short.generate(), tunnel, profile={}, db }={}) {
     super();
 
@@ -366,13 +369,6 @@ export default class ChatSiteService extends EventEmitter {
     const next = (index + 1) % players.length;
 
     this.turn = players[next].id;
-    this.broadcastAll({
-      data: {
-        name: 'turn',
-        clientId: this.turn,
-      },
-      type: 'command',
-    });
 
     if (this.turn === this.playedClientId) {
       this.current = null;
@@ -380,6 +376,14 @@ export default class ChatSiteService extends EventEmitter {
         name: 'clear',
       });
     }
+
+    this.broadcastAll({
+      data: {
+        name: 'turn',
+        clientId: this.turn,
+      },
+      type: 'command',
+    });
   }
 
   end(clientId='host') {
@@ -397,5 +401,73 @@ export default class ChatSiteService extends EventEmitter {
     this.participants
       .filter((participant) => participant)
       .forEach((participant) => participant.ready = false);
+  }
+
+  async addRobot() {
+    const clientId = `${ROBOT_ID_PREFIX}${short.generate()}`;
+    const agent = new BigTwoAgent();
+    const proxySendReady = () => {
+      this.onrequest({
+        clientId,
+        messageId: null,
+        type: 'ready',
+        status: true,
+      });
+    };
+    const proxySend = ({ data, type }) => {
+      const isMyTurn = (type === 'command'
+        && data.name === 'turn'
+        && data.clientId === clientId);
+      const isEnd = (type === 'command'
+        && data.name === 'end');
+
+      if (isMyTurn) {
+        const myPlayer = this.players.find(({ id }) => id === clientId);
+        const played = this.current || [];
+        const onHands = myPlayer.cards;
+        const individual = this.players.some(({ cards }) => cards.length <= 3);
+        const isLast = this.players.some(({ cards }) => cards.length <= 1);
+        const suggests = agent.run({
+          played,
+          onHands,
+          individual,
+          isLast,
+        });
+
+        if (suggests.length) {
+          setTimeout(() => this.playCard(suggests, clientId), 1500);
+        } else {
+          setTimeout(() => this.pass(clientId), 1500);
+        }
+      } else if (isEnd) {
+        proxySendReady();
+      }
+    };
+
+    await agent.init();
+
+    const robot = {
+      agent,
+      send: proxySend,
+      sendResponse: () => {},
+      sendReject: () => {},
+    }
+
+    this.connections[clientId] = robot;
+    this.onregister({
+      clientId,
+      name: 'Robot',
+      avatar: null,
+    });
+
+    proxySendReady();
+  }
+
+  removeRobot(clientId) {
+    if (!clientId || !clientId.includes(ROBOT_ID_PREFIX)) {
+      return;
+    }
+
+    this.ondisconnect({ clientId });
   }
 }
