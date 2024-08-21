@@ -293,7 +293,7 @@ export default {
     this.$nextTick(() => {
       this.positionMarker = this.$refs.googleMap.addPositionMarker(this.position);
     });
-    this.type = 'uno';
+    this.type = 'bigTwo';
   },
 }
 </script>
