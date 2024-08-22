@@ -40,6 +40,7 @@ export default {
       cardBack: 'Blue_Back',
       orderBySuits: false,
       players: [],
+      alternates: [],
       newMessage: null,
       timeout: null,
       expandedPanels: [0],
@@ -163,21 +164,40 @@ export default {
     onregister(register) {
       const { name, avatar, clientId, index } = register;
 
-      this.players[index] = {
-        name,
-        avatar,
-        id: clientId,
-        ready: false,
-        turn: false,
-        cards: 0,
-      };
+      if (index >= 0) {
+        this.players[index] = {
+          name,
+          avatar,
+          id: clientId,
+          ready: false,
+          turn: false,
+          cards: 0,
+        };
+        this.alternates = this.alternates.filter((alternate) => alternate.clientId !== clientId);
+      } else {
+        this.alternates[(index * -1 - 1)] = { name, avatar, clientId };
+      }
+
+      this.appendMessageToWindow(`${name} added`);
     },
     onderegister({ index }) {
-      this.players[index] = undefined;
+      let player;
+
+      if (index >= 0) {
+        player = this.players[index];
+
+        this.players[index] = undefined;
+      } else {
+        player = this.alternates[(index * -1 - 1)];
+
+        this.alternates.splice((index * -1 - 1), 1);
+      }
 
       if (!this.scoreRenew) {
         this.scoreRenew = true;
       };
+
+      this.appendMessageToWindow(`${player.name} left`);
     },
     oncommand(command) {
       switch (command.name) {
@@ -234,7 +254,7 @@ export default {
             player.turn = false;
             player.trophy = player.id === trophyId;
 
-            if (command.cards[player.id]) player.cards = sortByRank(command.cards[player.id]);
+            if (command.cards && command.cards[player.id]) player.cards = sortByRank(command.cards[player.id]);
           });
           this.activePlayer
             .filter(({ id }) => id !== 'host')
@@ -267,6 +287,10 @@ export default {
       if (player) {
         this.appendMessageToWindow(content, player);
         this.showPlayerMessage(player, content, 5000);
+      } else {
+        const alternate = this.alternates.find((alternate) => alternate.clientId === clientId);
+
+        this.appendMessageToWindow(content, alternate);
       }
     },
     onClickStart() {
@@ -336,14 +360,17 @@ export default {
     },
     appendMessageToWindow(message, client) {
       const data = {
-        sender: client.name,
         time: Date.now(),
         message,
       };
 
-      if (client.id === 'host') {
-        data.align = 'right';
-        data.sender = this.$t('You');
+      if (client) {
+        data.sender = client.name;
+
+        if (client.id === 'host') {
+          data.align = 'right';
+          data.sender = this.$t('You');
+        }
       }
 
       this.$refs.messageWindow.appendMessage(data);
@@ -921,6 +948,30 @@ export default {
                   class="pa-0"
                   :displayInput="false"
                 ></ChatWindow>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+            <v-expansion-panel
+              :title="$t('Waiting List')"
+            >
+              <v-expansion-panel-text
+                class="expansion-panel"
+                eager
+              >
+                <v-list
+                  class="text-h5"
+                >
+                  <v-list-item v-for="alternate in alternates">
+                    <v-list-item-title>
+                      <AccountAvatar
+                          class="account-avatar"
+                          :avatar="alternate.avatar"
+                        />
+                        <span class="ml-2">
+                          {{ alternate.name }}
+                        </span>
+                    </v-list-item-title>
+                  </v-list-item>
+                </v-list>
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>

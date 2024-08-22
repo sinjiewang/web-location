@@ -57,6 +57,7 @@ export default {
       cardBack: 'Blue_Back',
       orderBySuits: false,
       players: [],
+      alternates: [],
       participantIndex: null,
       isReady: false,
       newMessage: null,
@@ -106,13 +107,16 @@ export default {
       return !this.gameStarted;
     },
     selfPlayer() {
-      return this.players[this.participantIndex];
+      const participantIndex = this.participantIndex >= 0 ? this.participantIndex : 0;
+
+      return this.players[participantIndex];
     },
     showBottomMenu() {
       return !!this.selfPlayer?.message;
     },
     firstPlayer() {
-      const index = (this.participantIndex + 1) % 4;
+      const participantIndex = this.participantIndex >= 0 ? this.participantIndex : 0;
+      const index = (participantIndex + 1) % 4;
 
       return this.players[index];
     },
@@ -123,7 +127,8 @@ export default {
       return !!this.firstPlayer?.message;
     },
     secondPlayer() {
-      const index = (this.participantIndex + 2) % 4;
+      const participantIndex = this.participantIndex >= 0 ? this.participantIndex : 0;
+      const index = (participantIndex + 2) % 4;
 
       return this.players[index];
     },
@@ -134,7 +139,8 @@ export default {
       return !!this.secondPlayer?.message;
     },
     thirdPlayer() {
-      const index = (this.participantIndex - 1) % 4;
+      const participantIndex = this.participantIndex >= 0 ? this.participantIndex : 4;
+      const index = (participantIndex - 1) % 4;
 
       return this.players[index];
     },
@@ -164,11 +170,16 @@ export default {
     },
     playedCardClass() {
       const mapping = ['moving-from-bottom', 'moving-from-left', 'moving-from-top', 'moving-from-right'];
-      let index = this.playedPlayerIndex - this.participantIndex;
+      const participantIndex = this.participantIndex >= 0 ? this.participantIndex : 0;
+
+      let index = this.playedPlayerIndex - participantIndex;
 
       index = index < 0 ? index + 4 : index;
 
       return mapping[index] || '';
+    },
+    disableReady() {
+      return !this.participantIndex || this.participantIndex < 0;
     },
   },
   methods: {
@@ -262,17 +273,43 @@ export default {
     onregister(register) {
       const { name, avatar, clientId, index, ready=false } = register;
 
-      this.players[index] = {
-        name,
-        avatar,
-        id: clientId,
-        ready,
-        turn: false,
-        cards: 0,
-      };
+      if (index >= 0) {
+        this.players[index] = {
+          name,
+          avatar,
+          id: clientId,
+          ready,
+          turn: false,
+          cards: 0,
+        };
+        this.alternates = this.alternates.filter((alternate) => alternate.clientId !== clientId);
+      } else {
+        this.alternates[(index * -1 - 1)] = { name, avatar, clientId };
+
+        console.log(index, JSON.parse(JSON.stringify(this.alternates)))
+      }
+
+      this.appendMessageToWindow(`${name} added`);
     },
     onderegister({ index }) {
-      this.players[index] = undefined;
+      let player;
+
+      if (index >= 0) {
+        player = this.players[index];
+
+        this.players[index] = undefined;
+      } else {
+        player = this.alternates[(index * -1 - 1)];
+
+        this.alternates.splice((index * -1 - 1), 1);
+        console.warn(index, JSON.parse(JSON.stringify(this.alternates)))
+      }
+
+      if (!this.scoreRenew) {
+        this.scoreRenew = true;
+      };
+
+      this.appendMessageToWindow(`${player.name} left`);
     },
     oncommand(command) {
       switch (command.name) {
@@ -317,7 +354,7 @@ export default {
           this.playedPlayerIndex = playedPlayerIndex;
           this.played = command.cards;
 
-          if (playedPlayer) {
+          if (playedPlayer && playedPlayer.cards) {
             playedPlayer.cards.length -= command.cards.length;
           }
           break;
@@ -330,7 +367,7 @@ export default {
             player.turn = false;
             player.trophy = player.id === trophyId;
 
-            if (command.cards[player.id]) player.cards = sortByRank(command.cards[player.id]);
+            if (command.cards && command.cards[player.id]) player.cards = sortByRank(command.cards[player.id]);
           });
           this.activePlayer
             .filter(({ id }) => id !== 'host')
@@ -367,6 +404,10 @@ export default {
       if (player) {
         this.appendMessageToWindow(content, player);
         this.showPlayerMessage(player, content, 5000);
+      } else {
+        const alternate = this.alternates.find((alternate) => alternate.clientId === clientId);
+
+        this.appendMessageToWindow(content, alternate);
       }
     },
     onClickReady() {
@@ -459,15 +500,30 @@ export default {
       this.service.pass();
     },
     appendMessageToWindow(message, client) {
+      // const data = {
+      //   sender: client.name,
+      //   time: Date.now(),
+      //   message,
+      // };
+
+      // if (client.id === this.profile?.clientId) {
+      //   data.align = 'right';
+      //   data.sender = this.$t('You');
+      // }
+
+      // this.$refs.messageWindow.appendMessage(data);
       const data = {
-        sender: client.name,
         time: Date.now(),
         message,
       };
 
-      if (client.id === this.profile?.clientId) {
-        data.align = 'right';
-        data.sender = this.$t('You');
+      if (client) {
+        data.sender = client.name;
+
+        if (client.id === this.profile?.clientId) {
+          data.align = 'right';
+          data.sender = this.$t('You');
+        }
       }
 
       this.$refs.messageWindow.appendMessage(data);
@@ -491,8 +547,11 @@ export default {
         .reduce((acc, curr) => acc + curr) * -1;
 
       scores[index] = total;
-      scoreTable.scores.unshift(scores);
-      scoreTable.totals = scoreTable.totals.map((value, i) => value += (scores[i] !== '--' ? scores[i] : 0 ));
+
+      if (scoreTable) {
+        scoreTable.scores.unshift(scores);
+        scoreTable.totals = scoreTable.totals.map((value, i) => value += (scores[i] !== '--' ? scores[i] : 0 ));
+      }
     },
   },
   watch: {
@@ -892,6 +951,7 @@ export default {
                     color="blue"
                     variant="elevated"
                     block
+                    :disabled="disableReady"
                     @click="onClickReady"
                   >
                     {{ readyLabel }}
@@ -1003,6 +1063,30 @@ export default {
                   class="pa-0"
                   :displayInput="false"
                 ></ChatWindow>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+            <v-expansion-panel
+              :title="$t('Waiting List')"
+            >
+              <v-expansion-panel-text
+                class="expansion-panel"
+                eager
+              >
+                <v-list
+                  class="text-h5"
+                >
+                  <v-list-item v-for="alternate in alternates">
+                    <v-list-item-title>
+                      <AccountAvatar
+                          class="account-avatar"
+                          :avatar="alternate.avatar"
+                        />
+                        <span class="ml-2">
+                          {{ alternate.name }}
+                        </span>
+                    </v-list-item-title>
+                  </v-list-item>
+                </v-list>
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>

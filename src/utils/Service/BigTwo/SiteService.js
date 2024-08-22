@@ -28,6 +28,7 @@ export default class BigTwoSiteService extends EventEmitter {
       name: 'HOST',
       avatar: null,
     };
+    this.alternates = [];
 
     this.cards = [];
     this.locked = false;
@@ -76,6 +77,19 @@ export default class BigTwoSiteService extends EventEmitter {
       this.players = this.players.filter((player) => player.id !== clientId);
     }
     this.emit('disconnect', { clientId });
+
+    const hasEmpty = this.participants.some((participant) => !participant);
+    const hasAlternate = this.alternates.length > 0;
+
+    if (hasEmpty && hasAlternate) {
+      const alternate = this.alternates.shift();
+
+      if (alternate) {
+        const { id, name, avatar } = alternate;
+
+        this.onregister({ clientId: id, name, avatar });
+      }
+    }
   }
 
   onregister(event) {
@@ -88,6 +102,7 @@ export default class BigTwoSiteService extends EventEmitter {
       name,
       avatar
     });
+
     this.broadcast({
       excepts: [clientId],
       data: { name, avatar, clientId, index },
@@ -113,6 +128,16 @@ export default class BigTwoSiteService extends EventEmitter {
           index,
         },
       }) : null);
+    this.alternates
+      .forEach((alternate, index) => connection.send({
+        type: 'register',
+        data: {
+          clientId: alternate.id,
+          name: alternate.name,
+          avatar: alternate.avatar,
+          index: (index + 1) * -1,
+        },
+      }));
 
     this.emit('register', {
       ...event,
@@ -215,16 +240,31 @@ export default class BigTwoSiteService extends EventEmitter {
       };
     }
 
+    if (index < 0) {
+      this.alternates.push({ id, name, avatar });
+
+      index = this.alternates.length * -1;
+    }
+
     return index;
   }
 
   deregister(clientId) {
-    const index = this.participants
+    let index = this.participants
       .findIndex((participant) => participant && participant.id === clientId);
 
-    if (index < 0) return;
+    if (index < 0) {
+      const i = this.alternates
+        .findIndex((alternate) => alternate.id === clientId);
 
-    this.participants[index] = undefined;
+      if (i < 0) return;
+
+      this.alternates.splice(i, 1);
+
+      index = (i + 1) * -1;
+    } else {
+      this.participants[index] = undefined;
+    }
     this.broadcastAll({
       data: { clientId, index },
       type: 'deregister',
@@ -240,7 +280,7 @@ export default class BigTwoSiteService extends EventEmitter {
   }
 
   get connectionCount() {
-    return Object.keys(this.connections).length;
+    return Object.keys(this.connections).filter((id) => !id.includes(ROBOT_ID_PREFIX)).length;
   }
 
   reset() {
@@ -299,9 +339,12 @@ export default class BigTwoSiteService extends EventEmitter {
     if (this.turn !== clientId) return;
     if (!this.current) return;
 
-    this.broadcastPlayers({
-      name: 'pass',
-      clientId,
+    this.broadcastAll({
+      data: {
+        name: 'pass',
+        clientId,
+      },
+      type: 'command',
     });
     this.nextTurn();
   }
@@ -327,10 +370,13 @@ export default class BigTwoSiteService extends EventEmitter {
       this.initialized = false;
       this.current = cards;
       this.playedClientId = clientId;
-      this.broadcastPlayers({
-        name: 'play',
-        clientId,
-        cards,
+      this.broadcastAll({
+        data: {
+          name: 'play',
+          clientId,
+          cards,
+        },
+        type: 'command',
       });
       this.nextTurn();
 
@@ -398,9 +444,17 @@ export default class BigTwoSiteService extends EventEmitter {
           [curr.id]: curr.cards,
         }), {}),
     });
+
     this.participants
       .filter((participant) => participant)
       .forEach((participant) => participant.ready = false);
+    this.alternates.forEach((alternate) => this.connections[alternate.id].send({
+      data: {
+        name: 'end',
+        clientId,
+      },
+      type: 'command',
+    }));
   }
 
   async addRobot() {
