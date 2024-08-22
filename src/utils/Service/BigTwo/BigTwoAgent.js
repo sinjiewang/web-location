@@ -89,7 +89,6 @@ class BigTwoAgent {
   }
 
   run({ played=[], onHands=[], individual=false, isLast=false }={}) {
-    console.log(`played: `, played)
     const THRESHOLD = 0.01;
     const dynamicThreshold = THRESHOLD * onHands.length / 13;
     const FIRST_CARD = '3C';
