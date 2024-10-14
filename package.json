@@ -16,6 +16,8 @@
     "@vueup/vue-quill": "^1.2.0",
     "aws-amplify": "^6.0.15",
     "brain.js": "^2.0.0-beta.24",
+    "cannon": "^0.6.2",
+    "dat.gui": "^0.7.9",
     "dompurify": "^3.0.11",
     "events": "^3.3.0",
     "file-saver": "^2.0.5",
