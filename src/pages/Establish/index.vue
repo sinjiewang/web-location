@@ -13,6 +13,7 @@ import Access from '@/pages/Access/site/index.vue';
 import MemoryCard from '@/pages/MemoryCard/site/index.vue';
 import BigTwo from '@/pages/BigTwo/site/index.vue';
 import Uno from '@/pages/Uno/site/index.vue';
+import Chess from '@/pages/Chess/site/index.vue';
 
 import short from 'short-uuid';
 import QRCode from 'qrcode';
@@ -24,6 +25,7 @@ const APP_MAPPING = {
   memoryCard: 'MemoryCard',
   bigTwo: 'BigTwo',
   uno: 'Uno',
+  chess: 'Chess',
 };
 
 export default {
@@ -36,6 +38,7 @@ export default {
     MemoryCard,
     BigTwo,
     Uno,
+    Chess,
   },
   data() {
     return {
@@ -293,7 +296,7 @@ export default {
     this.$nextTick(() => {
       this.positionMarker = this.$refs.googleMap.addPositionMarker(this.position);
     });
-    this.type = 'bigTwo';
+    this.type = 'chess';
   },
 }
 </script>

@@ -9,12 +9,13 @@ import Access from '@/pages/Access/client/index.vue';
 import MemoryCard from '@/pages/MemoryCard/client/index.vue';
 import BigTwo from '@/pages/BigTwo/client/index.vue';
 import Uno from '@/pages/Uno/client/index.vue';
+import Chess from '@/pages/Chess/client/index.vue';
 import File from '@/pages/File/index.vue';
 import HistoryChat from '@/pages/History/Chat.vue';
 import HistoryBlog from '@/pages/History/Blog.vue';
 import HistoryAccess from '@/pages/History/Access.vue';
 import Info from '@/pages/Info/index.vue';
-// import Cards from '@/pages/Uno/site/cards.vue';
+// import Dev from '@/pages/Dev/index.vue';
 
 const routes = [
   {
@@ -116,6 +117,16 @@ const routes = [
     },
   },
   {
+    path: '/chess/:siteId',
+    name: 'chess',
+    component: Chess,
+    meta: {
+      // requiresAuth: true,
+      layout: false,
+      type: 'chess',
+    },
+  },
+  {
     path: '/file',
     name: 'file',
     component: File,
@@ -128,7 +139,7 @@ const routes = [
   // {
   //   path: '/dev',
   //   name: 'dev',
-  //   component: Cards,
+  //   component: Dev,
   // },
   {
     path: '/:pathMatch(.*)*',

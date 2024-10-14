@@ -5,6 +5,7 @@ import {
   mdiCommentEyeOutline,
   mdiFileEye,
   mdiFileArrowUpDown,
+  mdiChessKnight,
   // mdiCardsPlayingClubMultiple,
   // mdiCardsPlayingSpadeMultipleOutline,
 } from '@mdi/js';
@@ -34,6 +35,10 @@ const TYPE = Object.freeze({
     name: () => 'Uno',
     icon: 'mdi-cards',
   },
+  chess: {
+    name: ($t) => $t('Chess'),
+    icon: 'mdi-chess-knight',
+  },
 });
 
 const TYPE_LIMITATION = Object.freeze({
@@ -42,6 +47,9 @@ const TYPE_LIMITATION = Object.freeze({
   },
   uno: {
     connectionLimit: 5,
+  },
+  chess: {
+    connectionLimit: 1,
   },
 });
 
@@ -57,6 +65,10 @@ const TYPE_ACTION_ICON = Object.freeze({
   access: {
     create: mdiFileArrowUpDown,
     join: mdiFileEye,
+  },
+  access: {
+    create: mdiChessKnight,
+    join: mdiChessKnight,
   },
   // memoryCard: {
   //   create: mdiCardsPlayingClubMultiple,
